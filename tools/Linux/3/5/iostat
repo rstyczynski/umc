@@ -1,0 +1,3 @@
+delay=$1
+count=$2
+iostat -d $delay $count | sed -u -n -e '/^Device:/,/^$/{ /^Device/d; /^$/d; p; }'  | sed -u 's/  */,/g;s/^,//;s/,$//' | sed -un '1!p'  | sed -un '1!p' | //home/ubuntu/ttMetrics/bin/addTimestamp.pl

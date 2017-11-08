@@ -1,0 +1,11 @@
+#!/bin/bash
+
+delay=$1
+count=$2
+vmstat -n $delay $count | sed $sedBUFFER 's/  */,/g;s/^,//;s/,$//' | sed -n $sedBUFFER '1,2!p'  | sed -n $sedBUFFER '1!p' 
+#Comments
+#1. vmstat -n -> prevents vmstat from printing headers after some number of lines
+#2. $sedBuffer - controls adding "-u" option which control buffering. On this stage script should work in unbuffered mode
+#3. s/... -> replace spaces to comma; removes first and last comma 
+#4. sed -n 1,2 -> remove first two lines - header lines
+#5. sed -n 1!p -> remove first line which contains average numbers measured from start of the system

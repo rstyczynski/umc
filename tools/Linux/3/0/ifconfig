@@ -1,0 +1,33 @@
+#!/bin/bash
+
+#get interface name
+netlist=$1
+
+#if no parameter is specified get data from all interfeces
+if [ -z $netlist ]; then
+  netlist=ALL
+fi
+
+#extract interface names
+if [ "$netlist" = "ALL" ]; then 
+  netlist=$(ifconfig | grep "^[a-zA-Z]" | cut -d ' ' -f1)
+fi
+
+#collect data for each interface
+for net in $netlist; do 
+   ifconfig $net \
+   | grep -i X \
+   | perl $toolsBin/joinlines.pl -stop "RX bytes" \
+   | sed $sedBUFFER 's/[a-zA-Z:]//g' \
+   | sed $sedBUFFER 's/  */,/g' \
+   | cut -d',' -f2-6,8-13,14-15,18,21  \
+   | perl -ne "$perlBUFFER; print \"$net,\$_\";"
+#1. grep -i X -> get rows with "x". It's set of rows in are of our interest
+#2. joinlines.pl -> join multiline information into one line. Note that on a third line there is "RX bytes" byte sequence
+#3. $sedBUFFER -> control buffering of data. Not used.
+#4. s/[a-zA-Z:]//g -> remove all non letters and semi colons
+#5. s/  */,/g -> replace spaces with comma
+#6. -f2-6,8-13,14-15,18,21 -> selects columns with information
+#7. print interface information at beginning of each line.
+done
+
