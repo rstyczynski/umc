@@ -19,13 +19,14 @@ to overcome problem of correlation with times and source, each row contains time
 # Example
 For regular vmstat command executed on Linux 3.11, giving below output
 
-`  vmstat 2 3
-  procs -----------memory---------- ---swap-- -----io---- -system-- ----cpu----
-   r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa
-   1  0      0 523356  32092 125180    0    0    11     2   42  104  1  0 98  1
-   0  0      0 523224  32092 125180    0    0     0     0   31   74  1  0 99  0
-   0  0      0 523128  32092 125180    0    0     0     0   28   70  0  1 99  0
-`
+```bash
+vmstat 2 3
+procs -----------memory---------- ---swap-- -----io---- -system-- ----cpu----
+r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa
+1  0      0 523356  32092 125180    0    0    11     2   42  104  1  0 98  1
+0  0      0 523224  32092 125180    0    0     0     0   31   74  1  0 99  0
+0  0      0 523128  32092 125180    0    0     0     0   28   70  0  1 99  0
+```
 
 data collection script generates following CSV file.
 
