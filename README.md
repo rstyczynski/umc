@@ -19,20 +19,23 @@ to overcome problem of correlation with times and source, each row contains time
 # Example
 For regular vmstat command executed on Linux 3.11, giving below output
 
+`
 vmstat 2 3
 procs -----------memory---------- ---swap-- -----io---- -system-- ----cpu----
  r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa
  1  0      0 523356  32092 125180    0    0    11     2   42  104  1  0 98  1
  0  0      0 523224  32092 125180    0    0     0     0   31   74  1  0 99  0
  0  0      0 523128  32092 125180    0    0     0     0   28   70  0  1 99  0
-
+`
 
 data collection script generates following CSV file.
 
+`
 invoke vmstat 2 3
 date,time,system,source,ProcessRunQueue,ProcessBlocked,MemSwpd,MemFree,MemBuff,MemCache,SwapReadBlocks,SwapWriteBlocks,IOReadBlocks,IOWriteBlocks,Interrupts,ContextSwitches,CPUuser,CPUsystem,CPUidle,CPUwaitIO
 2017-11-07,14:01:12,host1,vmstat,0,0,0,518912,32076,125176,0,0,0,0,36,80,2,1,98,0
 2017-11-07,14:01:14,host1,vmstat,0,0,0,518928,32076,125176,0,0,0,0,33,75,1,1,99,0
+`
 
 Note that first row from vmstat is omitted as it's presenting data aggregated from start of the system. 
 
