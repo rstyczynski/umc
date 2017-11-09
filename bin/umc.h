@@ -1,8 +1,10 @@
 #---
 #--- Library
 #---
-umcRoot=~/ttMetrics
 
+if [ -z "$umcRoot" ]; then
+  export umcRoot="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
+fi
 
 export toolsBin=$umcRoot/bin
 
@@ -99,6 +101,7 @@ function invoke {
   fi
 
   #check if looping is requited
+  unset loop
   if [ -f $toolExecDir/$cmd.properties ]; then
     loop=$(cat $toolExecDir/$cmd.properties | grep loop | cut -d':' -f2)
   fi
@@ -120,11 +123,11 @@ function invoke {
   if [ "$loop" = "true" ]; then
     $toolsBin/timedExec.sh $interval $count $uosmcDEBUG $toolExecDir/$cmd $1 $2 $3 $4 \
     | perl -ne "$perlBUFFER; print \"$hostname,$cmd,\$_\";" \
-    | $toolsBin/addTimestamp.pl $addTimestampBUFFER
+    | $toolsBin/addTimestamp.pl $addTimestampBUFFER -delimiter="_"
   else
     $toolExecDir/$cmd $1 $2 $3 $4 \
     | perl -ne "$perlBUFFER; print \"$hostname,$cmd,\$_\";" \
-    | $toolsBin/addTimestamp.pl $addTimestampBUFFER
+    | $toolsBin/addTimestamp.pl $addTimestampBUFFER -delimiter="_"
   fi
 }
 
@@ -238,60 +241,14 @@ function locateCompatilbleExecDir {
   done
 }
 
-
 #---
-#--- prepare baseline configuration
+#--- Test Run
 #---
-mkdir -p $umcRoot/tools/Linux/3/0
+function testRun {
+ invoke iostat 1 3
+ invoke vmstat 1 3
+ invoke ifconfig 1 3
+}
 
-cat >$umcRoot/tools/Linux/3/0/iostat.rawheader <<EOF
-cfg:line:6,6
-Device:            tps    kB_read/s    kB_wrtn/s    kB_read    kB_wrtn
-EOF
-
-cat >$umcRoot/tools/Linux/3/0/iostat.header <<EOF
-date,time,system,source,Device,tps,kB_read/s,kB_wrtn/s,kB_read,kB_wrtn
-EOF
-
-cat >$umcRoot/tools/Linux/3/0/iostat <<EOF
-#!/bin/bash
-
-delay=\$1
-count=\$2
-iostat -d \$delay \$count | sed \$sedBUFFER -n -e '/^Device:/,/^\$/{ /^Device/d; /^\$/d; p; }'  | sed \$sedBUFFER 's/  */,/g;s/^,//;s/,$//' | sed \$sedBUFFER -n '1!p'  | sed \$sedBUFFER -n '1!p' 
-EOF
-
-cat >$umcRoot/tools/Linux/3/0/vmstat.header <<EOF
-date,time,system,source,ProcessRunQueue,ProcessBlocked,MemSwpd,MemFree,MemBuff,MemCache,SwapReadBlocks,SwapWriteBlocks,IOReadBlocks,IOWriteBlocks,Interrupts,ContextSwitches,CPUuser,CPUsystem,CPUidle,CPUwaitIO
-EOF
-
-cat >$umcRoot/tools/Linux/3/0/vmstat.rawheader <<EOF
-cfg:line:1,2
-procs -----------memory---------- ---swap-- -----io---- -system-- ----cpu----
- r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa
-EOF
-
-cat >$umcRoot/tools/Linux/3/0/vmstat <<EOF
-#!/bin/bash
-
-delay=\$1
-count=\$2
-vmstat -n \$delay \$count \
-| sed \$sedBUFFER 's/  */,/g;s/^,//;s/,$//' \
-| sed -n \$sedBUFFER '1,2!p'  \
-| sed -n \$sedBUFFER '1!p' 
-#Comments
-#1. vmstat -n -> prevents vmstat from printing headers after some number of lines
-#2. \$sedBuffer - controls adding "-u" option which control buffering. On this stage script should work in unbuffered mode
-#3. s/... -> replace spaces to comma; removes first and last comma 
-#4. sed -n 1,2 -> remove first two lines - header lines
-#5. sed -n 1!p -> remove first line which contains average numbers measured from start of the system
-EOF
-
-#---
-#--- Run
-#---
-invoke iostat 1 3
-invoke vmstat 1 3
-invoke ifconfig 1 3
+echo Universal Metrics Collector initialized.
 

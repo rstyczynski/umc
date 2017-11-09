@@ -10,14 +10,16 @@ my $man=0;                      #man flag
 my $help=0;                     #help flag
 my $verbose=0;     #verbose flaga
 my $notbuffered=0;
+my $dateTimeDelimiter=",";
 
 #read cmd line options
 my $optError=0;
 GetOptions (
-            'notbuffered'  => \$notbuffered, #flag
-            'verbose'   => \$verbose,           # flag
-            'help|?'    => \$help,                  # flag
-            'man'               => \$man)           # flag
+            'delimiter=s'  => \$dateTimeDelimiter, #string
+            'notbuffered'  => \$notbuffered,       #flag
+            'verbose'      => \$verbose,           # flag
+            'help|?'       => \$help,              # flag
+            'man'          => \$man)               # flag
 or $optError=1;
 
 
@@ -40,7 +42,7 @@ while (<>) {
 								($sec, $min, $hour, $day, $mon, $year);
 	}
 	#format: 2010-11-20,16:44:34,
-	printf("%04d-%02d-%02d,%02d:%02d:%02d", 1900 + $yearPrint, $monPrint + 1, $dayPrint,
+	printf("%04d-%02d-%02d" . $dateTimeDelimiter . "%02d:%02d:%02d", 1900 + $yearPrint, $monPrint + 1, $dayPrint,
 						$hourPrint, $minPrint, $secPrint);
 	print ",$_";
 }
