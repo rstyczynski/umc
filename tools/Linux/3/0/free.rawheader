@@ -1,0 +1,2 @@
+cfg:command:free -k | perl $toolsBin/joinlines.pl -stop "Swap:" | sed -e 's/[0-9]//g' -e 's/\s\s*/,/g'
+,total,used,free,shared,buffers,cached,Mem:,,-/+,buffers/cache:,,Swap:,

@@ -1,0 +1,20 @@
+#!/bin/bash
+
+netlist=$1
+
+if [ -z $netlist ]; then
+  netlist=ALL
+fi
+
+if [ "$netlist" = "ALL" ]; then 
+  netlist=$(/sbin/ifconfig | grep "^[a-zA-Z]" | cut -d ' ' -f1)
+fi
+
+IFS='.
+'
+for net in $netlist; do 
+   #/sbin/ifconfig $net | grep X | sed 's/^\s*//g' | awk "{print \"$net\",\$0; fflush(stdout);}"
+   ifconfig $net | grep -i X | perl $toolsBin/joinlines.pl -stop "RX bytes" | sed -u 's/[a-z:]//g' | sed -u 's/  */,/g' | cut -d',' -f3-7,10-13,16-17,21,25 | awk "{print \"$net,\",\$0; fflush(stdout);}" | $toolsBin/addTimestamp.pl
+
+done
+

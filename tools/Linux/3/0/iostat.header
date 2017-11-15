@@ -1,1 +1,1 @@
-timestamp,system,source,Device,tps,kB_read/s,kB_wrtn/s,kB_read,kB_wrtn
+Device,tps,kB_read/s,kB_wrtn/s,kB_read,kB_wrtn

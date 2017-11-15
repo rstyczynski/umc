@@ -1,0 +1,2 @@
+cfg:command:top -b -n 1 | grep PID | tr -s ' '
+ PID USER PR NI VIRT RES SHR S %CPU %MEM TIME+ COMMAND 

@@ -7,6 +7,7 @@ if [ -z "$umcRoot" ]; then
 fi
 
 export toolsBin=$umcRoot/bin
+export CSVdelimiter=,
 
 # ATTENTION!
 # Do not use buffered!
@@ -47,11 +48,39 @@ function locateToolExecDir {
 function assertInvoke {
   toolCmd=$1
 
-  $toolCmd 2>/dev/null 1>/dev/null
-  if [ $? -eq 127 ]; then
-    echo "Error! Reason: utility not installed."
-    return 2
+  unset availabilityMethod 
+  if [ -f $toolExecDir/$toolCmd.properties ]; then 
+    availabilityMethod=$(cat $toolExecDir/$toolCmd.properties | grep "availability:" | cut -d':' -f2)
   fi
+  if [ -z $availabilityMethod ]; then
+    availabilityMethod=default
+  fi
+
+  if [ "$availabilityMethod" = "default" ]; then
+    $toolCmd 2>/dev/null 1>/dev/null
+    if [ $? -eq 127 ]; then
+      echo "Error! Reason: utility not installed."
+      return 2
+    fi
+  fi
+
+  if [ "$availabilityMethod" = "command" ]; then
+    command=$(cat $toolExecDir/$toolCmd.properties | grep "availability:" | cut -d':' -f3)
+    $command 2>/dev/null 1>/dev/null
+    if [ $? -eq 127 ]; then
+      echo "Error! Reason: utility not installed."
+      return 2
+    fi
+  fi
+
+  if [ "$availabilityMethod" = "file" ]; then
+    file=$(cat $toolExecDir/$toolCmd.properties | grep "availability:" | cut -d':' -f3)
+    if [ ! -f $file ]; then
+      echo "Error! Reason: data file not available."
+      return 2
+    fi 
+  fi
+
 }
 
 function cfgBuffered {
@@ -117,7 +146,8 @@ function invoke {
   hostname=$(hostname)
 
   #print headers
-  cat $toolExecDir/$cmd.header
+  export CSVheader=$(cat $toolExecDir/global.header | tr -d '\n'; echo -n $CSVdelimiter;  cat $toolExecDir/$cmd.header | tr -d '\n'; echo )
+  echo $CSVheader
 
   #run the tool
   if [ "$loop" = "true" ]; then
@@ -138,8 +168,8 @@ function locateCompatibleVersions {
   tools="iostat vmstat ifconfig"
  fi
 
- rm -f $umcRoot/tools/$system_type/$version_major/$version_minor/*.Success
- rm -f $umcRoot/tools/$system_type/$version_major/$version_minor/*.Failure
+ rm -f "$umcRoot/tools/$system_type/$version_major/$version_minor/*.Success"
+ rm -f "$umcRoot/tools/$system_type/$version_major/$version_minor/*.Failure"
  
  toolCnt=0
  for toolCmd in $tools; do
@@ -149,7 +179,7 @@ function locateCompatibleVersions {
 
  echo
  echo Summary of compatible versions. 
- cat $umcRoot/tools/$system_type/$version_major/$version_minor/*.Success | sort | uniq -c | sort -n -r | egrep "^\s+$toolCnt"
+ cat "$umcRoot/tools/$system_type/$version_major/$version_minor/*.Success" | sort | uniq -c | sort -n -r | egrep "^\s+$toolCnt"
 }
 
 function reportCompatibilityResult {
@@ -200,6 +230,16 @@ function testCompatibility {
   headerscript=$(cat $toolExecDir/$toolCmd.rawheader | grep 'cfg:script' | cut -d':' -f3)
   if [ ! -z "$headerscript" ]; then
     systemHeader=$(. $toolExecDir/$headerscript)
+    thisHeader=$(cat $toolExecDir/$toolCmd.rawheader | grep -v 'cfg:')
+    if [ "$thisHeader" = "$systemHeader" ]; then
+      echo OK
+      reportCompatibilityResult $toolCmd Success $toolExecDir
+      return 0
+    fi
+  fi
+  headerCmd=$(cat $toolExecDir/$toolCmd.rawheader | grep 'cfg:command' | cut -d':' -f3-999)
+  if [ ! -z "$headerCmd" ]; then
+    systemHeader=$($toolExecDir/$headerCmd)
     thisHeader=$(cat $toolExecDir/$toolCmd.rawheader | grep -v 'cfg:')
     if [ "$thisHeader" = "$systemHeader" ]; then
       echo OK

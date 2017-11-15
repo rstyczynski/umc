@@ -1,0 +1,4 @@
+#!/bin/bash
+
+cat /proc/meminfo | cut -d':' -f2 | tr -d ' ' | sed $sedBUFFER 's/kB//g' | tr '\n' ',' | sed $sedBUFFER 's/,$//g'
+echo

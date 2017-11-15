@@ -1,0 +1,2 @@
+cfg:script:ifconfig.validateheader.sh
+RXpackets:errors:dropped:overruns:frame:TXpackets:errors:dropped:overruns:carrier:collisions:txqueuelen:RXbytes:TXbytes:
