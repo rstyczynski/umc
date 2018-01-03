@@ -1,0 +1,4 @@
+#!/bin/bash
+
+cat /proc/net/netstat | grep $grepBUFFER 'TcpExt:' | cut -f2 -d':' | sed $sedBUFFER -e 's/^ //g' -e "s/ /$CSVdelimiter/g" | tail -1
+

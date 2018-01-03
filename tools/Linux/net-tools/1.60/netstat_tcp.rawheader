@@ -1,0 +1,2 @@
+cfg:command:netstat -s | sed -n '/active connections openings/,/resets sent/p' | sed -e 's/^ *//g' | cut -d' ' -f2-99 | tr ' ' '_' | tr '\n' ',' | sed -e 's/\.//' -e 's/,$//g'
+active_connections_openings,passive_connection_openings,failed_connection_attempts,connection_resets_received,connections_established,segments_received,segments_send_out,segments_retransmited,bad_segments_received,resets_sent

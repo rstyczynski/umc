@@ -1,0 +1,4 @@
+#!/bin/bash
+
+uptime | cut -d' ' -f6-99 | sed $sedBUFFER -e 's/[ a-zA-Z:]//g'
+

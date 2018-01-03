@@ -1,3 +1,0 @@
-delay=$1
-count=$2
-vmstat $delay $count | sed -u 's/  */,/g;s/^,//;s/,$//' | sed -un '1,2!p'  | sed -un '1!p' | //home/ubuntu/ttMetrics/bin/addTimestamp.pl

@@ -14,7 +14,9 @@ To overcome potential problem with recognition of column meaning, first row of C
 
 To overcome problem of too big files, files may be generated to contain subset of rows e.g. split by time. Each file should however contain first row with header.
 
-to overcome problem of correlation with times and source, each row contains timestamp, system name, and utility name.
+To overcome problem of correlation with time and source, each row contains timestamp, system name, and utility name.
+
+To overcome problems with different version of operating systems and tools, scripts collecting metrics are stored in directure structure with system name and version. Such organization makes is possible to handle Linux, Solaris, WebLogic in different versions. It supports utility pack version as well. Exeplary directory structure is: Linux/3/11/procps_3.2.8/free.
 
 # Example
 For regular vmstat command executed on Linux 3.11, giving below output
@@ -192,7 +194,7 @@ date,time,system,source,device,RXpackets,RXerrors,RXdropped,RXoverruns,RXframe,T
 2017-11-07,16:00:26,ubuntu,ifconfig,eth0,154279,0,0,0,0,144771,0,0,0,0,,0,1000,10712481,16168808
 ```
 
-You probably noted that by default ifconfig does not work in a loop, just presenting data per invocation. That's correct, and the invocation loop is a special option of each utility, which is recognized and controlled by UOSMC. Special needs are stored in $cmd.properties file. In case of ifconfig the file informs invocation logic that looped invocation must be handled by UOSMC.
+By default ifconfig does not work in a loop, just presenting current data per invocation. That's correct, and the invocation loop is a special option of each utility, which is recognized and controlled by UMC. Special requriments of each utility are stored in $cmd.properties file. In case of ifconfig the file informs invocation logic that looped invocation must be handled by UMC.
 
 ```bash
 cat $uosmcRoot/tools/Linux/3/0/ifconfig.properties 
@@ -320,13 +322,19 @@ function locateCompatibleVersions {
 }
 ```
 
+# Regression
+1. fix locateCompatibleVersions after moving tools to utility directory
+
 # TODO Tools
-1. ping
+1. Ping
 2. Add node column to identify process e.g. WebLogic instance on a host
+3. Add long timestamp (raw long value of Linux time) as a generic column
+4. Add version information: os, utils
 
 # TODO General
 1. Automatically execute test for given OS with '0' level utilities. Once executed stores information in directory that test was passed or failed. Invoke should use this information.
 2. Invoke performs header test upon first run to write result to files. During next runs it's verified if test was passed or not.
+3. Add "procps version" e.g. free -V to validate comatibility of tools and scripts
 
 # Open issues
 1. Are extra columns allowed in CSV file?

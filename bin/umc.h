@@ -7,7 +7,9 @@ if [ -z "$umcRoot" ]; then
 fi
 
 export toolsBin=$umcRoot/bin
-export CSVdelimiter=,
+
+# configure
+. $umcRoot/etc/config.h
 
 # ATTENTION!
 # Do not use buffered!
@@ -26,19 +28,23 @@ function decodeVersion {
 }
 
 function locateToolExecDir {
+
+  cmd=$1
+  cmd_version=$(eval "echo $(echo \$$cmd\_version)")
+ 
   unset toolExecDir
-  if [ -f $umcRoot/tools/$system_type/$version_major/$version_minor/$version_patch/$version_specific/$1 ]; then
-    toolExecDir=$umcRoot/tools/$system_type/$version_major/$version_minor/$version_patch/$version_specific
-  elif [ -f $umcRoot/tools/$system_type/$version_major/$version_minor/$version_patch/$1 ]; then
-    toolExecDir=$umcRoot/tools/$system_type/$version_major/$version_minor/$version_patch
-  elif [ -f $umcRoot/tools/$system_type/$version_major/$version_minor/$1 ]; then
-    toolExecDir=$umcRoot/tools/$system_type/$version_major/$version_minor
-  elif [ -f $umcRoot/tools/$system_type/$version_major/0/$1 ]; then
-    toolExecDir=$umcRoot/tools/$system_type/$version_major/0
-  elif [ -f $umcRoot/tools/$system_type/$1 ]; then
-    toolExecDir=$umcRoot/tools/$system_type
-  elif [ -f $umcRoot/tools/$1 ]; then
-    toolExecDir=$umcRoot/tools
+  if [ -f $umcRoot/tools/$system_type/$version_major/$version_minor/$version_patch/$version_specific/$cmd_version/$cmd ]; then
+    toolExecDir=$umcRoot/tools/$system_type/$version_major/$version_minor/$version_patch/$version_specific/$cmd_version 
+  elif [ -f $umcRoot/tools/$system_type/$version_major/$version_minor/$version_patch/$cmd_version/$cmd ]; then
+    toolExecDir=$umcRoot/tools/$system_type/$version_major/$version_minor/$version_patch/$cmd_version 
+  elif [ -f $umcRoot/tools/$system_type/$version_major/$version_minor/$cmd_version/$cmd ]; then
+    toolExecDir=$umcRoot/tools/$system_type/$version_major/$version_minor/$cmd_version 
+  elif [ -f $umcRoot/tools/$system_type/$version_major/0/$cmd_version/$cmd ]; then
+    toolExecDir=$umcRoot/tools/$system_type/$version_major/0/$cmd_version 
+  elif [ -f $umcRoot/tools/$system_type/$cmd_version/$cmd ]; then
+    toolExecDir=$umcRoot/tools/$system_type/$cmd_version 
+  elif [ -f $umcRoot/tools/$cmd_version/$cmd ]; then
+    toolExecDir=$umcRoot/tools/$cmd_version 
   else
     echo "Error! Reason: utility not recognized as supported tool."
     return 3
@@ -146,18 +152,18 @@ function invoke {
   hostname=$(hostname)
 
   #print headers
-  export CSVheader=$(cat $toolExecDir/global.header | tr -d '\n'; echo -n $CSVdelimiter;  cat $toolExecDir/$cmd.header | tr -d '\n'; echo )
+  export CSVheader=$(cat $umcRoot/etc/global.header | tr -d '\n'; echo -n $CSVdelimiter;  cat $toolExecDir/$cmd.header | tr -d '\n'; echo )
   echo $CSVheader
 
   #run the tool
   if [ "$loop" = "true" ]; then
     $toolsBin/timedExec.sh $interval $count $uosmcDEBUG $toolExecDir/$cmd $1 $2 $3 $4 \
     | perl -ne "$perlBUFFER; print \"$hostname,$cmd,\$_\";" \
-    | $toolsBin/addTimestamp.pl $addTimestampBUFFER -delimiter="_"
+    | $toolsBin/addTimestamp.pl $addTimestampBUFFER -timedelimiter=" " -delimiter=$CSVdelimiter
   else
     $toolExecDir/$cmd $1 $2 $3 $4 \
     | perl -ne "$perlBUFFER; print \"$hostname,$cmd,\$_\";" \
-    | $toolsBin/addTimestamp.pl $addTimestampBUFFER -delimiter="_"
+    | $toolsBin/addTimestamp.pl $addTimestampBUFFER -timedelimiter=" " -delimiter=$CSVdelimiter
   fi
 }
 

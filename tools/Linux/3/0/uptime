@@ -1,4 +1,0 @@
-#!/bin/bash
-
-uptime | cut -d' ' -f6-99 | sed -e 's/[ a-zA-Z:]//g'
-
