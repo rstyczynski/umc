@@ -1,0 +1,325 @@
+from java.io import File
+from java.io import FileOutputStream
+from java.util import Collections
+import getopt
+import sys
+import os
+import socket
+import datetime
+import time as pytime
+
+
+bindingMetrics = HashMap()
+compositeMetrics= HashMap()
+now = datetime.datetime.now()
+output = sys.stdout
+
+serviceColumns=['error.rate',
+'Errors.count',
+'Errors.throughput',
+'processIncomingMessages.averageTime',
+'processIncomingMessages.completed',
+'processIncomingMessages.throughput',
+'processIncomingMessages.time',
+'processIncomingMessages.totalTime',
+'processIncomingMessagesEvents.count',
+'processIncomingMessagesEvents.throughput',
+'processTotalMessages.count',
+'ServerName',
+'soainfra_composite',
+'soainfra_composite_assembly_member',
+'soainfra_composite_assembly_member_type',
+'soainfra_composite_revision',
+'soainfra_domain']
+
+referenceColumns=['error.rate',
+'Errors.count',
+'Errors.throughput',
+'processOutboundMessages.averageTime',
+'processOutboundMessages.completed',
+'processOutboundMessages.throughput',
+'processOutboundMessages.time',
+'processOutboundMessages.totalTime',
+'processOutboundMessagesEvents.count',
+'processOutboundMessagesEvents.throughput',
+'processTotalMessages.count',
+'ServerName',
+'soainfra_composite',
+'soainfra_composite_assembly_member',
+'soainfra_composite_assembly_member_type',
+'soainfra_composite_revision',
+'soainfra_domain']
+
+csvColumns=['error.rate',
+'Errors.count',
+'Errors.throughput',
+'Messages.averageTime',
+'Messages.completed',
+'Messages.throughput',
+'Messages.time',
+'Messages.totalTime',
+'MessagesEvents.count',
+'MessagesEvents.throughput',
+'Messages.count',
+'ServerName',
+'soainfra_composite',
+'soainfra_composite_assembly_member',
+'soainfra_composite_assembly_member_type',
+'soainfra_composite_revision',
+'soainfra_domain']
+
+class Unbuffered(object):
+   def __init__(self, stream):
+       self.stream = stream
+   def write(self, data):
+       self.stream.write(data)
+       self.stream.flush()
+   def writelines(self, datas):
+       self.stream.writelines(datas)
+       self.stream.flush()
+   def __getattr__(self, attr):
+       return getattr(self.stream, attr)
+       
+def getCompositeBindingMetrics( compositeList ):
+    #
+    global bindingMetrics
+    global compositeMetrics
+    global output
+    #
+    metric_table='oracle_soainfra:soainfra_binding_rollup_domain'    
+    #
+    # displayMetricTables displays data
+    # block this stdout http://www.javamonamour.org/2011/08/wlst-redirecting-all-output-to-file.html
+    #
+    prev = theInterpreter.getOut()
+    f = File("/dev/null")
+    fos = FileOutputStream(f)
+    theInterpreter.setOut(fos)
+    results = displayMetricTables(metric_table)
+    theInterpreter.setOut(prev)
+    #
+    #
+    #
+    for table in results:
+        name = table.get('Table')
+        rows = table.get('Rows')
+        rowCollection = rows.values()
+        iter = rowCollection.iterator()
+        while iter.hasNext():
+            row = iter.next()    
+            # 
+            # top level identifier
+            # 
+            value = row.get('soainfra_composite')
+            # 
+            # check if current composite is on a list of interest
+            # 
+            if (value in compositeList) or (len(compositeList)==0):
+                if not bindingMetrics.containsKey(value):
+                    bindingMetrics.put(value, HashMap())
+                compositeMap = bindingMetrics.get(value)
+                memberType = row.get('soainfra_composite_assembly_member_type')
+                if not compositeMap.containsKey(memberType):
+                    compositeMap.put(memberType, HashMap())
+                memberTypeMap = compositeMap.get(memberType)
+                # 
+                # mid level category
+                # 
+                memberName=row.get('soainfra_composite_assembly_member')
+                if not memberTypeMap.containsKey(memberName):
+                    memberTypeMap.put(memberName, HashMap())
+                memberNameMap = memberTypeMap.get(memberName)
+                #
+                # low level identifier
+                # 
+                rowType = row.getCompositeType()
+                keys = rowType.keySet()
+                keyIter = keys.iterator()
+                while keyIter.hasNext():
+                   columnName = keyIter.next()
+                   value = row.get(columnName)
+                   memberNameMap.put(columnName, value)
+				   
+				 
+				   
+#
+compositeList = ArrayList()
+
+#	
+def printHeader():
+    #	
+    global sortedKeys
+    global timestamp
+    global globalheader
+    global delimiter
+    global output
+    #
+    if(timestamp): 
+        output.write(globalheader)
+        output.write(delimiter)
+    pos=len(csvColumns)
+    for key in csvColumns:
+       output.write(key)
+       if(pos>1):
+           output.write(delimiter)
+       else:
+           output.write('\n')
+       pos=pos-1
+#
+def printData():
+    #
+    global compositeList
+    global sortedKeys
+    global timestamp
+    global system
+    global source
+    global delimiter
+    global timedelimiter
+    global now
+    global output
+    #
+    for composite in compositeList:
+        #
+        # services
+        #
+        for service in bindingMetrics.get(composite).get('SERVICEs').keySet():
+            if(timestamp): 
+                output.write(now.strftime('%d-%m-%Y' + timedelimiter + '%H:%M:%S' + delimiter +  '%z' + delimiter))
+                epoch = int(pytime.time())
+                output.write(str(epoch) + delimiter + system + delimiter + source + delimiter)
+            #
+            pos=len(serviceColumns)
+            for key in serviceColumns:
+               output.write(str(bindingMetrics.get(composite).get('SERVICEs').get(service).get(key)))
+               if(pos>1):
+                   output.write(delimiter)
+               else:
+                   output.write('\n')
+               pos=pos-1
+        #
+        # references
+        #
+        try:
+            for reference in bindingMetrics.get(composite).get('REFERENCEs').keySet():
+                if(timestamp): 
+                    output.write(now.strftime('%d-%m-%Y' + timedelimiter + '%H:%M:%S' + delimiter +  '%z' + delimiter))
+                    epoch = int(pytime.time())
+                    output.write(str(epoch) + delimiter + system + delimiter + source + delimiter)
+                #
+                pos=len(referenceColumns)
+                for key in referenceColumns:
+                   output.write(str(bindingMetrics.get(composite).get('REFERENCEs').get(reference).get(key)))
+                   if(pos>1):
+                       output.write(delimiter)
+                   else:
+                       output.write('\n')
+                   pos=pos-1
+        except:
+            pass
+#			   
+#
+def dumpCommpositeCSV(compositeListArg=[], header=true):
+    #
+    global compositeList
+    global now
+    #
+    now = datetime.datetime.now()
+    getCompositeBindingMetrics( compositeListArg )
+
+    if(len(compositeListArg)==0):
+        compositeList=compositeMetrics.keySet()
+    else:
+        compositeList=compositeListArg
+    #
+    getSortedKeys()
+    if(header): printHeader()
+    printData()
+
+#
+def compositestat(composites=[], count=10, interval=1):
+    dumpCommpositeCSV(composites, true)
+    count = count - 1
+    while count >0:
+      java.lang.Thread.sleep(interval * 1000)
+      dumpCommpositeCSV(composites,false)
+      count = count - 1
+  
+#
+def usage():
+	print "TODO"
+  
+#
+#
+# default values
+admin_name = 'AdminServer'
+admin_address = 'localhost'
+admin_port = 7001
+admin_protocol = 't3'
+admin_url = admin_protocol + "://" + admin_address + ":" + str(admin_port)
+monitor_composites = []
+monitor_count = 10
+monitor_interval = 5
+delimiter = ','
+timedelimiter = ' '
+system = socket.gethostname()
+source = 'soa_dms'
+globalheader = 'datetime' + delimiter + 'timezone' + delimiter + 'timestamp' + delimiter + 'system' + delimiter + 'source'
+timestamp = false
+notbuffered = false
+#
+try:
+    opts, args = getopt.getopt( sys.argv[1:], 's:p:u:c:d:h', ['server=','port=','ulr=', 'count=','delay=','composites=','help','timedelimiter=','delimiter=','system=','source=', 'globalheader=', 'timestamp', 'notbuffered'] )
+except getopt.GetoptError, err:
+    print str(err)
+    usage()
+    sys.exit(2)
+	
+for opt, arg in opts:
+    if opt in ('-h', '--help'):
+        usage()
+        sys.exit(2)
+    elif opt in ('-s', '--server'):
+        admin_name = arg
+    elif opt in ('-p', '--port'):
+        admin_port = arg
+        admin_url = admin_protocol + "://" + admin_address + ":" + str(admin_port)
+    elif opt in ('-u', '--url'):
+        admin_url = arg
+    elif opt in ('-c', '--count'):
+        monitor_count = int(arg)
+    elif opt in ('-d', '--delay'):
+        monitor_interval = int(arg)
+    elif opt in ('--composites'):
+        monitor_composites = arg.split(',')
+    elif opt in ('--timedelimiter'):
+        timedelimiter = arg
+    elif opt in ('--delimiter'):
+        delimiter = arg
+        globalheader = 'datetime' + delimiter + 'timezone' + delimiter + 'timestamp' + delimiter + 'system' + delimiter + 'source'
+    elif opt in ('--system'):
+        system = arg
+    elif opt in ('--source'):
+        source = arg
+    elif opt in ('--globalheader'):
+        globalheader = arg
+    elif opt in ('--timestamp'):
+        timestamp = true
+    elif opt in ('--notbuffered'):
+        notbuffered = true
+        output = Unbuffered(sys.stdout)
+    else:
+        usage()
+        sys.exit(2)
+
+#
+connect(url=admin_url, adminServerName=admin_name)
+compositestat(monitor_composites, monitor_count, monitor_interval)
+
+#
+disconnect()
+exit()
+
+
+
+
+
