@@ -199,7 +199,8 @@ def printData():
         #
         # references
         #
-        try:
+        #
+        if not (bindingMetrics.get(composite).get('REFERENCEs') is None):
             for reference in bindingMetrics.get(composite).get('REFERENCEs').keySet():
                 if(timestamp): 
                     output.write(now.strftime('%d-%m-%Y' + timedelimiter + '%H:%M:%S' + delimiter +  '%z' + delimiter))
@@ -214,8 +215,6 @@ def printData():
                    else:
                        output.write('\n')
                    pos=pos-1
-        except:
-            pass
 #			   
 #
 def dumpCommpositeCSV(compositeListArg=[], header=true):
@@ -231,7 +230,6 @@ def dumpCommpositeCSV(compositeListArg=[], header=true):
     else:
         compositeList=compositeListArg
     #
-    getSortedKeys()
     if(header): printHeader()
     printData()
 
