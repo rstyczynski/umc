@@ -8,9 +8,9 @@ import socket
 import datetime
 import time as pytime
 
-
+compositeList = ArrayList()
 bindingMetrics = HashMap()
-compositeMetrics= HashMap()
+
 now = datetime.datetime.now()
 output = sys.stdout
 
@@ -83,7 +83,6 @@ class Unbuffered(object):
 def getCompositeBindingMetrics( compositeList ):
     #
     global bindingMetrics
-    global compositeMetrics
     global output
     #
     metric_table='oracle_soainfra:soainfra_binding_rollup_domain'    
@@ -139,12 +138,43 @@ def getCompositeBindingMetrics( compositeList ):
                    columnName = keyIter.next()
                    value = row.get(columnName)
                    memberNameMap.put(columnName, value)
-				   
-				 
-				   
+    
 #
-compositeList = ArrayList()
-
+def printRawHeader():
+    #	
+    global sortedKeys
+    global timestamp
+    global globalheader
+    global delimiter
+    global output
+    global bindingMetrics
+    #
+    getCompositeBindingMetrics([])
+    composite=bindingMetrics.keySet()[0]
+    
+    if not (bindingMetrics.get(composite).get('SERVICEs') is None):
+        refName=bindingMetrics.get(composite).get('SERVICEs').keySet()[0]
+        rawheader=bindingMetrics.get(composite).get('SERVICEs').get(refName).keySet()
+    elif not (bindingMetrics.get(composite).get('REFERENCEs') is None):
+        refName=bindingMetrics.get(composite).get('REFERENCEs').keySet()[0]
+        rawheader=bindingMetrics.get(composite).get('REFERENCEs').get(refName).keySet()
+    else:
+        print "Error: cannot recognise dms structure."
+        exit(4)
+    
+    sortedKeys = ArrayList()
+    sortedKeys.addAll(rawheader)
+    java.util.Collections.sort(sortedKeys, String.CASE_INSENSITIVE_ORDER)
+    
+    pos=len(sortedKeys)
+    for key in sortedKeys:
+       output.write(key)
+       if(pos>1):
+           output.write(delimiter)
+       else:
+           output.write('\n')
+       pos=pos-1
+       
 #	
 def printHeader():
     #	
@@ -182,24 +212,26 @@ def printData():
         #
         # services
         #
-        for service in bindingMetrics.get(composite).get('SERVICEs').keySet():
-            if(timestamp): 
-                output.write(now.strftime('%d-%m-%Y' + timedelimiter + '%H:%M:%S' + delimiter +  '%z' + delimiter))
-                epoch = int(pytime.time())
-                output.write(str(epoch) + delimiter + system + delimiter + source + delimiter)
-            #
-            pos=len(serviceColumns)
-            for key in serviceColumns:
-               output.write(str(bindingMetrics.get(composite).get('SERVICEs').get(service).get(key)))
-               if(pos>1):
-                   output.write(delimiter)
-               else:
-                   output.write('\n')
-               pos=pos-1
+        # it's possible that composite is w/o services...
+        if not (bindingMetrics.get(composite).get('SERVICEs') is None):
+            for service in bindingMetrics.get(composite).get('SERVICEs').keySet():
+                if(timestamp): 
+                    output.write(now.strftime('%d-%m-%Y' + timedelimiter + '%H:%M:%S' + delimiter +  '%z' + delimiter))
+                    epoch = int(pytime.time())
+                    output.write(str(epoch) + delimiter + system + delimiter + source + delimiter)
+                #
+                pos=len(serviceColumns)
+                for key in serviceColumns:
+                   output.write(str(bindingMetrics.get(composite).get('SERVICEs').get(service).get(key)))
+                   if(pos>1):
+                       output.write(delimiter)
+                   else:
+                       output.write('\n')
+                   pos=pos-1
         #
         # references
         #
-        #
+        # it's possible that composite is w/o references...
         if not (bindingMetrics.get(composite).get('REFERENCEs') is None):
             for reference in bindingMetrics.get(composite).get('REFERENCEs').keySet():
                 if(timestamp): 
@@ -221,12 +253,13 @@ def dumpCommpositeCSV(compositeListArg=[], header=true):
     #
     global compositeList
     global now
+    global bindingMetrics
     #
     now = datetime.datetime.now()
     getCompositeBindingMetrics( compositeListArg )
 
     if(len(compositeListArg)==0):
-        compositeList=compositeMetrics.keySet()
+        compositeList=bindingMetrics.keySet()
     else:
         compositeList=compositeListArg
     #
@@ -235,7 +268,7 @@ def dumpCommpositeCSV(compositeListArg=[], header=true):
 
 #
 def compositestat(composites=[], count=10, interval=1):
-    dumpCommpositeCSV(composites, true)
+    dumpCommpositeCSV(composites, not(noheader))
     count = count - 1
     while count >0:
       java.lang.Thread.sleep(interval * 1000)
@@ -244,8 +277,60 @@ def compositestat(composites=[], count=10, interval=1):
   
 #
 def usage():
-	print "TODO"
+    
+    # help fusion may inject here anything if necessary
+    # description
+    output.write("""
+Gets Oracle SOA 11g composite dynamic monitoring information and saves execution details about service and references into CSV columnar format.""")
+        
+    # help fusion may inject here anything if necessary
+    # usage
+    output.write("""
+usage: getCompositeBindings.sh """)
+    
+    # help fusion may inject here anything if necessary
+    # arguments
+    output.write("""
+[-s|--server -p|--port] [-u|--url] [-c|--count] [-d|--delay] [--composites] [--timedelimiter] [--delimiter] [--system] [--source] [--globalheader] [--noheader] [--timestamp] [--notbuffered] [-h|--help]""")
+
+    # help fusion may inject here anything if necessary
+    # details
+    output.write("""
+    --count..........number of DMS data collection cycles. default: 10    
+    --delay..........delay between DMS data collection cycles. default: 5
+    --composites.....list of composites to be reported, separated by comma. When ommited all composites will be reported. default: all
+    
+    --system.........source system name. default: hostname
+    --source.........source data name. default: soa_dms
+    --timestamp......prefix metrics data with globalheader and timestamp. default: false
+    
+    --server.........Admin server name used during WLST connect operation. default: AdminServer
+    --port...........TCP port used to connect to Admin server. default: 7001
+    --url............user specified URL. Will be used as provided
+    
+    --notbuffered....flush after each std write. To be used in console mode. default: false
+    --delimiter......delimiter used in CSV to divide columns. default: comma
   
+    --timedelimiter..delimiter between data and time in datetime column. default: space
+    --globalheader...header used to prefix composite metric names. default: datetime,timezone,timestamp,system,source
+    --noheader.......remove CSV header from output. default=false
+    --printrawheader.print raw header as taken from dms and exit. default=false""")
+      
+    # help fusion may inject here anything if necessary
+    # notes
+    output.write("""
+    Note that:
+    1. script requires Oracle SOA to be installed and up, as it's based on SOA DMS metrics. 
+    2. uses WLST. 
+    3. runs w/o need to authenticate as it's started from domain directory""")
+
+    # help fusion may inject here anything if necessary
+    # author
+    output.write("""
+    ---
+    version 0.1 by ryszard.styczynski@oracle.com, https://github.com/rstyczynski/tools/tree/master/umc""")
+    
+    
 #
 #
 # default values
@@ -264,16 +349,18 @@ source = 'soa_dms'
 globalheader = 'datetime' + delimiter + 'timezone' + delimiter + 'timestamp' + delimiter + 'system' + delimiter + 'source'
 timestamp = false
 notbuffered = false
+noheader=false
+printrawheader=false
 #
 try:
-    opts, args = getopt.getopt( sys.argv[1:], 's:p:u:c:d:h', ['server=','port=','ulr=', 'count=','delay=','composites=','help','timedelimiter=','delimiter=','system=','source=', 'globalheader=', 'timestamp', 'notbuffered'] )
+    opts, args = getopt.getopt( sys.argv[1:], 's:p:u:c:d:h', ['server=','port=','ulr=', 'count=','delay=','composites=','help', 'helpInternal', 'timedelimiter=','delimiter=','system=','source=', 'globalheader=', 'noheader', 'timestamp', 'notbuffered', 'printrawheader'] )
 except getopt.GetoptError, err:
     print str(err)
     usage()
     sys.exit(2)
 	
 for opt, arg in opts:
-    if opt in ('-h', '--help'):
+    if opt in ('--help'):
         usage()
         sys.exit(2)
     elif opt in ('-s', '--server'):
@@ -300,6 +387,10 @@ for opt, arg in opts:
         source = arg
     elif opt in ('--globalheader'):
         globalheader = arg
+    elif opt in ('--noheader'):
+        noheader = true
+    elif opt in ('--printrawheader'):
+        printrawheader=true
     elif opt in ('--timestamp'):
         timestamp = true
     elif opt in ('--notbuffered'):
@@ -311,7 +402,11 @@ for opt, arg in opts:
 
 #
 connect(url=admin_url, adminServerName=admin_name)
-compositestat(monitor_composites, monitor_count, monitor_interval)
+
+if printrawheader==true:
+    printRawHeader()
+else:
+    compositestat(monitor_composites, monitor_count, monitor_interval)
 
 #
 disconnect()

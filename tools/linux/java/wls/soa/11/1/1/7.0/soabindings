@@ -1,0 +1,69 @@
+#!/bin/bash
+
+getCompositeBindings_bin="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+usage=0
+exit=0
+
+function help {
+    cat $getCompositeBindings_bin/wls_soa_bindings_dms.wlst | sed -n '/# description/,/#/p'  | egrep -v '#|output.write' | sed 's/""")//'
+    echo -n $(cat $getCompositeBindings_bin/wls_soa_bindings_dms.wlst | sed -n '/# usage/,/#/p' | egrep -v '#|output.write' | sed 's/""")//' | tr -d '\n')
+    echo -n ' --domain '
+    cat $getCompositeBindings_bin/wls_soa_bindings_dms.wlst | sed -n '/# arguments/,/#/p' | egrep -v '#|output.write' | sed 's/""")//'
+    echo '    --domain.........SOA domain directory. default: $DOMAIN_HOME'
+    echo
+    cat $getCompositeBindings_bin/wls_soa_bindings_dms.wlst | sed -n '/# details/,/#/p' | egrep -v '#|output.write' | sed 's/""")//'
+    echo '
+    As this tool is based on WebLogic, SOA, and UMC environment, it is mandatory:
+    1. call setWLSEnv.sh before use
+    2. source umc.h before use 
+    
+    Be aware that starting the script takes few seconds as Java based WLST subsystem must be loaded and initialized first.
+'
+    cat $getCompositeBindings_bin/wls_soa_bindings_dms.wlst | sed -n '/# notes/,/#/p' | egrep -v '#|output.write' | sed 's/""")//'
+
+    cat $getCompositeBindings_bin/wls_soa_bindings_dms.wlst | sed -n '/# author/,/#/p' | egrep -v '#|output.write' | sed 's/""")//' 
+}
+
+if [ -z $DOMAIN_HOME ]; then
+    if [ ! "$(echo  $1 | cut -d'=' -f1)" = "--domain" ]; then
+        echo "Error: first argument must be --domain"
+        usage=1; exit=1
+    fi
+
+    if [ "$(echo  $1 | cut -d'=' -f1)" = "--domain" ]; then
+        DOMAIN_HOME=$(echo  $1 | cut -d'=' -f2)
+        if [ ! -f $DOMAIN_HOME/config/config.xml ]; then
+            echo "Error: DOMAIN_HOME not provided or pointing to wrong directory."
+            usage=1; exit=1
+        fi
+    fi
+    shift
+fi
+
+if [ -z $toolsBin ]; then
+    echo "Error: umc environment not set. source umc.h first."
+    usage=1; exit=1
+fi
+if [ -z $BEA_HOME ]; then
+    echo "Error: BEA_HOME not set. Call WebLogic's setWLSEnv.sh first"
+    usage=2; exit=1
+fi
+if [ -z $WL_HOME ]; then
+    echo "Error: WL_HOME not set. Call WebLogic's setWLSEnv.sh first"
+    usage=2; exit=1
+fi
+
+if [ $usage -gt 1 ]; then echo; help; fi
+if [ $exit -eq 1 ]; then exit 1; fi
+
+if [ "$1" = "--help" ]; then
+    help
+    exit 0
+fi
+
+cd $DOMAIN_HOME
+$BEA_HOME/oracle_common/common/bin/wlst.sh $getCompositeBindings_bin/wls_soa_bindings_dms.wlst $@ | egrep --line-buffered -v 'CLASSPATH|Initializing WebLogic Scripting Tool|Welcome to WebLogic Server Administration Scripting Shell|Type help\(\) for help on available commands|Connecting to|Successfully connected to|Warning: An insecure protocol was used to connect to the|To ensure on-the-wire security|Admin port should be used instead|Disconnected from weblogic server|Exiting WebLogic Scripting Tool|^$' 
+cd ..
+
+

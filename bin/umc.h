@@ -18,7 +18,6 @@ export toolsBin=$umcRoot/bin
 export BUFFERED=no
 
 function decodeVersion {
-  system_type=$(uname -s)
   version_full=$(uname -r | cut -d'-' -f1)
   version_specific=$(uname -r | cut -d'-' -f2-999)
 
@@ -27,29 +26,112 @@ function decodeVersion {
   version_patch=$(uname -r | cut -d'-' -f1 | cut -d'.' -f3)
 }
 
-function locateToolExecDir {
 
+# list parent layers in platform layer stack
+# for soa produces: Linux java wls
+function getParentLayers {
+  unset layers
+  layer=$1
+  until [ "$layer" = "/" -o "$layer" = "" ]; do
+    layers="$layer/$layers"
+    layer=$(eval "echo $(echo \$$layer\_layer)")
+  done 
+  echo "/$layers" | sed "s/\/$1//"
+}
+
+# list child layers in platform layer stack
+# for java produces: wls soa
+function getChildLayers {
+  unset layers
+  layer=$1
+  echo $platformLayers | sed "s/^.*$layer\(.*\)/\1/g"
+}
+
+
+function getLayerDirectories {
+  local layer=$1
+  
+  layer_version_major=$(eval "echo $(echo \$$layer\_version_major)")
+  layer_version_minor=$(eval "echo $(echo \$$layer\_version_minor)")
+  layer_version_patch=$(eval "echo $(echo \$$layer\_version_patch)")
+  layer_version_specific=$(eval "echo $(echo \$$layer\_version_specific)")
+  
+  if [ ! "$layer/$layer_version_major/$layer_version_minor/$layer_version_patch/$layer_version_specific" = "hardware////" ]; then
+    echo "$layer/$layer_version_major/$layer_version_minor/$layer_version_patch/$layer_version_specific"
+  fi
+  if [ ! "$layer/$layer_version_major/$layer_version_minor/$layer_version_patch" = "hardware///" ]; then
+    echo "$layer/$layer_version_major/$layer_version_minor/$layer_version_patch"
+  fi
+  if [ ! "$layer/$layer_version_major/$layer_version_minor" = "hardware//" ]; then
+    echo "$layer/$layer_version_major/$layer_version_minor"
+  fi
+  if [ ! "$layer/$layer_version_major" = "hardware/" ]; then
+    echo "$layer/$layer_version_major"
+  fi
+  echo "$layer"
+  
+}
+
+
+getDirectories() {
+  layer=$1
+  
+  for directoryRoot in ""; do
+      for directoryLinux in $(getLayerDirectories linux); do
+        if [ ! $layer = "linux" ]; then
+            for directoryJava in $(getLayerDirectories java); do
+                if [ ! $layer = "java" ]; then
+                    for directoryWLS in $(getLayerDirectories wls); do
+                        if [ ! $layer = "wls" ]; then
+                            for directorySOA in $(getLayerDirectories soa); do
+                                echo -n "$umcRoot/tools"
+                                echo $directoryRoot/$directoryLinux/$directoryJava/$directoryWLS/$directorySOA
+                            done
+                        else
+                            echo -n "$umcRoot/tools"
+                            echo $directoryRoot/$directoryLinux/$directoryJava/$directoryWLS
+                        fi
+                    done
+                else
+                    echo -n "$umcRoot/tools"
+                    echo $directoryRoot/$directoryLinux/$directoryJava
+                fi
+            done
+        else
+            echo -n "$umcRoot/tools"
+            echo $directoryRoot/$directoryLinux
+        fi
+      done
+    done
+}
+
+function locateToolExecDir {
   cmd=$1
-  cmd_version=$(eval "echo $(echo \$$cmd\_version)")
- 
+  cmd_layer=$(eval "echo $(echo \$$cmd\_layer)")
+  cmd_package=$(eval "echo $(echo \$$cmd\_package)")
+  
   unset toolExecDir
-  if [ -f $umcRoot/tools/$system_type/$version_major/$version_minor/$version_patch/$version_specific/$cmd_version/$cmd ]; then
-    toolExecDir=$umcRoot/tools/$system_type/$version_major/$version_minor/$version_patch/$version_specific/$cmd_version 
-  elif [ -f $umcRoot/tools/$system_type/$version_major/$version_minor/$version_patch/$cmd_version/$cmd ]; then
-    toolExecDir=$umcRoot/tools/$system_type/$version_major/$version_minor/$version_patch/$cmd_version 
-  elif [ -f $umcRoot/tools/$system_type/$version_major/$version_minor/$cmd_version/$cmd ]; then
-    toolExecDir=$umcRoot/tools/$system_type/$version_major/$version_minor/$cmd_version 
-  elif [ -f $umcRoot/tools/$system_type/$version_major/0/$cmd_version/$cmd ]; then
-    toolExecDir=$umcRoot/tools/$system_type/$version_major/0/$cmd_version 
-  elif [ -f $umcRoot/tools/$system_type/$cmd_version/$cmd ]; then
-    toolExecDir=$umcRoot/tools/$system_type/$cmd_version 
-  elif [ -f $umcRoot/tools/$cmd_version/$cmd ]; then
-    toolExecDir=$umcRoot/tools/$cmd_version 
-  else
+  directories=$(getDirectories $cmd_layer);
+  for directory in $directories; do
+    if [ -f $directory/$cmd ]; then
+        toolExecDir=$directory
+        return 0
+    fi
+    if [ ! -z $cmd_package ]; then
+        if [ -f $directory/$cmd_package/$cmd ]; then
+            toolExecDir=$directory/$cmd_package
+            return 0
+        fi
+    fi
+    
+  done
+  
+  if [ -z $toolExecDir ]; then
     echo "Error! Reason: utility not recognized as supported tool."
     return 3
   fi
 }
+
 
 function assertInvoke {
   toolCmd=$1
@@ -87,6 +169,14 @@ function assertInvoke {
     fi 
   fi
 
+  if [ "$availabilityMethod" = "env" ]; then
+    envVariable=$(cat $toolExecDir/$toolCmd.properties | grep "availability:" | cut -d':' -f3)
+    if [ -z $envVariable ]; then
+      echo "Error! Reason: required variable not available."
+      return 2
+    fi 
+  fi
+
 }
 
 function cfgBuffered {
@@ -113,6 +203,9 @@ function invoke {
         export uosmcDEBUG=DEBUG
         shift
   fi
+
+  export LC_CTYPE=en_US.UTF-8
+  export LC_ALL=en_US.UTF-8
 
   export cmd=$1
   shift
@@ -157,11 +250,11 @@ function invoke {
 
   #run the tool
   if [ "$loop" = "true" ]; then
-    $toolsBin/timedExec.sh $interval $count $uosmcDEBUG $toolExecDir/$cmd $1 $2 $3 $4 \
+    $toolsBin/timedExec.sh $interval $count $uosmcDEBUG $toolExecDir/$cmd $@ \
     | perl -ne "$perlBUFFER; print \"$hostname,$cmd,\$_\";" \
     | $toolsBin/addTimestamp.pl $addTimestampBUFFER -timedelimiter=" " -delimiter=$CSVdelimiter
   else
-    $toolExecDir/$cmd $1 $2 $3 $4 \
+    $toolExecDir/$cmd $@ \
     | perl -ne "$perlBUFFER; print \"$hostname,$cmd,\$_\";" \
     | $toolsBin/addTimestamp.pl $addTimestampBUFFER -timedelimiter=" " -delimiter=$CSVdelimiter
   fi
@@ -222,7 +315,7 @@ function testCompatibility {
     return 3
   fi
 
-  #test tool compatibility. The rule is that if header is the same, it ok.
+  #test tool compatibility. The rule is that if header is the same, it's ok.
   headerlines=$(cat $toolExecDir/$toolCmd.rawheader | grep 'cfg:line' | cut -d':' -f3)
   if [ ! -z $headerlines ]; then
     systemHeader=$($toolCmd | sed -n "$headerlines"p)
