@@ -94,7 +94,19 @@ def getCompositeBindingMetrics( compositeList ):
     f = File("/dev/null")
     fos = FileOutputStream(f)
     theInterpreter.setOut(fos)
-    results = displayMetricTables(metric_table)
+    
+    for attempt in range(3):
+        try:
+            results = displayMetricTables(metric_table)
+        except Exception:
+            pass
+        else:
+            break
+    else:
+        print "Error: cannot gather DMS data. Retry failed. Exiting..."
+        disconnect()
+        exit(1)
+    
     theInterpreter.setOut(prev)
     #
     #
@@ -328,7 +340,8 @@ usage: getCompositeBindings.sh """)
     # author
     output.write("""
     ---
-    version 0.1 by ryszard.styczynski@oracle.com, https://github.com/rstyczynski/tools/tree/master/umc""")
+    version 0.1
+    ryszard.styczynski@oracle.com, https://github.com/rstyczynski/tools/tree/master/umc""")
     
     
 #

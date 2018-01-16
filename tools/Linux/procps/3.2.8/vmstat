@@ -2,6 +2,7 @@
 
 delay=$1
 count=$2
+count=$(( $count + 1 ))
 vmstat -n $delay $count | sed $sedBUFFER 's/  */,/g;s/^,//;s/,$//' | sed -n $sedBUFFER '1,2!p'  | sed -n $sedBUFFER '1!p' 
 #Comments
 #1. vmstat -n -> prevents vmstat from printing headers after some number of lines

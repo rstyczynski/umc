@@ -1,0 +1,2 @@
+cfg:command:iostat -k | sed -n '6,6p'
+Device:            tps    kB_read/s    kB_wrtn/s    kB_read    kB_wrtn

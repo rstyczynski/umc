@@ -2,4 +2,5 @@
 
 delay=$1
 count=$2
+count=$(( $count + 1 ))
 iostat -d $delay $count | sed $sedBUFFER -n -e '/^Device:/,/^$/{ /^Device/d; /^$/d; p; }'  | sed $sedBUFFER 's/  */,/g;s/^,//;s/,$//' | sed $sedBUFFER -n '1!p'  | sed $sedBUFFER -n '1!p' 
