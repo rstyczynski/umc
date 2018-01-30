@@ -45,7 +45,7 @@ export java_version_minor=$(echo $java_version | cut -f1 -d'_' | cut -d'.' -f2)
 export java_version_patch=$(echo $java_version | cut -f1 -d'_' | cut -d'.' -f3)
 export java_version_specific=$(echo $java_version | cut -f2 -d'_')
     
-if [ ! -z $WLS_HOME ]; then
+if [ ! -z "$WLS_HOME" ]; then
     #10.3.6.0
     export wls_version=$(cat $FMW_MOME/registry.xml | grep 'component name="WebLogic Server"' | tr ' ' '\n' | grep version | cut -d'=' -f2 | tr -d '"')
     export wls_version_major=$(echo $wls_version | cut -d'.' -f1)

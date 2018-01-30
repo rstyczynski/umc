@@ -1,0 +1,368 @@
+from java.io import File
+from java.io import FileOutputStream
+from java.util import Collections
+import getopt
+import sys
+import os
+import socket
+import datetime
+import time as pytime
+
+#
+#
+# data headers
+#
+sensorList = ArrayList()    # list of sensors to collect data
+sensorMetrics = HashMap()   # hash map with data collected for each sensor
+
+#
+#
+# data headers
+#
+rawColumns=[
+'col1',
+'col1'
+]
+
+csvColumns=[
+'col1',
+'col1'
+]
+
+#
+#
+# system functions
+#
+class Unbuffered(object):
+   def __init__(self, stream):
+       self.stream = stream
+   def write(self, data):
+       self.stream.write(data)
+       self.stream.flush()
+   def writelines(self, datas):
+       self.stream.writelines(datas)
+       self.stream.flush()
+   def __getattr__(self, attr):
+       return getattr(self.stream, attr)
+          
+#
+#
+# plugin related functions
+#
+#
+# getSensorMetrics to copy all data in any internal format to a hashmap
+# 
+def getSensorMetrics( compositeList ):
+    #
+    global output
+    #
+    #
+    #
+    # get data 
+    # block stdout hack from: http://www.javamonamour.org/2011/08/wlst-redirecting-all-output-to-file.html
+    #
+    prev = theInterpreter.getOut()
+    f = File("/dev/null")
+    fos = FileOutputStream(f)
+    theInterpreter.setOut(fos)
+    
+    for attempt in range(3):
+        try:
+            results = XXX_GET_DATA_XXX
+        except Exception:
+            pass
+        else:
+            break
+    else:
+        print "Error: cannot gather sensor data. Retry failed. Exiting..."
+        disconnect()
+        exit(1)
+    
+    theInterpreter.setOut(prev)
+    #
+    #
+    #
+    XXX_PROCESS_RESULTS_XXX
+    #
+    #
+    #
+#
+#
+# dump raw header as reported by sensor API
+#
+def printRawHeader():
+    #	
+    global sortedKeys
+    global timestamp
+    global globalheader
+    global delimiter
+    global output
+    #
+    #
+    #
+    rawData = XXX_GET_RAW_DATA_XXX
+    #
+    #
+    #
+    if not (rawheaderData is None):
+        #
+        rawheader = XXX_GET_RAW_HEADER_XXX
+        #
+    else:
+        print "Error: cannot recognise sensor data structure."
+        exit(4)
+    
+    sortedKeys = ArrayList()
+    sortedKeys.addAll(rawheader)
+    java.util.Collections.sort(sortedKeys, String.CASE_INSENSITIVE_ORDER)
+    
+    pos=len(sortedKeys)
+    for key in sortedKeys:
+       output.write(key)
+       if(pos>1):
+           output.write(delimiter)
+       else:
+           output.write('\n')
+       pos=pos-1
+       
+#	
+#
+# print external CSV header. This function should not be changed.
+# 
+def printHeader():
+    #	
+    global sortedKeys
+    global timestamp
+    global globalheader
+    global delimiter
+    global output
+    #
+    if(timestamp): 
+        output.write(globalheader)
+        output.write(delimiter)
+    pos=len(csvColumns)
+    for key in csvColumns:
+       output.write(key)
+       if(pos>1):
+           output.write(delimiter)
+       else:
+           output.write('\n')
+       pos=pos-1
+#
+#
+# XXX
+#
+def printData():
+    #
+    global compositeList
+    global sortedKeys
+    global timestamp
+    global system
+    global source
+    global delimiter
+    global timedelimiter
+    global now
+    global output
+    #
+    #
+    # loop to get data for each sensor in sensors list
+    #
+    for sensor in seonsorList:
+        #
+        if not (sensorMetrics.get(sensor) is None):
+            for sensor in sensorMetrics.get(sensor).keySet():
+                if(timestamp): 
+                    output.write(now.strftime('%d-%m-%Y' + timedelimiter + '%H:%M:%S' + delimiter +  '%z' + delimiter))
+                    epoch = int(pytime.time())
+                    output.write(str(epoch) + delimiter + system + delimiter + source + delimiter)
+                #
+                pos=len(rawColumns)
+                for key in rawColumns:
+                   output.write(str(sensorMetrics.get(sensor).get(key)))
+                   if(pos>1):
+                       output.write(delimiter)
+                   else:
+                       output.write('\n')
+                   pos=pos-1
+
+#			   
+#
+def dumpSesnsorCSV(sensorListArg=[], header=true):
+    #
+    global now
+    global sensorList
+    global sensorMetrics
+    #
+    now = datetime.datetime.now()
+    getSensorMetrics( sensorListArg )
+
+    if(len(sensorListArg)==0):
+        compositeList=sensorMetrics.keySet()
+    else:
+        compositeList=compositeListArg
+    #
+    if(header): printHeader()
+    printData()
+
+#
+def sesnsorStat(sensors=[], count=10, interval=1):
+    #
+    #
+    # write first line
+    #
+    dumpSensorCSV(sensors, not(noheader))
+    count = count - 1
+    while count >0:
+      java.lang.Thread.sleep(interval * 1000)
+      dumpSensorCSV(sensors,false)
+      count = count - 1
+  
+#
+def usage():
+    
+    # help fusion may inject here anything if necessary
+    # description
+    output.write("""
+Gets Oracle SOA 11g composite dynamic monitoring information and saves execution details about service and references into CSV columnar format.""")
+        
+    # help fusion may inject here anything if necessary
+    # usage
+    output.write("""
+usage: getCompositeBindings.sh """)
+    
+    # help fusion may inject here anything if necessary
+    # arguments
+    output.write("""
+[-s|--server -p|--port] [-u|--url] [-c|--count] [-d|--delay] [--composites] [--timedelimiter] [--delimiter] [--system] [--source] [--globalheader] [--noheader] [--timestamp] [--notbuffered] [-h|--help]""")
+
+    # help fusion may inject here anything if necessary
+    # details
+    output.write("""
+    --count..........number of DMS data collection cycles. default: 10    
+    --delay..........delay between DMS data collection cycles. default: 5
+    --composites.....list of composites to be reported, separated by comma. When ommited all composites will be reported. default: all
+    
+    --system.........source system name. default: hostname
+    --source.........source data name. default: soa_dms
+    --timestamp......prefix metrics data with globalheader and timestamp. default: false
+    
+    --server.........Admin server name used during WLST connect operation. default: AdminServer
+    --port...........TCP port used to connect to Admin server. default: 7001
+    --url............user specified URL. Will be used as provided
+    
+    --notbuffered....flush after each std write. To be used in console mode. default: false
+    --delimiter......delimiter used in CSV to divide columns. default: comma
+  
+    --timedelimiter..delimiter between data and time in datetime column. default: space
+    --globalheader...header used to prefix composite metric names. default: datetime,timezone,timestamp,system,source
+    --noheader.......remove CSV header from output. default=false
+    --printrawheader.print raw header as taken from dms and exit. default=false""")
+      
+    # help fusion may inject here anything if necessary
+    # notes
+    output.write("""
+    Note that:
+    1. script requires Oracle SOA to be installed and up, as it's based on SOA DMS metrics. 
+    2. uses WLST. 
+    3. runs w/o need to authenticate as it's started from domain directory""")
+
+    # help fusion may inject here anything if necessary
+    # author
+    output.write("""
+    ---
+    version 0.1
+    ryszard.styczynski@oracle.com, https://github.com/rstyczynski/tools/tree/master/umc""")
+    
+
+
+#
+#
+#
+now = datetime.datetime.now()
+output = sys.stdout
+
+#
+#
+# default values
+admin_name = 'AdminServer'
+admin_address = 'localhost'
+admin_port = 7001
+admin_protocol = 't3'
+admin_url = admin_protocol + "://" + admin_address + ":" + str(admin_port)
+monitor_composites = []
+monitor_count = 10
+monitor_interval = 5
+delimiter = ','
+timedelimiter = ' '
+system = socket.gethostname()
+source = 'soa_dms'
+globalheader = 'datetime' + delimiter + 'timezone' + delimiter + 'timestamp' + delimiter + 'system' + delimiter + 'source'
+timestamp = false
+notbuffered = false
+noheader=false
+printrawheader=false
+#
+try:
+    opts, args = getopt.getopt( sys.argv[1:], 's:p:u:c:d:h', ['server=','port=','ulr=', 'count=','delay=','composites=','help', 'helpInternal', 'timedelimiter=','delimiter=','system=','source=', 'globalheader=', 'noheader', 'timestamp', 'notbuffered', 'printrawheader'] )
+except getopt.GetoptError, err:
+    print str(err)
+    usage()
+    sys.exit(2)
+	
+for opt, arg in opts:
+    if opt in ('--help'):
+        usage()
+        sys.exit(2)
+    elif opt in ('-s', '--server'):
+        admin_name = arg
+    elif opt in ('-p', '--port'):
+        admin_port = arg
+        admin_url = admin_protocol + "://" + admin_address + ":" + str(admin_port)
+    elif opt in ('-u', '--url'):
+        admin_url = arg
+    elif opt in ('-c', '--count'):
+        monitor_count = int(arg)
+    elif opt in ('-d', '--delay'):
+        monitor_interval = int(arg)
+    elif opt in ('--composites'):
+        monitor_composites = arg.split(',')
+    elif opt in ('--timedelimiter'):
+        timedelimiter = arg
+    elif opt in ('--delimiter'):
+        delimiter = arg
+        globalheader = 'datetime' + delimiter + 'timezone' + delimiter + 'timestamp' + delimiter + 'system' + delimiter + 'source'
+    elif opt in ('--system'):
+        system = arg
+    elif opt in ('--source'):
+        source = arg
+    elif opt in ('--globalheader'):
+        globalheader = arg
+    elif opt in ('--noheader'):
+        noheader = true
+    elif opt in ('--printrawheader'):
+        printrawheader=true
+    elif opt in ('--timestamp'):
+        timestamp = true
+    elif opt in ('--notbuffered'):
+        notbuffered = true
+        output = Unbuffered(sys.stdout)
+    else:
+        usage()
+        sys.exit(2)
+
+#
+connect(url=admin_url, adminServerName=admin_name)
+
+if printrawheader==true:
+    printRawHeader()
+else:
+    compositestat(monitor_composites, monitor_count, monitor_interval)
+
+#
+disconnect()
+exit()
+
+
+
+
+

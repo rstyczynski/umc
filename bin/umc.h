@@ -29,7 +29,7 @@ function usage {
     cat <<EOF
 Universal Metrics Collector. Collects system monitoring data and presents in CSV format.
 
-Usage: umc [-V|test|help] [SENSOR collect delay count] 
+Usage: umc [sensors|test|help|-V] [SENSOR collect delay count] 
 
     Sensor commands:
         SENSOR.......sensor to collect data

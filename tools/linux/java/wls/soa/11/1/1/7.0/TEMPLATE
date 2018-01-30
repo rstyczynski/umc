@@ -1,18 +1,27 @@
 #!/bin/bash
 
-getCompositeBindings_bin="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+getSensorData_wlst=$(basename "$0").wlst
+getSensorData_bin="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 usage=0
 exit=0
 
+function helpFusion {
+    section=$1
+    cat $getSensorData_bin/$getSensorData_wlst | sed -n "/# $section/,/#/p"  | egrep -v '#|output.write' | sed 's/""")//'
+}
+
 function help {
-    cat $getCompositeBindings_bin/wls_soa_bindings_dms.wlst | sed -n '/# description/,/#/p'  | egrep -v '#|output.write' | sed 's/""")//'
-    echo -n $(cat $getCompositeBindings_bin/wls_soa_bindings_dms.wlst | sed -n '/# usage/,/#/p' | egrep -v '#|output.write' | sed 's/""")//' | tr -d '\n')
+    helpFusion("description")
+    
+    echo -n $(helpFusion("usage") | tr -d '\n')
     echo -n ' --domain '
-    cat $getCompositeBindings_bin/wls_soa_bindings_dms.wlst | sed -n '/# arguments/,/#/p' | egrep -v '#|output.write' | sed 's/""")//'
+    
+    helpFusion("arguments")
     echo '    --domain.........SOA domain directory. default: $DOMAIN_HOME'
     echo
-    cat $getCompositeBindings_bin/wls_soa_bindings_dms.wlst | sed -n '/# details/,/#/p' | egrep -v '#|output.write' | sed 's/""")//'
+    
+    helpFusion("details")
     echo '
     As this tool is based on WebLogic, SOA, and UMC environment, it is mandatory:
     1. call setWLSEnv.sh before use
@@ -20,9 +29,9 @@ function help {
     
     Be aware that starting the script takes few seconds as Java based WLST subsystem must be loaded and initialized first.
 '
-    cat $getCompositeBindings_bin/wls_soa_bindings_dms.wlst | sed -n '/# notes/,/#/p' | egrep -v '#|output.write' | sed 's/""")//'
+    helpFusion("notes")
 
-    cat $getCompositeBindings_bin/wls_soa_bindings_dms.wlst | sed -n '/# author/,/#/p' | egrep -v '#|output.write' | sed 's/""")//' 
+    helpFusion("author")
 }
 
 #validate environment
@@ -64,7 +73,7 @@ if [ "$1" = "--help" ]; then
 fi
 
 cd $DOMAIN_HOME
-$BEA_HOME/oracle_common/common/bin/wlst.sh $getCompositeBindings_bin/wls_soa_bindings_dms.wlst $@ | egrep --line-buffered -v 'CLASSPATH|Initializing WebLogic Scripting Tool|Welcome to WebLogic Server Administration Scripting Shell|Type help\(\) for help on available commands|Connecting to|Successfully connected to|Warning: An insecure protocol was used to connect to the|To ensure on-the-wire security|Admin port should be used instead|Disconnected from weblogic server|Exiting WebLogic Scripting Tool|^$' 
+$BEA_HOME/oracle_common/common/bin/wlst.sh $getCompositeBindings_bin/$getSensorData_wlst $@ | egrep --line-buffered -v 'CLASSPATH|Initializing WebLogic Scripting Tool|Welcome to WebLogic Server Administration Scripting Shell|Type help\(\) for help on available commands|Connecting to|Successfully connected to|Warning: An insecure protocol was used to connect to the|To ensure on-the-wire security|Admin port should be used instead|Disconnected from weblogic server|Exiting WebLogic Scripting Tool|^$' 
 cd ..
 
 
