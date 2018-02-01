@@ -1,0 +1,22 @@
+#!/bin/bash
+
+#
+# Taking args w/o getops from: https://gist.github.com/dgoguerra/9206418
+#
+
+while [ "$#" -gt 0 ]
+do  
+    option=$(echo $1 | cut -f1 -d'=')
+    arg=$(echo $1 | cut -f2 -d'=')
+	case "$option" in
+	--metrics_type)
+		export UMC_SENSOR_HEADER="$arg"
+		;;
+	--)
+		break
+		;;
+	# an option argument, continue
+	*)	;;
+	esac
+	shift
+done

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-getSensorData_wlst=$(basename "$0").wlst
-getSensorData_bin="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+getSensorData_wlst='wls_osb_businessservice.wlst'
+getSensorData_bin=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
 usage=0
 exit=0
@@ -12,16 +12,16 @@ function helpFusion {
 }
 
 function help {
-    helpFusion("description")
+    helpFusion 'description'
     
     echo -n $(helpFusion("usage") | tr -d '\n')
     echo -n ' --domain '
     
-    helpFusion("arguments")
+    helpFusion 'arguments'
     echo '    --domain.........SOA domain directory. default: $DOMAIN_HOME'
     echo
     
-    helpFusion("details")
+    helpFusion 'details'
     echo '
     As this tool is based on WebLogic, SOA, and UMC environment, it is mandatory:
     1. call setWLSEnv.sh before use
@@ -29,9 +29,9 @@ function help {
     
     Be aware that starting the script takes few seconds as Java based WLST subsystem must be loaded and initialized first.
 '
-    helpFusion("notes")
+    helpFusion 'notes'
 
-    helpFusion("author")
+    helpFusion 'author'
 }
 
 #validate environment

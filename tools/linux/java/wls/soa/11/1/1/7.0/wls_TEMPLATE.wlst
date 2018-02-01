@@ -1,3 +1,13 @@
+#
+# 
+# script specific imports
+# 
+
+
+#
+# 
+# default imports
+# 
 from java.io import File
 from java.io import FileOutputStream
 from java.util import Collections
@@ -31,7 +41,7 @@ csvColumns=[
 
 #
 #
-# system functions
+# core functions
 #
 class Unbuffered(object):
    def __init__(self, stream):
@@ -44,7 +54,18 @@ class Unbuffered(object):
        self.stream.flush()
    def __getattr__(self, attr):
        return getattr(self.stream, attr)
-          
+
+def debugMsg( msg, place='none' ):
+    if debug:
+        print 'DEBUG:' + str(place) + ':' + str(msg)
+
+def warning(msg):
+    print 'WARNING:' + str(msg)
+
+def error(msg):
+    print 'ERROR:' + str(msg)
+
+
 #
 #
 # plugin related functions
@@ -219,7 +240,8 @@ def sesnsorStat(sensors=[], count=10, interval=1):
   
 #
 def usage():
-    
+    #
+    #
     # help fusion may inject here anything if necessary
     # description
     output.write("""

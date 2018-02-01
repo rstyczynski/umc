@@ -308,8 +308,25 @@ function invoke {
   #hostname
   hostname=$(hostname)
 
+
+  # reset all env settings
+  unset UMC_SENSOR_HEADER
+
+  #configure enronment for tool
+  # e.g. set UMC_SENSOR_HEADER  
+  if [ -f $toolExecDir/$cmd.setenv ]; then
+    . $toolExecDir/$cmd.setenv $@
+  fi
+  
+  # tool header file is available in $UMC_SENSOR_HEADER
+  if [ -z "$UMC_SENSOR_HEADER" ]; then
+    UMC_SENSOR_HEADER_FILE=$cmd.header
+  else
+    UMC_SENSOR_HEADER_FILE=$cmd.header.$UMC_SENSOR_HEADER
+  fi
+  
   #print headers
-  export CSVheader=$(cat $umcRoot/etc/global.header | tr -d '\n'; echo -n $CSVdelimiter;  cat $toolExecDir/$cmd.header | tr -d '\n'; echo )
+  export CSVheader=$(cat $umcRoot/etc/global.header | tr -d '\n'; echo -n $CSVdelimiter;  cat $toolExecDir/$UMC_SENSOR_HEADER_FILE | tr -d '\n'; echo )
   echo $CSVheader
 
   #run the tool

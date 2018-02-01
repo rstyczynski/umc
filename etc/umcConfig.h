@@ -3,20 +3,37 @@
 #---------------------------------------------------------------------------------------
 
 #TODO configure below variables to used Oracle SOA data collectors
-export FMW_MOME=/oracle/fmwhome
-export WLS_HOME=$FMW_MOME/wlserver_10.3/server
-export SOA_HOME=$FMW_MOME/Oracle_SOA1
-export DOMAIN_HOME=/oracle/fmwhome/user_projects/domains/dev_soasuite
+export FMW_HOME=/oracle/fmwhome
+export SOA_HOME=$FMW_HOME/Oracle_SOA1
+export OSB_HOME=$FMW_HOME/Oracle_OSB1
+export WLS_HOME=$FMW_HOME/wlserver_10.3/server
+export DOMAIN_HOME=$FMW_HOME/user_projects/domains/dev_soasuite
 
 #---------------------------------------------------------------------------------------
 #--- platform elements 
 #---------------------------------------------------------------------------------------
 
-if [ ! -z $WLS_HOME ]; then
+if [ ! -z "$WLS_HOME" ]; then
   . $WLS_HOME/bin/setWLSEnv.sh
+  
+  if [ ! -z "$OSB_HOME" ]; then
+    #add osb libraries to classpath
+    for jar in $OSB_HOME/lib/*.jar;do 
+        if [[ ! $CLASSPATH = *"$jar"* ]]; then
+            CLASSPATH=$CLASSPATH:$jar
+        fi
+    done
+    for jar in $OSB_HOME/modules/*.jar; do
+        if [[ ! $CLASSPATH = *"$jar"* ]]; then
+            CLASSPATH=$CLASSPATH:$jar
+        fi
+    done
+  fi
 else
   echo "Note: Oracle SOA not configured. Update umcConfig.h to be able to use SOA related components of the package."
 fi
+
+
 
 #---------------------------------------------------------------------------------------
 #--- reporting
@@ -47,7 +64,7 @@ export java_version_specific=$(echo $java_version | cut -f2 -d'_')
     
 if [ ! -z "$WLS_HOME" ]; then
     #10.3.6.0
-    export wls_version=$(cat $FMW_MOME/registry.xml | grep 'component name="WebLogic Server"' | tr ' ' '\n' | grep version | cut -d'=' -f2 | tr -d '"')
+    export wls_version=$(cat $FMW_HOME/registry.xml | grep 'component name="WebLogic Server"' | tr ' ' '\n' | grep version | cut -d'=' -f2 | tr -d '"')
     export wls_version_major=$(echo $wls_version | cut -d'.' -f1)
     export wls_version_minor=$(echo $wls_version | cut -d'.' -f2)
     export wls_version_patch=$(echo $wls_version | cut -d'.' -f3)
@@ -77,6 +94,7 @@ export netstattcp_layer=$system_type
 export ifconfig_layer=$system_type
 export iostat_layer=$system_type
 export soabindings_layer=soa
+export businessservice_layer=soa
 
 #---------------------------------------------------------------------------------------
 #--- tools packages

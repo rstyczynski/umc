@@ -1,0 +1,544 @@
+#
+# 
+# script specific imports
+# 
+from com.bea.wli.sb.management.configuration import ALSBConfigurationMBean
+from com.bea.wli.sb.management.query import BusinessServiceQuery
+from com.bea.wli.monitoring import ResourceType
+from com.bea.wli.monitoring import MonitoringNotEnabledException
+from com.bea.wli.monitoring import StatisticType
+
+#
+# 
+# default imports
+# 
+from java.io import File
+from java.io import FileOutputStream
+from java.util import Collections
+import getopt
+import sys
+import os
+import socket
+import datetime
+import time as pytime
+
+
+#
+#
+# data headers
+#
+rawColumns_SERVICE=[
+'error-count#count','failover-count#count','failure-rate#count','message-count#count','response-time#average','response-time#max','response-time#min','response-time#sum','severity-all#count','sla-severity-all#count','sla-severity-critical#count','sla-severity-fatal#count','sla-severity-major#count','sla-severity-minor#count','sla-severity-normal#count','sla-severity-warning#count','success-rate#count','throttling-time#average','throttling-time#max','throttling-time#min','throttling-time#sum','uri-offline-count#current','uri-offline-count#initial','wss-error#count'
+]
+
+rawColumns_WEBSERVICE_OPERATION=[
+'elapsed-time#average','elapsed-time#max','elapsed-time#min','elapsed-time#sum','error-count#count','message-count#count'
+]
+
+rawColumns_URI=[
+'error-count#count','message-count#count','response-time#average','response-time#max','response-time#min','response-time#sum','status#current','status#initial'
+]
+
+rawColumns = HashMap()
+rawColumns.put(ResourceType.SERVICE, rawColumns_SERVICE)
+rawColumns.put(ResourceType.WEBSERVICE_OPERATION, rawColumns_WEBSERVICE_OPERATION)
+rawColumns.put(ResourceType.URI, rawColumns_URI)
+
+csvColumns_SERVICE=[
+'service_type','path','name','metrics_type',
+'error-count#count','failover-count#count','failure-rate#count','message-count#count','response-time#average','response-time#max','response-time#min','response-time#sum','severity-all#count','sla-severity-all#count','sla-severity-critical#count','sla-severity-fatal#count','sla-severity-major#count','sla-severity-minor#count','sla-severity-normal#count','sla-severity-warning#count','success-rate#count','throttling-time#average','throttling-time#max','throttling-time#min','throttling-time#sum','uri-offline-count#current','uri-offline-count#initial','wss-error#count'
+]
+
+csvColumns_WEBSERVICE_OPERATION=[
+'service_type','path','name','metrics_type',
+'elapsed-time#average','elapsed-time#max','elapsed-time#min','elapsed-time#sum','error-count#count','message-count#count'
+]
+
+csvColumns_URI=[
+'service_type','path','name','metrics_type',
+'error-count#count','message-count#count','response-time#average','response-time#max','response-time#min','response-time#sum','status#current','status#initial'
+]
+
+csvColumns = HashMap()
+csvColumns.put(ResourceType.SERVICE, csvColumns_SERVICE)
+csvColumns.put(ResourceType.WEBSERVICE_OPERATION, csvColumns_WEBSERVICE_OPERATION)
+csvColumns.put(ResourceType.URI, csvColumns_URI)
+
+#
+#
+# system functions
+#
+class Unbuffered(object):
+   def __init__(self, stream):
+       self.stream = stream
+   def write(self, data):
+       self.stream.write(data)
+       self.stream.flush()
+   def writelines(self, datas):
+       self.stream.writelines(datas)
+       self.stream.flush()
+   def __getattr__(self, attr):
+       return getattr(self.stream, attr)
+
+def debugMsg( msg, place='none' ):
+    global debugFlag
+    #
+    if debugFlag:
+        print 'DEBUG:' + str(place) + ':' + str(msg)
+
+def warning(msg):
+    print 'WARNING:' + str(msg)
+
+def error(msg):
+    print 'ERROR:' + str(msg)
+
+#
+#
+# plugin related functions
+#
+#
+# getSensorMetrics to copy all data in any internal format to a hashmap
+# 
+# Usage: 
+#   data=getSensorMetrics(['TEST1'],ResourceType.SERVICE); print data
+#   data=getSensorMetrics([],ResourceType.SERVICE); print data
+#
+def getSensorMetrics( sensorList , resourceType):
+    #
+    global output
+    #
+    # get data 
+    # block stdout hack from: http://www.javamonamour.org/2011/08/wlst-redirecting-all-output-to-file.html
+    #
+    refList = []
+    prev = theInterpreter.getOut()
+    f = File("/dev/null")
+    fos = FileOutputStream(f)
+    theInterpreter.setOut(fos)
+    #
+    for attempt in range(3):
+        try:
+            domainRuntime()
+            alsbCore = findService(ALSBConfigurationMBean.NAME, ALSBConfigurationMBean.TYPE)
+            #
+            psQuery = BusinessServiceQuery()
+            psQuery.setServiceEnabled(true)
+            #
+            if alsbCore is None: 
+                warning('No references found.')
+            else:
+                allRefs= alsbCore.getRefs(psQuery)
+                #
+                for ref in allRefs.iterator():
+                    typeId = ref.getTypeId()
+                    projectName = ref.getParentNamePart(ref.getFullName())
+                    if (typeId == "BusinessService") and ((projectName in sensorList) or (len(sensorList)==0)):
+                        refList.append(ref)
+                        debugMsg(ref, 'REF')
+        except Exception:
+            theInterpreter.setOut(prev)
+            pass
+        else:
+            break
+    else:
+        theInterpreter.setOut(prev)
+        error('cannot gather sensor data. Retry failed. Exiting...')
+        disconnect()
+        exit(1)
+    #
+    theInterpreter.setOut(prev)
+    #
+    osbSensors=getMBean('DomainServices/ServiceDomain')
+    if osbSensors is None:
+        raise('Not connected.')
+    #    
+    sensorRawStats=osbSensors.getBusinessServiceStatistics(refList,resourceType.value(),'')
+    debugMsg(sensorRawStats)
+    #
+    #
+    # copy data to hashmap
+    #
+    # sensorStats.resurceType.serviceType.parent.name.fiels=value
+    # sensorStats."SERVICE"."BusinessService"."TEST1"."TestService1"."metric"=15
+    #
+    sensorStats = HashMap()
+    #
+    ###>to keep resource data: SERVICE
+    sensorStats.put(resourceType.value(), HashMap())
+    #resurceType = SERVICE
+    #
+    statsKeys = sensorRawStats.keySet()
+    debugMsg(statsKeys, 'statsKeys')
+    for statsKey in statsKeys:
+        serviceRawStats = sensorRawStats.get(statsKey)
+        debugMsg(serviceRawStats, 'sensorRawStats')
+        debugMsg(statsKey, 'statsKey')
+        try:
+            serviceAllStats=serviceRawStats.getAllResourceStatistics()
+            debugMsg(serviceAllStats, 'serviceAllStats')
+            #
+            metricsType, fullName = str(statsKey).split(' ')
+            #metricsType, fullName = BusinessService, TEST2/TriggerSOA
+            #
+            parent, name = str(fullName).split('/')
+            #
+            #parent, name = TEST2, TriggerSOA
+            #
+            # 
+            ###>to keep resource data: BusinessService
+            resourceStats=sensorStats.get(resourceType.value())
+            if not resourceStats.containsKey(metricsType):
+                resourceStats.put(metricsType, HashMap())
+            parentStats=resourceStats.get(metricsType)
+            #
+            #
+            ###>to keep parent/path data: TEST1
+            if not parentStats.containsKey(parent):
+                parentStats.put(parent, HashMap())
+            nameStats=parentStats.get(parent)
+            # 
+            #
+            if not nameStats.containsKey(name):
+                nameStats.put(name, HashMap())
+            fields=nameStats.get(name)
+            fields.put('service_type', resourceType)
+            fields.put('name', name)
+            fields.put('path', parent)
+            fields.put('metrics_type', metricsType)
+            #
+            #
+            for allStats in serviceAllStats:
+                metrics = allStats.getStatistics()
+                for metric in metrics:
+                    metricName=metric.getName()
+                    if metric.getType() == StatisticType.COUNT:
+                        fields.put(metricName + '#count', metric.getCount())
+                    if metric.getType() == StatisticType.INTERVAL:
+                        fields.put(metricName + '#min', metric.getMin())
+                        fields.put(metricName + '#max', metric.getMax())
+                        fields.put(metricName + '#average', metric.getAverage())
+                        fields.put(metricName + '#sum', metric.getSum())
+                    if metric.getType() == StatisticType.STATUS:
+                        fields.put(metricName + '#current', metric.getCurrentStatus())
+                        fields.put(metricName + '#initial', metric.getInitialStatus())
+                    started=true
+            #
+            debugMsg(sensorStats, 'sensorStats')
+            debugMsg(resourceStats, 'resourceStats')
+            debugMsg(parentStats, 'parentStats')
+            debugMsg(nameStats, 'nameStats')
+            debugMsg(fields, 'fields')
+        except MonitoringNotEnabledException:
+            warning('Not enabled')
+            pass
+        except Exception, e:
+            error('Cause: ' + str(e.message))
+    #
+    return(sensorStats)
+
+#
+#
+# dump raw header as reported by sensor API
+#
+# Usage: 
+#   printRawHeader(ResourceType.SERVICE)
+#
+def printRawHeader( sensorStats, resourceType ):
+    #	
+    global sortedKeys
+    global timestamp
+    global globalheader
+    global delimiter
+    global output
+    #
+    # sensorStats.resurceType.serviceType.parent.name
+    # sensorStats."SERVICE"."BusinessService"."TEST1"."TestService1"
+    #            
+    resourceStats=sensorStats.get(resourceType.value())
+    parentStats=resourceStats.get(resourceStats.keySet()[0]) #get first piece of data
+    nameStats=parentStats.get(parentStats.keySet()[0]) #get first piece of data
+    fields=nameStats.get(nameStats.keySet()[0]) #get first piece of data
+    #
+    sortedKeys = ArrayList()
+    sortedKeys.addAll(fields.keySet())
+    java.util.Collections.sort(sortedKeys, String.CASE_INSENSITIVE_ORDER)
+    
+    pos=len(sortedKeys)
+    for key in sortedKeys:
+       output.write(key)
+       if(pos>1):
+           output.write(delimiter)
+       else:
+           output.write('\n')
+       pos=pos-1
+
+#	
+#
+# print external CSV header. This function should not be changed.
+#
+# Usage: 
+#   printHeader(ResourceType.SERVICE)
+#
+def printHeader( resourceType ):
+    #	
+    global sortedKeys
+    global timestamp
+    global globalheader
+    global delimiter
+    global output
+    #
+    if(timestamp): 
+        output.write(globalheader)
+        output.write(delimiter)
+    pos=len(csvColumns.get(resourceType))
+    for key in csvColumns.get(resourceType):
+       output.write(key)
+       if(pos>1):
+           output.write(delimiter)
+       else:
+           output.write('\n')
+       pos=pos-1
+
+#
+#
+# print OSB data for selected projects
+#
+# Usage: 
+#   data=getSensorMetrics([],ResourceType.SERVICE); printData(data, ResourceType.SERVICE)
+#
+#   data=getSensorMetrics(['TEST1'],ResourceType.SERVICE); printData(data, ResourceType.SERVICE)
+#
+def printData( sensorStats, resourceType ):
+    #
+    global compositeList
+    global sortedKeys
+    global timestamp
+    global system
+    global source
+    global delimiter
+    global timedelimiter
+    global now
+    global output
+    #
+    #
+    # loop to get data for each sensor in sensors list
+    #
+    # sensorStats.resurceType.serviceType.parent.name.field=value
+    # sensorStats."SERVICE"."BusinessService"."TEST1"."TestService1"
+    #
+    debugMsg(sensorStats, 'sensorStats')      
+    resourceStats=sensorStats.get(resourceType.value())
+    debugMsg(resourceStats, 'resourceStats')
+    parentStats=resourceStats.get(resourceStats.keySet()[0])
+    debugMsg(parentStats, 'parentStats')
+    projects=parentStats.keySet()
+    for project in projects:
+        nameStats=parentStats.get(project) 
+        debugMsg(nameStats, 'nameStats')
+        sensorList=nameStats.keySet()
+        for sensor in sensorList:
+            #
+            if not (nameStats.get(sensor) is None):
+                for sensor in nameStats.keySet():
+                    if(timestamp): 
+                        output.write(now.strftime('%d-%m-%Y' + timedelimiter + '%H:%M:%S' + delimiter +  '%z' + delimiter))
+                        epoch = int(pytime.time())
+                        output.write(str(epoch) + delimiter + system + delimiter + source + delimiter)
+                    #
+                    pos=len(csvColumns.get(resourceType))
+                    for key in csvColumns.get(resourceType):
+                        #debugMsg(sensor,'sensor')
+                        output.write(str(nameStats.get(sensor).get(key)))
+                        if(pos>1):
+                           output.write(delimiter)
+                        else:
+                           output.write('\n')
+                        pos=pos-1
+
+#			   
+#
+def dumpSensorCSV(resourceType=ResourceType.SERVICE, sensorList=[], header=true ):
+    #
+    global now
+    #
+    now = datetime.datetime.now()
+    #
+    sensorStats = getSensorMetrics(sensorList,resourceType)
+    #
+    if(header): 
+        printHeader(resourceType)
+    printData(sensorStats,resourceType)
+
+#
+def sensorStat(resourceType=ResourceType.SERVICE, sensorList=[], count=10, interval=1):
+    #
+    #
+    # write first line
+    #
+    dumpSensorCSV(resourceType, sensorList, not(noheader))
+    count = count - 1
+    while count >0:
+      java.lang.Thread.sleep(interval * 1000)
+      dumpSensorCSV(resourceType,sensorList,false)
+      count = count - 1
+  
+#
+def usage():
+    
+    # help fusion may inject here anything if necessary
+    # description
+    output.write("""
+Gets Oracle SOA 11g composite dynamic monitoring information and saves execution details about service and references into CSV columnar format.""")
+        
+    # help fusion may inject here anything if necessary
+    # usage
+    output.write("""
+usage: getCompositeBindings.sh """)
+    
+    # help fusion may inject here anything if necessary
+    # arguments
+    output.write("""
+[-s|--server -p|--port] [-u|--url] [-c|--count] [-d|--delay] [--services] [--metrics_type=SERVICE|OPERATION|URI] [--timedelimiter] [--delimiter] [--system] [--source] [--globalheader] [--noheader] [--timestamp] [--notbuffered] [--debug] [-h|--help]""")
+
+    # help fusion may inject here anything if necessary
+    # details
+    output.write("""
+    --count..........number of DMS data collection cycles. default: 10    
+    --delay..........delay between DMS data collection cycles. default: 5
+    --services.......list of composites to be reported, separated by comma. When ommited all composites will be reported. default: all
+    --metrics_type....typ of metrics. One of:SERVICE, OPERATION, URI
+    
+    --system.........source system name. default: hostname
+    --source.........source data name. default: soa_dms
+    --timestamp......prefix metrics data with globalheader and timestamp. default: false
+    
+    --server.........Admin server name used during WLST connect operation. default: AdminServer
+    --port...........TCP port used to connect to Admin server. default: 7001
+    --url............user specified URL. Will be used as provided
+    
+    --notbuffered....flush after each std write. To be used in console mode. default: false
+    --delimiter......delimiter used in CSV to divide columns. default: comma
+    --debug..........print debug information. default: false
+  
+    --timedelimiter..delimiter between data and time in datetime column. default: space
+    --globalheader...header used to prefix composite metric names. default: datetime,timezone,timestamp,system,source
+    --noheader.......remove CSV header from output. default=false
+    --printrawheader.print raw header as taken from dms and exit. default=false""")
+      
+    # help fusion may inject here anything if necessary
+    # notes
+    output.write("""
+    Note that:
+    1. script requires Oracle SOA to be installed and up, as it's based on SOA DMS metrics. 
+    2. uses WLST. 
+    3. runs w/o need to authenticate as it's started from domain directory""")
+
+    # help fusion may inject here anything if necessary
+    # author
+    output.write("""
+    ---
+    version 0.1
+    ryszard.styczynski@oracle.com, https://github.com/rstyczynski/tools/tree/master/umc""")
+    
+
+#
+#
+#
+now = datetime.datetime.now()
+output = sys.stdout
+
+#
+#
+# default values
+admin_name = 'AdminServer'
+admin_address = 'localhost'
+admin_port = 7001
+admin_protocol = 't3'
+admin_url = admin_protocol + "://" + admin_address + ":" + str(admin_port)
+monitor_services = []
+metrics_type=ResourceType.SERVICE
+monitor_count = 10
+monitor_interval = 5
+delimiter = ','
+timedelimiter = ' '
+system = socket.gethostname()
+source = 'soa_dms'
+globalheader = 'datetime' + delimiter + 'timezone' + delimiter + 'timestamp' + delimiter + 'system' + delimiter + 'source'
+timestamp = false
+notbuffered = false
+noheader=false
+printrawheader=false
+debugFlag=false
+
+#
+try:
+    opts, args = getopt.getopt( sys.argv[1:], 's:p:u:c:d:h', ['server=','port=','ulr=', 'count=','delay=','services=', 'metrics_types=', 'help', 'helpInternal', 'timedelimiter=','delimiter=','system=','source=', 'globalheader=', 'noheader', 'timestamp', 'notbuffered', 'printrawheader'] )
+except getopt.GetoptError, err:
+    print str(err)
+    usage()
+    sys.exit(2)
+	
+for opt, arg in opts:
+    if opt in ('--help'):
+        usage()
+        sys.exit(2)
+    elif opt in ('-s', '--server'):
+        admin_name = arg
+    elif opt in ('-p', '--port'):
+        admin_port = arg
+        admin_url = admin_protocol + "://" + admin_address + ":" + str(admin_port)
+    elif opt in ('-u', '--url'):
+        admin_url = arg
+    elif opt in ('-c', '--count'):
+        monitor_count = int(arg)
+    elif opt in ('-d', '--delay'):
+        monitor_interval = int(arg)
+    elif opt in ('--services'):
+        monitor_services = arg.split(delimiter)
+    elif opt in ('--metrics_types'):
+        if arg == 'SERVICE':
+            metrics_type = ResourceType.SERVICE
+        elif arg == 'OPERATION':
+            metrics_type = ResourceType.WEBSERVICE_OPERATION
+        elif arg == 'URI':
+            metrics_type = ResourceType.URI
+        else:
+            usage()
+            sys.exit(2)
+    elif opt in ('--timedelimiter'):
+        timedelimiter = arg
+    elif opt in ('--delimiter'):
+        delimiter = arg
+        globalheader = 'datetime' + delimiter + 'timezone' + delimiter + 'timestamp' + delimiter + 'system' + delimiter + 'source'
+    elif opt in ('--system'):
+        system = arg
+    elif opt in ('--source'):
+        source = arg
+    elif opt in ('--globalheader'):
+        globalheader = arg
+    elif opt in ('--noheader'):
+        noheader = true
+    elif opt in ('--printrawheader'):
+        printrawheader=true
+    elif opt in ('--timestamp'):
+        timestamp = true
+    elif opt in ('--notbuffered'):
+        notbuffered = true
+        output = Unbuffered(sys.stdout)
+    elif opt in ('--debug'):
+        debugFlag = true
+    else:
+        usage()
+        sys.exit(2)
+
+#
+connect(url=admin_url, adminServerName=admin_name)
+
+if printrawheader==true:
+    printRawHeader()
+else:
+    sensorStat(metrics_type, monitor_services, monitor_count, monitor_interval)
+
+#
+disconnect()
+exit()
