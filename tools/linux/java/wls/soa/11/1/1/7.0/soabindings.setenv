@@ -1,0 +1,3 @@
+#!/bin/bash
+
+UMC_SENSOR_HELP="--help"

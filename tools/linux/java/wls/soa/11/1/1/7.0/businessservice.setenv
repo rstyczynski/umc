@@ -20,3 +20,6 @@ do
 	esac
 	shift
 done
+
+UMC_SENSOR_HELP="--help"
+

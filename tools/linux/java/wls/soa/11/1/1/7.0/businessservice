@@ -14,7 +14,7 @@ function helpFusion {
 function help {
     helpFusion 'description'
     
-    echo -n $(helpFusion("usage") | tr -d '\n')
+    echo -n $(helpFusion 'usage' | tr -d '\n')
     echo -n ' --domain '
     
     helpFusion 'arguments'

@@ -76,7 +76,7 @@ function umc {
      
     case $command in
         sensor_help)
-            echo TODO help for sensor
+            invoke $sensor help
         ;;
         
         sensor_collect)
@@ -311,12 +311,21 @@ function invoke {
 
   # reset all env settings
   unset UMC_SENSOR_HEADER
+  unset UMC_SENSOR_HELP
 
   #configure enronment for tool
   # e.g. set UMC_SENSOR_HEADER  
   if [ -f $toolExecDir/$cmd.setenv ]; then
     . $toolExecDir/$cmd.setenv $@
   fi
+
+  #TODO implement proper handler for options
+  echo $interval
+  if [ $interval = "help" ]; then
+    $toolExecDir/$cmd $UMC_SENSOR_HELP
+    return 1
+  fi
+
   
   # tool header file is available in $UMC_SENSOR_HEADER
   if [ -z "$UMC_SENSOR_HEADER" ]; then
