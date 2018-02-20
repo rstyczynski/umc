@@ -288,54 +288,53 @@ function invoke {
     return 2
   fi
 
+  interval=$1
+  count=$2
   #check if looping is requited
   unset loop
   if [ -f $toolExecDir/$cmd.properties ]; then
     loop=$(cat $toolExecDir/$cmd.properties | grep loop | cut -d':' -f2)
+    if [ "$loop" = "external" ]; then
+        shift 2
+    elif [ "$loop" = "options" ]; then
+        shift 2
+        loop_options=$(eval echo $(cat $toolExecDir/$cmd.properties | grep loop | cut -d':' -f3))
+    fi
   fi
 
-  if [ "$loop" = "external" ]; then
-     interval=$1
-     count=$2
-     shift 2
-  elif [ "$loop" = "options" ]; then
-     interval=$1
-     count=$2
-     shift 2
-     loop_options=$(eval echo $(cat $toolExecDir/$cmd.properties | grep loop | cut -d':' -f3))
-  fi
 
   #hostname
   hostname=$(hostname)
 
 
   # reset all env settings
-  unset UMC_SENSOR_HEADER
+  unset UMC_PROBE_META_EXT
   unset UMC_SENSOR_HELP
 
-  #configure enronment for tool
+  #configure enronment for tool. *setenv is a part of binaries. It's not a configuration file.
   # e.g. set UMC_SENSOR_HEADER  
   if [ -f $toolExecDir/$cmd.setenv ]; then
     . $toolExecDir/$cmd.setenv $@
   fi
 
   #TODO implement proper handler for options
-  echo $interval
   if [ $interval = "help" ]; then
     $toolExecDir/$cmd $UMC_SENSOR_HELP
     return 1
   fi
 
-  
-  # tool header file is available in $UMC_SENSOR_HEADER
-  if [ -z "$UMC_SENSOR_HEADER" ]; then
-    UMC_SENSOR_HEADER_FILE=$cmd.header
+  #TODO: move global cfg to YAML
+  #global header prefix
+  export CSVheader=$(cat $umcRoot/etc/global.header | tr -d '\n')
+  CSVheader="$CSVheader$CSVdelimiter"
+  # tool header is available in $cmd.info
+  if [ -z "$UMC_PROBE_META_EXT" ]; then
+    CSVheader="$CSVheader$($toolsBin/getCfg.py $toolExecDir/$cmd.info $cmd.header; echo)"
   else
-    UMC_SENSOR_HEADER_FILE=$cmd.header.$UMC_SENSOR_HEADER
+    CSVheader="$CSVheader$($toolsBin/getCfg.py $toolExecDir/$cmd\_$UMC_PROBE_META_EXT.info $cmd\_$UMC_PROBE_META_EXT.header; echo)"
   fi
   
-  #print headers
-  export CSVheader=$(cat $umcRoot/etc/global.header | tr -d '\n'; echo -n $CSVdelimiter;  cat $toolExecDir/$UMC_SENSOR_HEADER_FILE | tr -d '\n'; echo )
+  #TODO pass header to log director
   echo $CSVheader
 
   #run the tool

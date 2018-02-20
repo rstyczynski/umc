@@ -64,7 +64,7 @@ if [ "$1" = "--help" ]; then
 fi
 
 cd $DOMAIN_HOME
-$BEA_HOME/oracle_common/common/bin/wlst.sh $getCompositeBindings_bin/wls_soa_bindings_dms.wlst $@ | egrep --line-buffered -v 'CLASSPATH|Initializing WebLogic Scripting Tool|Welcome to WebLogic Server Administration Scripting Shell|Type help\(\) for help on available commands|Connecting to|Successfully connected to|Warning: An insecure protocol was used to connect to the|To ensure on-the-wire security|Admin port should be used instead|Disconnected from weblogic server|Exiting WebLogic Scripting Tool|^$' 
+$BEA_HOME/oracle_common/common/bin/wlst.sh $getCompositeBindings_bin/wls_soa_bindings_dms.wlst $@ | egrep --line-buffered -v 'CLASSPATH|Jython scans all the jar files it can find at first startup. Depending on the system, this process may take a few minutes to complete, and WLST may not return a prompt right away.|Initializing WebLogic Scripting Tool|Welcome to WebLogic Server Administration Scripting Shell|Type help\(\) for help on available commands|Connecting to|Successfully connected to|Warning: An insecure protocol was used to connect to the|To ensure on-the-wire security|Admin port should be used instead|Disconnected from weblogic server|Exiting WebLogic Scripting Tool|^$' 
 cd ..
 
 

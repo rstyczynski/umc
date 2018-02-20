@@ -1,0 +1,37 @@
+soabindings:
+    version:    1.0
+    layer:      Middleware
+    system:     SOA
+    subsystem:  Bindings
+    header: >-
+        ServerName,
+        soainfra_composite,soainfra_composite_assembly_member,soainfra_composite_assembly_member_type,soainfra_composite_revision,soainfra_domain,
+        Messages.averageTime,Messages.completed,Messages.throughput,Messages.time,Messages.totalTime,
+        MessagesEvents.count,MessagesEvents.throughput,Messages.count,
+        error.rate,Errors.count,Errors.throughput
+    rawheader:
+        directive:  cfg:soabindings --domain=$DOMAIN_HOME --printrawheader
+        expected: |  
+            error.rate,Errors.count,Errors.throughput,processIncomingMessages.averageTime,processIncomingMessages.completed,processIncomingMessages.throughput,processIncomingMessages.time,processIncomingMessages.totalTime,processIncomingMessagesEvents.count,processIncomingMessagesEvents.throughput,processOutboundMessages.averageTime,processOutboundMessages.completed,processOutboundMessages.throughput,processOutboundMessages.time,processOutboundMessages.totalTime,processOutboundMessagesEvents.count,processOutboundMessagesEvents.throughput,processTotalMessages.count,ServerName,soainfra_composite,soainfra_composite_assembly_member,soainfra_composite_assembly_member_type,soainfra_composite_revision,soainfra_domain
+    metrics:
+        info: 
+            ServerName:
+            soainfra_composite:
+            soainfra_composite_assembly_member:
+            soainfra_composite_assembly_member_type:
+            soainfra_composite_revision:
+            soainfra_domain:
+        message:
+            Messages.averageTime:
+            Messages.completed:
+            Messages.throughput:
+            Messages.time,Messages.totalTime:
+            MessagesEvents.count:
+            MessagesEvents.throughput:
+            Messages.count:
+        errors:
+            error.rate:
+            Errors.count:
+            Errors.throughput:
+
+

@@ -20,7 +20,7 @@ if [ ! -z "$WLS_HOME" ]; then
     #add osb libraries to classpath
     for jar in $OSB_HOME/lib/*.jar;do 
         if [[ ! $CLASSPATH = *"$jar"* ]]; then
-            echo CLASSPATH=$CLASSPATH:$jar
+            CLASSPATH=$CLASSPATH:$jar
         fi
     done
     for jar in $OSB_HOME/modules/*.jar; do

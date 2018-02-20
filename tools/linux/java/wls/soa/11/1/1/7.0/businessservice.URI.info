@@ -1,0 +1,30 @@
+businessservice_URI:
+    version:    1.0
+    layer:      Middleware
+    system:     OSB
+    subsystem:  URI
+    header:
+        service_type,path,name,metrics_type,error-count#count,message-count#count,response-time#average,response-time#max,response-time#min,response-time#sum,status#current,status#initial
+    rawheader:
+        directive:  cfg:businessservice --domain=$DOMAIN_HOME --printrawheader
+        expected: |  
+            error-count#count,failover-count#count,failure-rate#count,message-count#count,response-time#average,response-time#max,response-time#min,response-time#sum,severity-all#count,sla-severity-all#count,sla-severity-critical#count,sla-severity-fatal#count,sla-severity-major#count,sla-severity-minor#count,sla-severity-normal#count,sla-severity-warning#count,success-rate#count,throttling-time#average,throttling-time#max,throttling-time#min,throttling-time#sum,uri-offline-count#current,uri-offline-count#initial,wss-error#count
+    metrics:
+        info: 
+            service_type:
+            path:
+            name:
+            metrics_type:
+        status:
+            status#current:
+            status#initial:
+        general:
+            message-count#count:
+            error-count#count:
+        response:
+            response-time#average:
+            response-time#max:
+            response-time#min:
+            response-time#sum:
+
+
