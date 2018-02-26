@@ -196,18 +196,41 @@ function locateToolExecDir {
 }
 
 
+function cfgInfoFile {
+
+  # reset all env settings
+  unset UMC_PROBE_META_EXT
+  unset UMC_SENSOR_HELP
+  
+  #configure enronment for tool. *setenv is a part of binaries. It's not a configuration file.
+  # e.g. set UMC_SENSOR_HEADER  
+  if [ -f $toolExecDir/$cmd.setenv ]; then
+    . $toolExecDir/$cmd.setenv $@
+  fi
+
+  if [ -z "$UMC_PROBE_META_EXT" ]; then
+    probeInfo="$toolExecDir/$cmd.info"
+    probeYAMLRoot="$cmd"
+  else
+    probeInfo="$toolExecDir/$cmd\_$UMC_PROBE_META_EXT.info"
+    probeYAMLRoot="$cmd\_$UMC_PROBE_META_EXT.header"
+  fi
+  
+}
+
 function assertInvoke {
   toolCmd=$1
 
   unset availabilityMethod 
-  if [ -f $toolExecDir/$toolCmd.properties ]; then 
-    availabilityMethod=$(cat $toolExecDir/$toolCmd.properties | grep "availability:" | cut -d':' -f2)
-  fi
-  if [ -z $availabilityMethod ]; then
-    availabilityMethod=default
-  fi
+  
+  cfgInfoFile 
 
-  if [ "$availabilityMethod" = "default" ]; then
+  availabilityMethod=$($toolsBin/getCfg.py $probeInfo $probeYAMLRoot.availability.method)
+  if [ $? -ne 0 ]; then
+    availabilityMethod="None"
+  fi
+  
+  if [ "$availabilityMethod" = "None" ]; then
     $toolCmd 2>/dev/null 1>/dev/null
     if [ $? -eq 127 ]; then
       echo "Error! Reason: utility not installed."
@@ -216,7 +239,7 @@ function assertInvoke {
   fi
 
   if [ "$availabilityMethod" = "command" ]; then
-    command=$(cat $toolExecDir/$toolCmd.properties | grep "availability:" | cut -d':' -f3)
+    command=$($toolsBin/getCfg.py $probeInfo $probeYAMLRoot.availability.directive)
     $command 2>/dev/null 1>/dev/null
     if [ $? -eq 127 ]; then
       echo "Error! Reason: utility not installed."
@@ -225,7 +248,7 @@ function assertInvoke {
   fi
 
   if [ "$availabilityMethod" = "file" ]; then
-    file=$(cat $toolExecDir/$toolCmd.properties | grep "availability:" | cut -d':' -f3)
+    file=$($toolsBin/getCfg.py $probeInfo $probeYAMLRoot.availability.directive)
     if [ ! -f $file ]; then
       echo "Error! Reason: data file not available."
       return 2
@@ -233,7 +256,7 @@ function assertInvoke {
   fi
 
   if [ "$availabilityMethod" = "env" ]; then
-    envVariable=$(cat $toolExecDir/$toolCmd.properties | grep "availability:" | cut -d':' -f3)
+    envVariable=$($toolsBin/getCfg.py $probeInfo $probeYAMLRoot.availability.directive)
     if [ -z $envVariable ]; then
       echo "Error! Reason: required variable not available."
       return 2
@@ -257,6 +280,23 @@ function cfgBuffered {
    export addTimestampBUFFER="-notbuffered"
    export joinlinesBUFFER="-notbuffered"
   fi
+}
+
+function string2value {
+    optionsString=$1
+
+    for element in $optionsString; do
+      if [[ $element == '$'* ]]; then
+        value=$(eval  echo $element)
+        #echo $element, $value
+        sedCmd="s#$element#$value#g"
+        #echo $sedCmd
+        optionsString=$(echo $optionsString | sed "$sedCmd")
+      fi
+    done
+    
+    echo $optionsString
+
 }
 
 function invoke {
@@ -292,14 +332,21 @@ function invoke {
   count=$2
   #check if looping is requited
   unset loop
-  if [ -f $toolExecDir/$cmd.properties ]; then
-    loop=$(cat $toolExecDir/$cmd.properties | grep loop | cut -d':' -f2)
-    if [ "$loop" = "external" ]; then
+  
+  cfgInfoFile 
+
+  loop=$($toolsBin/getCfg.py $probeInfo $probeYAMLRoot.loop.method)
+  if [ $? -ne 0 ]; then
+    loop="None"
+  fi
+  
+  if [ "$loop" = "external" ]; then
+        shift 2  
+  elif [ "$loop" = "options" ]; then
         shift 2
-    elif [ "$loop" = "options" ]; then
-        shift 2
-        loop_options=$(eval echo $(cat $toolExecDir/$cmd.properties | grep loop | cut -d':' -f3))
-    fi
+        loop_string=$($toolsBin/getCfg.py $probeInfo $probeYAMLRoot.loop.directive)
+        #convert strong to values
+        loop_options=$(string2value "$loop_string")
   fi
 
 
@@ -307,15 +354,15 @@ function invoke {
   hostname=$(hostname)
 
 
-  # reset all env settings
-  unset UMC_PROBE_META_EXT
-  unset UMC_SENSOR_HELP
+#  # reset all env settings
+#  unset UMC_PROBE_META_EXT
+#  unset UMC_SENSOR_HELP
 
-  #configure enronment for tool. *setenv is a part of binaries. It's not a configuration file.
-  # e.g. set UMC_SENSOR_HEADER  
-  if [ -f $toolExecDir/$cmd.setenv ]; then
-    . $toolExecDir/$cmd.setenv $@
-  fi
+#  #configure enronment for tool. *setenv is a part of binaries. It's not a configuration file.
+#  # e.g. set UMC_SENSOR_HEADER  
+#  if [ -f $toolExecDir/$cmd.setenv ]; then
+#    . $toolExecDir/$cmd.setenv $@
+#  fi
 
   #TODO implement proper handler for options
   if [ $interval = "help" ]; then
@@ -327,13 +374,10 @@ function invoke {
   #global header prefix
   export CSVheader=$(cat $umcRoot/etc/global.header | tr -d '\n')
   CSVheader="$CSVheader$CSVdelimiter"
+
   # tool header is available in $cmd.info
-  if [ -z "$UMC_PROBE_META_EXT" ]; then
-    CSVheader="$CSVheader$($toolsBin/getCfg.py $toolExecDir/$cmd.info $cmd.header; echo)"
-  else
-    CSVheader="$CSVheader$($toolsBin/getCfg.py $toolExecDir/$cmd\_$UMC_PROBE_META_EXT.info $cmd\_$UMC_PROBE_META_EXT.header; echo)"
-  fi
-  
+  CSVheader="$CSVheader$($toolsBin/getCfg.py $probeInfo $probeYAMLRoot.header)"
+ 
   #TODO pass header to log director
   echo $CSVheader
 
@@ -353,13 +397,85 @@ function invoke {
   fi
 }
 
+function testCompatibility {
+  toolCmd=$1
+  toolExecDir=$2
+
+  unset thisHeader
+  unset systemHeader
+
+  echo -n Testing compatibility of $2 with $1 ...
+
+  #check if tool is installed on this platform
+  assertInvoke $1
+  if [ $? -eq 2 ]; then
+    return 2
+  fi
+
+  #check if directory is available
+  if [ ! -f $toolExecDir/$toolCmd ]; then
+    echo "Error! Reason: The tool not found in given directory."
+    return 3
+  fi
+  
+    # reset all env settings
+  unset UMC_PROBE_META_EXT
+  unset UMC_SENSOR_HELP
+
+  #configure enronment for tool. *setenv is a part of binaries. It's not a configuration file.
+  # e.g. set UMC_SENSOR_HEADER  
+  if [ -f $toolExecDir/$cmd.setenv ]; then
+    . $toolExecDir/$cmd.setenv $@
+  fi
+
+  # tool header is available in $cmd.info
+  if [ -z "$UMC_PROBE_META_EXT" ]; then
+    rawHeaderDirective=$($toolsBin/getCfg.py $toolExecDir/$cmd.info $cmd.rawheader.directive)
+    rawHeader=$($toolsBin/getCfg.py $toolExecDir/$cmd.info $cmd.rawheader.expected)
+  else
+    rawHeaderDirective=$($toolsBin/getCfg.py $toolExecDir/$cmd\_$UMC_PROBE_META_EXT.info $cmd\_$UMC_PROBE_META_EXT.rawheader.directive)
+    rawHeader=$($toolsBin/getCfg.py $toolExecDir/$cmd\_$UMC_PROBE_META_EXT.info $cmd\_$UMC_PROBE_META_EXT.rawheader.expected)
+  fi
+  
+  if [[ "$rawHeaderDirective" == "line"* ]]; then
+    headerCmd=$(echo $rawHeaderDirective | cut -f2 -d':')
+    systemHeader=$($toolCmd | sed -n "$headerCmd"p)
+    if [ "$rawHeader" = "$systemHeader" ]; then
+      echo OK
+      #reportCompatibilityResult $toolCmd Success $toolExecDir
+      return 0
+    fi
+  fi
+  
+  if [[ "$rawHeaderDirective" == "script"* ]]; then
+    headerCmd=$(echo $rawHeaderDirective | cut -f2 -d':')
+    systemHeader=$(. $toolExecDir/$headerCmd)
+    if [ "$rawHeader" = "$systemHeader" ]; then
+      echo OK
+      #reportCompatibilityResult $toolCmd Success $toolExecDir
+      return 0
+    fi
+  fi
+
+  echo "Error! Reason: different header"
+  echo "Tested system header: $systemHeader"
+  echo "This system header  : $rawHeader"
+  #reportCompatibilityResult $toolCmd Failure $toolExecDir
+  return 1
+}
+
 
 #---
 #--- Test Run
 #---
 function umcTestRun { 
- for cmd in $(availableSensors); do
+ #for cmd in $(availableSensors); do
+ for cmd in vmstat; do
     echo -n $cmd: 
+    
+    locateToolExecDir $cmd
+    testCompatibility $cmd $toolExecDir
+    
     invoke $cmd 1 1 >/dev/null
     if [ $? -eq 0 ]; then
         echo OK

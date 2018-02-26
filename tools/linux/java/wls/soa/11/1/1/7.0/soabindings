@@ -33,7 +33,7 @@ if [ -z $DOMAIN_HOME ]; then
     fi
 
     if [ "$(echo  $1 | cut -d'=' -f1)" = "--domain" ]; then
-        DOMAIN_HOME=$(echo  $1 | cut -d'=' -f2)
+        DOMAIN_HOME=$(echo  $1 | cut -d'=' -f2)        
         if [ ! -f $DOMAIN_HOME/config/config.xml ]; then
             echo "Error: DOMAIN_HOME not provided or pointing to wrong directory."
             usage=1; exit=1

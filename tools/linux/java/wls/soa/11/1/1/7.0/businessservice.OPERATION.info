@@ -6,9 +6,15 @@ businessservice_OPERATION:
     header:
         service_type,path,name,metrics_type,elapsed-time#average,elapsed-time#max,elapsed-time#min,elapsed-time#sum,error-count#count,message-count#count
     rawheader:
-        directive:  cfg:businessservice --domain=$DOMAIN_HOME --printrawheader
+        directive:  script:businessservice --printrawheader
         expected: |  
             error-count#count,failover-count#count,failure-rate#count,message-count#count,response-time#average,response-time#max,response-time#min,response-time#sum,severity-all#count,sla-severity-all#count,sla-severity-critical#count,sla-severity-fatal#count,sla-severity-major#count,sla-severity-minor#count,sla-severity-normal#count,sla-severity-warning#count,success-rate#count,throttling-time#average,throttling-time#max,throttling-time#min,throttling-time#sum,uri-offline-count#current,uri-offline-count#initial,wss-error#count
+    availability:
+        method:     env
+        directive:  WL_HOME
+    loop:
+        method:     options
+        directive:  -c $count -d $interval --noheader
     metrics:
         info:
             service_type:

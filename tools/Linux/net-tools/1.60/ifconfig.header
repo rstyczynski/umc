@@ -1,1 +1,0 @@
-device,RXpackets,RXerrors,RXdropped,RXoverruns,RXframe,TXpackets,TXerrors,TXdropped,TXoverruns,TXcarrier,collisions,txqueuelen,RXbytes,TXbytes

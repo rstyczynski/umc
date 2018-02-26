@@ -10,9 +10,15 @@ soabindings:
         MessagesEvents.count,MessagesEvents.throughput,Messages.count,
         error.rate,Errors.count,Errors.throughput
     rawheader:
-        directive:  cfg:soabindings --domain=$DOMAIN_HOME --printrawheader
+        directive:  script:soabindings --printrawheader
         expected: |  
             error.rate,Errors.count,Errors.throughput,processIncomingMessages.averageTime,processIncomingMessages.completed,processIncomingMessages.throughput,processIncomingMessages.time,processIncomingMessages.totalTime,processIncomingMessagesEvents.count,processIncomingMessagesEvents.throughput,processOutboundMessages.averageTime,processOutboundMessages.completed,processOutboundMessages.throughput,processOutboundMessages.time,processOutboundMessages.totalTime,processOutboundMessagesEvents.count,processOutboundMessagesEvents.throughput,processTotalMessages.count,ServerName,soainfra_composite,soainfra_composite_assembly_member,soainfra_composite_assembly_member_type,soainfra_composite_revision,soainfra_domain
+    availability:
+        method:     env
+        directive:  WL_HOME
+    loop:
+        method:     options
+        directive:  -c $count -d $interval --noheader
     metrics:
         info: 
             ServerName:

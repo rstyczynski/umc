@@ -1,1 +1,0 @@
-error.rate,Errors.count,Errors.throughput,Messages.averageTime,Messages.completed,Messages.throughput,Messages.time,Messages.totalTime,MessagesEvents.count,MessagesEvents.throughput,Messages.count,ServerName,soainfra_composite,soainfra_composite_assembly_member,soainfra_composite_assembly_member_type,soainfra_composite_revision,soainfra_domain

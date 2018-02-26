@@ -11,9 +11,9 @@ vmstat:
         CPUuser,CPUsystem,CPUidle,CPUwaitIO
     rawheader:
         directive:  line:1,2
-        expected: |  
-                procs -----------memory---------- ---swap-- -----io---- -system-- ----cpu----
-                 r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa
+        expected: |-
+            procs -----------memory---------- ---swap-- -----io---- --system-- -----cpu-----
+             r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa st
     metrics:
         Interrupt:
             Interrupts: interrupt
