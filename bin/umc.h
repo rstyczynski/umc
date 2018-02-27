@@ -10,8 +10,11 @@ fi
 
 export toolsBin=$umcRoot/bin
 
-# configure
-. $umcRoot/etc/umcConfig.h
+# configure user params
+. $umcRoot/etc/umc.cfg
+
+# configure global params
+. $toolsBin/global.cfg
 
 # ATTENTION!
 # Do not use buffered!
@@ -66,13 +69,16 @@ EOF
 function umc {
     export ALL_ARGS=$@
     sensor=$1; shift
-    if [ $sensor = help -o $sensor = -V -o $sensor = test -o $sensor = sensors ]; then
-        command=$sensor
-    else
-        command=sensor_$1; shift
-        delay=$1; shift
-        count=$1; shift
-        params=$@
+    
+    if [ $# -ne 0 ]; then
+        if [ $sensor = help -o $sensor = -V -o $sensor = test -o $sensor = sensors ]; then
+            command=$sensor
+        else
+            command=sensor_$1; shift
+            delay=$1; shift
+            count=$1; shift
+            params=$@
+        fi
     fi
      
     case $command in
@@ -486,9 +492,7 @@ function umcTestRun {
     testCompatibility $cmd $toolExecDir
     
     invoke $cmd 1 1 >/dev/null
-    if [ $? -eq 0 ]; then
-        echo OK
-    else
+    if [ $? -ne 0 ]; then
         echo Error
         locateToolExecDir $cmd
     fi

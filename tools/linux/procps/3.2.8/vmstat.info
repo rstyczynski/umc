@@ -8,7 +8,7 @@ vmstat:
         SwapReadBlocks,SwapWriteBlocks,
         IOReadBlocks,IOWriteBlocks,
         Interrupts,ContextSwitches,
-        CPUuser,CPUsystem,CPUidle,CPUwaitIO
+        CPUuser,CPUsystem,CPUidle,CPUwaitIO,CPUVMStolenTime
     rawheader:
         method:     line
         directive:  1,2
@@ -43,4 +43,5 @@ vmstat:
             SwapWriteBlocks:
             IOReadBlocks:
             IOWriteBlocks:
+            CPUVMStolenTime:
 
