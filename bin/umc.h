@@ -64,6 +64,7 @@ EOF
 
 # main wrapper over other methods. User should use this command to use umc
 function umc {
+    export ALL_ARGS=$@
     sensor=$1; shift
     if [ $sensor = help -o $sensor = -V -o $sensor = test -o $sensor = sensors ]; then
         command=$sensor
@@ -205,7 +206,7 @@ function cfgInfoFile {
   #configure enronment for tool. *setenv is a part of binaries. It's not a configuration file.
   # e.g. set UMC_SENSOR_HEADER  
   if [ -f $toolExecDir/$cmd.setenv ]; then
-    . $toolExecDir/$cmd.setenv $@
+    . $toolExecDir/$cmd.setenv $ALL_ARGS
   fi
 
   if [ -z "$UMC_PROBE_META_EXT" ]; then
