@@ -4,9 +4,7 @@
 
 umc_version=0.1
 
-if [ -z "$umcRoot" ]; then
-  export umcRoot="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
-fi
+export umcRoot="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
 
 export toolsBin=$umcRoot/bin
 
@@ -24,7 +22,7 @@ export BUFFERED=no
 
 
 function availableSensors {
-    cat $umcRoot/etc/umcConfig.h | grep "_layer=" | cut -f1 -d'=' | cut -f2 -d' ' | cut -f1 -d'_'
+    cat $umcRoot/bin/global.cfg | grep "_layer=" | cut -f1 -d'=' | cut -f2 -d' ' | cut -f1 -d'_'
 }
 
 function usage {
@@ -68,17 +66,20 @@ EOF
 # main wrapper over other methods. User should use this command to use umc
 function umc {
     export ALL_ARGS=$@
-    sensor=$1; shift
-    
-    if [ $# -ne 0 ]; then
-        if [ $sensor = help -o $sensor = -V -o $sensor = test -o $sensor = sensors ]; then
-            command=$sensor
-        else
-            command=sensor_$1; shift
-            delay=$1; shift
-            count=$1; shift
-            params=$@
-        fi
+
+    if [ -z $1 ]; then
+        sensor=none
+    else
+        sensor=$1; shift
+    fi
+
+    if [ $sensor = help -o $sensor = -V -o $sensor = test -o $sensor = sensors ]; then
+        command=$sensor
+    else
+        command=sensor_$1; shift
+        delay=$1; shift
+        count=$1; shift
+        params=$@
     fi
      
     case $command in
