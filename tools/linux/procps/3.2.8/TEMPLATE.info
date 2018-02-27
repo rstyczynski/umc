@@ -1,0 +1,20 @@
+XXX:
+    version:    1.0
+    layer:      OS
+    subsystem:  kernel
+    header: >-
+        XXX
+    rawheader:
+        method:     
+        directive:  
+        expected:   |-
+            XXX
+    availability:
+        method:     
+        directive:  
+    loop:
+        method:     
+        directive:  
+    metrics:
+        XXX:
+            XXX: XXX

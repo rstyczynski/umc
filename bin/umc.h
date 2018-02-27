@@ -209,11 +209,11 @@ function cfgInfoFile {
   fi
 
   if [ -z "$UMC_PROBE_META_EXT" ]; then
-    probeInfo="$toolExecDir/$cmd.info"
-    probeYAMLRoot="$cmd"
+    probeInfo=$toolExecDir/$cmd.info
+    probeYAMLRoot=$cmd
   else
-    probeInfo="$toolExecDir/$cmd\_$UMC_PROBE_META_EXT.info"
-    probeYAMLRoot="$cmd\_$UMC_PROBE_META_EXT.header"
+    probeInfo=$toolExecDir/$cmd\_$UMC_PROBE_META_EXT.info
+    probeYAMLRoot=$cmd\_$UMC_PROBE_META_EXT
   fi
   
 }
@@ -430,6 +430,7 @@ function testCompatibility {
 
   # tool header is available in $cmd.info
   if [ -z "$UMC_PROBE_META_EXT" ]; then
+    rawHeaderMethod=$($toolsBin/getCfg.py $toolExecDir/$cmd.info $cmd.rawheader.method)
     rawHeaderDirective=$($toolsBin/getCfg.py $toolExecDir/$cmd.info $cmd.rawheader.directive)
     rawHeader=$($toolsBin/getCfg.py $toolExecDir/$cmd.info $cmd.rawheader.expected)
   else
@@ -437,9 +438,8 @@ function testCompatibility {
     rawHeader=$($toolsBin/getCfg.py $toolExecDir/$cmd\_$UMC_PROBE_META_EXT.info $cmd\_$UMC_PROBE_META_EXT.rawheader.expected)
   fi
   
-  if [[ "$rawHeaderDirective" == "line"* ]]; then
-    headerCmd=$(echo $rawHeaderDirective | cut -f2 -d':')
-    systemHeader=$($toolCmd | sed -n "$headerCmd"p)
+  if [[ "$rawHeaderMethod" == "line" ]]; then
+    systemHeader=$($toolCmd | sed -n "$rawHeaderDirective"p)
     if [ "$rawHeader" = "$systemHeader" ]; then
       echo OK
       #reportCompatibilityResult $toolCmd Success $toolExecDir
@@ -447,9 +447,17 @@ function testCompatibility {
     fi
   fi
   
-  if [[ "$rawHeaderDirective" == "script"* ]]; then
-    headerCmd=$(echo $rawHeaderDirective | cut -f2 -d':')
-    systemHeader=$(. $toolExecDir/$headerCmd)
+  if [[ "$rawHeaderMethod" == "command" ]]; then
+    systemHeader=$(eval $rawHeaderDirective)
+    if [ "$rawHeader" = "$systemHeader" ]; then
+      echo OK
+      #reportCompatibilityResult $toolCmd Success $toolExecDir
+      return 0
+    fi
+  fi
+  
+  if [[ "$rawHeaderMethod" == "script" ]]; then
+    systemHeader=$(. $toolExecDir/$rawHeaderDirective)
     if [ "$rawHeader" = "$systemHeader" ]; then
       echo OK
       #reportCompatibilityResult $toolCmd Success $toolExecDir
@@ -458,8 +466,8 @@ function testCompatibility {
   fi
 
   echo "Error! Reason: different header"
-  echo "Tested system header: $systemHeader"
-  echo "This system header  : $rawHeader"
+  echo "Reported header: $systemHeader"
+  echo "Expected header: $rawHeader"
   #reportCompatibilityResult $toolCmd Failure $toolExecDir
   return 1
 }
@@ -469,8 +477,8 @@ function testCompatibility {
 #--- Test Run
 #---
 function umcTestRun { 
- #for cmd in $(availableSensors); do
- for cmd in vmstat; do
+ for cmd in $(availableSensors); do
+ #for cmd in vmstat; do
     echo -n $cmd: 
     
     locateToolExecDir $cmd

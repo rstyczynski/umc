@@ -1,0 +1,26 @@
+iostat:
+    version:    1.0
+    layer:      OS
+    subsystem:  kernel
+    header: >-
+        Device,tps,kB_read/s,kB_wrtn/s,kB_read,kB_wrtn
+    rawheader:
+        method:     command
+        directive:  iostat -k | sed -n '6,6p' | tr -d ':'
+        expected:   "Device            tps    kB_read/s    kB_wrtn/s    kB_read    kB_wrtn"
+    availability:
+        method:     command
+        directive:  iostat -V
+    loop:
+        method:     
+        directive:  
+    metrics:
+        Name:
+            Device:
+        Speed:
+            tps:
+            kB_read/s:
+            kB_wrtn/s:
+        Troughput:
+            kB_read:
+            kB_wrtn:

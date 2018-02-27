@@ -1,2 +1,0 @@
-cfg:command:uptime | cut -d' ' -f6-99 | sed -e 's/[ .0-9]//g'
-users,loadaverage:,,

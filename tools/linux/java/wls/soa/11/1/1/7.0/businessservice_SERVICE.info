@@ -1,0 +1,54 @@
+businessservice_SERVICE:
+    version:    1.0
+    layer:      Middleware
+    system:     OSB
+    subsystem:  Proxy
+    header: >-
+        service_type,path,name,metrics_type,error-count_count,failover-count_count,failure-rate_count,message-count_count,response-time_average,response-time_max,response-time_min,response-time_sum,severity-all_count,sla-severity-all_count,sla-severity-critical_count,sla-severity-fatal_count,sla-severity-major_count,sla-severity-minor_count,sla-severity-normal_count,sla-severity-warning_count,success-rate_count,throttling-time_average,throttling-time_max,throttling-time_min,throttling-time_sum,uri-offline-count_current,uri-offline-count_initial,wss-error_count
+    rawheader:
+        method:     script
+        directive:  businessservice --printrawheader
+        expected: |
+            error-count#count,failover-count#count,failure-rate#count,message-count#count,metrics_type,name,path,response-time#average,response-time#max,response-time#min,response-time#sum,service_type,severity-all#count,sla-severity-all#count,sla-severity-critical#count,sla-severity-fatal#count,sla-severity-major#count,sla-severity-minor#count,sla-severity-normal#count,sla-severity-warning#count,success-rate#count,throttling-time#average,throttling-time#max,throttling-time#min,throttling-time#sum,uri-offline-count#current,uri-offline-count#initial,wss-error#count
+    availability:
+        method:     env
+        directive:  WL_HOME
+    loop:
+        method:     options
+        directive:  -c $count -d $interval --noheader
+    metrics:
+        info:
+            service_type:
+            path:
+            name:
+            metrics_type:
+        general:
+            message-count_count:
+            failover-count_count:
+            error-count_count:
+            wss-error_count:
+        uri-offline:
+            uri-offline-count_current:
+            uri-offline-count_initial:
+        rates:
+            success-rate_count:
+            failure-rate_count:
+        response:
+            response-time_average:
+            response-time_max:
+            response-time_min:
+            response-time_sum:
+        severity:
+            severity-all_count:
+            sla-severity-all_count:
+            sla-severity-critical_count:
+            sla-severity-fatal_count:
+            sla-severity-major_count:
+            sla-severity-minor_count:
+            sla-severity-normal_count:
+            sla-severity-warning_count:
+        throttling:
+            throttling-time_average:
+            throttling-time_max:
+            throttling-time_min:
+            throttling-time_sum:

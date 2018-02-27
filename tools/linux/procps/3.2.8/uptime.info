@@ -1,0 +1,24 @@
+uptime:
+    version:    1.0
+    layer:      OS
+    subsystem:  kernel
+    header: >-
+        users,load1min,load5min,load15min
+    rawheader:
+        method:     command
+        directive:  uptime | cut -d' ' -f6-99 | sed -e 's/[ .0-9:]//g'
+        expected:   |-
+            ,users,loadaverage,,
+    availability:
+        method:     
+        directive:  
+    loop:
+        method:     external
+        directive:  
+    metrics:
+        Users:
+            users:
+        Load:
+            load1min:
+            load5min:
+            load15min:

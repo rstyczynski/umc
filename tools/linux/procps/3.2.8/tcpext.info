@@ -1,0 +1,106 @@
+tcpext:
+    version:    1.0
+    layer:      OS
+    subsystem:  kernel
+    header: >-
+        SyncookiesSent,SyncookiesRecv,SyncookiesFailed,EmbryonicRsts,PruneCalled,RcvPruned,OfoPruned,OutOfWindowIcmps,LockDroppedIcmps,ArpFilter,TW,TWRecycled,TWKilled,PAWSPassive,PAWSActive,PAWSEstab,DelayedACKs,DelayedACKLocked,DelayedACKLost,ListenOverflows,ListenDrops,TCPPrequeued,TCPDirectCopyFromBacklog,TCPDirectCopyFromPrequeue,TCPPrequeueDropped,TCPHPHits,TCPHPHitsToUser,TCPPureAcks,TCPHPAcks,TCPRenoRecovery,TCPSackRecovery,TCPSACKReneging,TCPFACKReorder,TCPSACKReorder,TCPRenoReorder,TCPTSReorder,TCPFullUndo,TCPPartialUndo,TCPDSACKUndo,TCPLossUndo,TCPLoss,TCPLostRetransmit,TCPRenoFailures,TCPSackFailures,TCPLossFailures,TCPFastRetrans,TCPForwardRetrans,TCPSlowStartRetrans,TCPTimeouts,TCPRenoRecoveryFail,TCPSackRecoveryFail,TCPSchedulerFailed,TCPRcvCollapsed,TCPDSACKOldSent,TCPDSACKOfoSent,TCPDSACKRecv,TCPDSACKOfoRecv,TCPAbortOnSyn,TCPAbortOnData,TCPAbortOnClose,TCPAbortOnMemory,TCPAbortOnTimeout,TCPAbortOnLinger,TCPAbortFailed,TCPMemoryPressures,TCPSACKDiscard,TCPDSACKIgnoredOld,TCPDSACKIgnoredNoUndo,TCPSpuriousRTOs,TCPMD5NotFound,TCPMD5Unexpected,TCPSackShifted,TCPSackMerged,TCPSackShiftFallback,TCPBacklogDrop,TCPMinTTLDrop,TCPDeferAcceptDrop,IPReversePathFilter,TCPTimeWaitOverflow
+
+    rawheader:
+        method:     command
+        directive:  cat /proc/net/netstat | grep $grepBUFFER 'TcpExt:' | cut -f2 -d':' | sed $sedBUFFER -e 's/^ //g' -e "s/ /$CSVdelimiter/g" | head -1
+        expected:   |-
+            SyncookiesSent,SyncookiesRecv,SyncookiesFailed,EmbryonicRsts,PruneCalled,RcvPruned,OfoPruned,OutOfWindowIcmps,LockDroppedIcmps,ArpFilter,TW,TWRecycled,TWKilled,PAWSPassive,PAWSActive,PAWSEstab,DelayedACKs,DelayedACKLocked,DelayedACKLost,ListenOverflows,ListenDrops,TCPPrequeued,TCPDirectCopyFromBacklog,TCPDirectCopyFromPrequeue,TCPPrequeueDropped,TCPHPHits,TCPHPHitsToUser,TCPPureAcks,TCPHPAcks,TCPRenoRecovery,TCPSackRecovery,TCPSACKReneging,TCPFACKReorder,TCPSACKReorder,TCPRenoReorder,TCPTSReorder,TCPFullUndo,TCPPartialUndo,TCPDSACKUndo,TCPLossUndo,TCPLoss,TCPLostRetransmit,TCPRenoFailures,TCPSackFailures,TCPLossFailures,TCPFastRetrans,TCPForwardRetrans,TCPSlowStartRetrans,TCPTimeouts,TCPRenoRecoveryFail,TCPSackRecoveryFail,TCPSchedulerFailed,TCPRcvCollapsed,TCPDSACKOldSent,TCPDSACKOfoSent,TCPDSACKRecv,TCPDSACKOfoRecv,TCPAbortOnSyn,TCPAbortOnData,TCPAbortOnClose,TCPAbortOnMemory,TCPAbortOnTimeout,TCPAbortOnLinger,TCPAbortFailed,TCPMemoryPressures,TCPSACKDiscard,TCPDSACKIgnoredOld,TCPDSACKIgnoredNoUndo,TCPSpuriousRTOs,TCPMD5NotFound,TCPMD5Unexpected,TCPSackShifted,TCPSackMerged,TCPSackShiftFallback,TCPBacklogDrop,TCPMinTTLDrop,TCPDeferAcceptDrop,IPReversePathFilter,TCPTimeWaitOverflow
+    availability:
+        method:     file
+        directive:  /proc/net/netstat
+    loop:
+        method:     external
+        directive:  
+    metrics:
+        Syncookies:
+            SyncookiesSent:
+            SyncookiesRecv:
+            SyncookiesFailed:
+        Group1:
+            EmbryonicRsts:
+            PruneCalled:
+            RcvPruned:
+            OfoPruned:
+            OutOfWindowIcmps:
+            LockDroppedIcmps:
+            ArpFilter:
+        TW:
+            TW:
+            TWRecycled:
+            TWKilled:
+        PAWS:
+            PAWSPassive:
+            PAWSActive:
+            PAWSEstab:
+        ACK:
+            DelayedACKs:
+            DelayedACKLocked:
+            DelayedACKLost:
+        Listen:
+            ListenOverflows:
+            ListenDrops:
+        TCP:
+            TCPPrequeued:
+            TCPDirectCopyFromBacklog:
+            TCPDirectCopyFromPrequeue:
+            TCPPrequeueDropped:
+            TCPHPHits:
+            TCPHPHitsToUser:
+            TCPPureAcks:
+            TCPHPAcks:
+            TCPRenoRecovery:
+            TCPSackRecovery:
+            TCPSACKReneging:
+            TCPFACKReorder:
+            TCPSACKReorder:
+            TCPRenoReorder:
+            TCPTSReorder:
+            TCPFullUndo:
+            TCPPartialUndo:
+            TCPDSACKUndo:
+            TCPLossUndo:
+            TCPLoss:
+            TCPLostRetransmit:
+            TCPRenoFailures:
+            TCPSackFailures:
+            TCPLossFailures:
+            TCPFastRetrans:
+            TCPForwardRetrans:
+            TCPSlowStartRetrans:
+            TCPTimeouts:
+            TCPRenoRecoveryFail:
+            TCPSackRecoveryFail:
+            TCPSchedulerFailed:
+            TCPRcvCollapsed:
+            TCPDSACKOldSent:
+            TCPDSACKOfoSent:
+            TCPDSACKRecv:
+            TCPDSACKOfoRecv:
+            TCPAbortOnSyn:
+            TCPAbortOnData:
+            TCPAbortOnClose:
+            TCPAbortOnMemory:
+            TCPAbortOnTimeout:
+            TCPAbortOnLinger:
+            TCPAbortFailed:
+            TCPMemoryPressures:
+            TCPSACKDiscard:
+            TCPDSACKIgnoredOld:
+            TCPDSACKIgnoredNoUndo:
+            TCPSpuriousRTOs:
+            TCPMD5NotFound:
+            TCPMD5Unexpected:
+            TCPSackShifted:
+            TCPSackMerged:
+            TCPSackShiftFallback:
+            TCPBacklogDrop:
+            TCPMinTTLDrop:
+            TCPDeferAcceptDrop:
+        Group1:
+            IPReversePathFilter:
+            TCPTimeWaitOverflow:

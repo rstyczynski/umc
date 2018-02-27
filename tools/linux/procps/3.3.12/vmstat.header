@@ -1,1 +1,0 @@
-ProcessRunQueue,ProcessBlocked,MemSwpd,MemFree,MemBuff,MemCache,SwapReadBlocks,SwapWriteBlocks,IOReadBlocks,IOWriteBlocks,Interrupts,ContextSwitches,CPUuser,CPUsystem,CPUidle,CPUwaitIO,CPUVMStolenTime

@@ -1,0 +1,72 @@
+meminfo:
+    version:    1.0
+    layer:      OS
+    subsystem:  kernel
+    header: >-
+        MemTotal,MemFree,Buffers,Cached,SwapCached,Active,Inactive,Active(anon),Inactive(anon),Active(file),Inactive(file),Unevictable,Mlocked,SwapTotal,SwapFree,Dirty,Writeback,AnonPages,Mapped,Shmem,Slab,SReclaimable,SUnreclaim,KernelStack,PageTables,NFS_Unstable,Bounce,WritebackTmp,CommitLimit,Committed_AS,VmallocTotal,VmallocUsed,VmallocChunk,HardwareCorrupted,AnonHugePages,HugePages_Total,HugePages_Free,HugePages_Rsvd,HugePages_Surp,Hugepagesize,DirectMap4k,DirectMap2M
+    rawheader:
+        method:     command
+        directive:  cat /proc/meminfo | cut -f1 -d':' | tr '\n' ','
+        expected: |-
+            MemTotal,MemFree,Buffers,Cached,SwapCached,Active,Inactive,Active(anon),Inactive(anon),Active(file),Inactive(file),Unevictable,Mlocked,SwapTotal,SwapFree,Dirty,Writeback,AnonPages,Mapped,Shmem,Slab,SReclaimable,SUnreclaim,KernelStack,PageTables,NFS_Unstable,Bounce,WritebackTmp,CommitLimit,Committed_AS,VmallocTotal,VmallocUsed,VmallocChunk,HardwareCorrupted,AnonHugePages,HugePages_Total,HugePages_Free,HugePages_Rsvd,HugePages_Surp,Hugepagesize,DirectMap4k,DirectMap2M,
+    availability:
+        method:     file
+        directive:  /proc/meminfo
+    loop:
+        method:     external
+        directive:  
+    metrics:
+        Memory:
+            MemTotal:
+            MemFree:
+            Buffers:
+            Cached:
+            SwapCached:
+        Active:
+            Active:
+            Inactive:
+            Active(anon):
+            Inactive(anon):
+            Active(file):
+            Inactive(file):
+        Group1:
+            Unevictable:
+            Mlocked:
+        Swap:
+            SwapTotal:
+            SwapFree:
+        Buffers:
+            Dirty:
+            Writeback:
+        Group2:
+            AnonPages:
+            Mapped:
+            Shmem:
+            Slab:
+            SReclaimable:
+            SUnreclaim:
+            KernelStack:
+        TLB:
+            PageTables:
+        Group3:
+            NFS_Unstable:
+            Bounce:
+            WritebackTmp:
+            CommitLimit:
+            Committed_AS:
+        Vmalloc:
+            VmallocTotal:
+            VmallocUsed:
+            VmallocChunk:
+        Group4:
+            HardwareCorrupted:
+        HugePages:
+            AnonHugePages:
+            HugePages_Total:
+            HugePages_Free:
+            HugePages_Rsvd:
+            HugePages_Surp:
+            Hugepagesize:
+        DirectMap:
+            DirectMap4k:
+            DirectMap2M:

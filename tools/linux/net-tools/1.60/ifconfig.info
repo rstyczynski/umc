@@ -9,7 +9,8 @@ ifconfig:
         collisions,txqueuelen,
         RXbytes,TXbytes
     rawheader:
-        directive:  script:ifconfig.validateheader.sh
+        method:     script
+        directive:  ifconfig.validateheader.sh
         expected: |-
             RXpackets:errors:dropped:overruns:frame:TXpackets:errors:dropped:overruns:carrier:collisions:txqueuelen:RXbytes:TXbytes:
     availability:

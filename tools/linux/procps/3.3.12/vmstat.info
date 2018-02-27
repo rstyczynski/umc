@@ -3,21 +3,21 @@ vmstat:
     layer:      OS
     subsystem:  kernel
     header: >-
-        ProcessRunQueue, ProcessBlocked,
-        MemSwpd,MemFree,MemBuff,MemCache,
-        SwapReadBlocks,SwapWriteBlocks,
-        IOReadBlocks,IOWriteBlocks,
-        Interrupts,ContextSwitches,
-        CPUuser,CPUsystem,CPUidle,CPUwaitIO
+       ProcessRunQueue,ProcessBlocked,
+       MemSwpd,MemFree,MemBuff,MemCache,
+       SwapReadBlocks,SwapWriteBlocks,
+       IOReadBlocks,IOWriteBlocks,
+       Interrupts,ContextSwitches,
+       CPUuser,CPUsystem,CPUidle,CPUwaitIO,CPUVMStolenTime
     rawheader:
         method:     line
         directive:  1,2
         expected:   |-
-            procs -----------memory---------- ---swap-- -----io---- --system-- -----cpu-----
-             r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa st
+            procs -----------memory---------- ---swap-- -----io---- -system-- ------cpu-----
+            r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa st
     availability:
-        method:     
-        directive:  
+        method:     command
+        directive:  vmstat -V
     loop:
         method:     
         directive:  
@@ -31,6 +31,7 @@ vmstat:
             CPUsystem: 
             CPUidle: 
             CPUwaitIO: 
+            CPUVMStolenTime:
             ProcessRunQueue: queue
             ProcessBlocked: queue
         Memory:

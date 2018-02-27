@@ -535,7 +535,8 @@ for opt, arg in opts:
 connect(url=admin_url, adminServerName=admin_name)
 
 if printrawheader==true:
-    printRawHeader()
+    sensorStats = getSensorMetrics(monitor_services,resourceType=metrics_type)
+    printRawHeader(sensorStats, resourceType=metrics_type)
 else:
     sensorStat(metrics_type, monitor_services, monitor_count, monitor_interval)
 

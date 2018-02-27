@@ -1,0 +1,31 @@
+free:
+    version:    1.0
+    layer:      OS
+    subsystem:  kernel
+    header: >-
+        total,used,free,shared,buffers,cached,usedNoBuffersCache,freePlusBuffersCache,SwapTotal,SwapUsed,SwapFree
+    rawheader:
+        method:     command
+        directive:  free -k | perl $toolsBin/joinlines.pl -stop "Swap:" | sed -e 's/[0-9]//g' -e 's/\s\s*/,/g'
+        expected:   ",total,used,free,shared,buffers,cached,Mem:,,-/+,buffers/cache:,,Swap:,"
+    availability:
+        method:     
+        directive:  
+    loop:
+        method:     
+        directive:  
+    metrics:
+        Total:
+            total:
+            used:
+            free:
+        Common:
+            shared:
+            buffers:
+            cached:
+            usedNoBuffersCache:
+            freePlusBuffersCache:
+        Swap:
+            SwapTotal:
+            SwapUsed:
+            SwapFree:
