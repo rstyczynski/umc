@@ -80,9 +80,8 @@ mkdir umc; cd umc; curl  -Lk https://api.github.com/repos/rstyczynski/umc/tarbal
 
 Now you are ready to use UMC on Linux.
 
-# First time use
-To configure UMC for Oracle Middleware, edit etc/umc.cfg to provide required information about home and domain directories. Note that home directory is important, as UMC probes are started from domain directory to bypass a need of authentication. 
 
+# First time use
 Before use one have to source umc.h which adds command line functions to Bash environment. Apart of internal things, UMC extends classpath by SOA and OSB jars, and calls Oracle Miffleware environment confguration script.
 
 ```bash
@@ -133,6 +132,29 @@ vmstat free top uptime meminfo tcpext netstattcp ifconfig iostat soabindings bus
 
 It means that this version of UMC is shipped with wide range of Linux probes, and two probes for SOA: one for OSB, and the other one for Composite.
 
+# Configuration of Oracle Middleware
+To configure UMC for Oracle Middleware, edit etc/umc.cfg to provide required information about home and domain directories. Note that prividing WebLogic domain directory is important, as UMC probes are started from domain directory to bypass a need of authentication. 
+
+```bash
+vi umc/etc/umc.cfg
+
+#---------------------------------------------------------------------------------------
+#--- platform location & specific configuration
+#---------------------------------------------------------------------------------------
+
+#TODO configure below variables to used Oracle SOA data collectors
+export FMW_HOME=/oracle/fmwhome
+export SOA_HOME=$FMW_HOME/Oracle_SOA1
+export OSB_HOME=$FMW_HOME/Oracle_OSB1
+export WLS_HOME=$FMW_HOME/wlserver_10.3/server
+export DOMAIN_HOME=$FMW_HOME/user_projects/domains/dev_soasuite
+
+#---------------------------------------------------------------------------------------
+#--- reporting
+#---------------------------------------------------------------------------------------
+
+export CSVdelimiter=,
+```
 
 # Simple test
 Availability of probes does not mean that all of them will work. Packages may be missing in the Operating system or system may be host different version of utilities. To validate compatibility of tools UMC does two things: (a) checks general availability with known OS level technique, and calls the uyility to get returned headers to compare with signature stored in plugin meat-information. UMC 
