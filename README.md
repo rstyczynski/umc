@@ -235,7 +235,7 @@ Notice change from Blk to kB, it's done by regular iostat parameter. Newer versi
 1. Are extra columns allowed in CSV file?
 
 # Author
-ryszard.styczynski@oracle.com, https://github.com/rstyczynski/umc
+rstyczynski@gmail.com, https://github.com/rstyczynski/umc
 
 # License
 I have no idea, but reuse and modify as you wish. The only thing is to add notice about source of the code.
