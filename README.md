@@ -75,7 +75,7 @@ Once located proper version of the wrapper, checks if source tool is available i
 To install UMC in a current directory execute below one-liner. It will create umc directory, get UMC from github, and initialize it.
 
 ```bash
-mkdir umc; cd umc; curl  -Lk https://github.com/rstyczynski/umc/archive/v0.2-beta.tar.gz| tar -xz --strip=1; cd ..; . umc/bin/umc.h
+mkdir umc; cd umc; curl  -Lk https://github.com/rstyczynski/umc/archive/v0.3-beta.tar.gz| tar -xz --strip=1; cd ..; . umc/bin/umc.h
 ```
 
 Now you are ready to use UMC on Linux.
