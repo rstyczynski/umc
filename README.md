@@ -241,7 +241,7 @@ UMC collects data from two sources: OSB, and SOA composite. The former gets data
 ## OSB ##
 OSB provides multiple metrices, and UMC harvets subset of them related to: (a) Proxy service, (b) Business service, and (c) URI. 
 
-Note that before ocllecting data you need to enable monitoring. Once enabled, UMC is able to harvest performence counters.
+Note that before ocllecting data you need to enable monitoring (sbconsole->service->operational settings->monitoring). Once enabled, UMC is able to harvest performence counters.
 
 Data collection from Proxy service:
 
@@ -277,7 +277,7 @@ datetime,timezone,timestamp,system,source,service_type,path,name,metrics_type,er
 ```
 
 ## Composite ##
-SOA provides massive information about internal systems. Out of all possibilities, UMC provides access to composite information, stored in DMS subsystem at 'oracle_soainfra:soainfra_binding_rollup_domain'.
+SOA provides massive information about internal systems. Out of all possibilities, UMC provides access to composite information, stored in DMS subsystem at 'oracle_soainfra:soainfra_binding_rollup_domain'. DMS data collection is enabled by default.
 
 ```bash
 umc soabindings collect 1 2
