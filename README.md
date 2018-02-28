@@ -235,13 +235,13 @@ datetime,timezone,timestamp,system,source,Device,tps,kB_read/s,kB_wrtn/s,kB_read
 
 Notice change from Blk to kB, it's done by regular iostat parameter. Newer versions of iostat report performance using kB. 
 
-# Oracle Middlware
-UMC collects data from two sources: OSB, and SOA composite. The former gets data directly from OSB via wlst, and the latter uses DMS subsystem available in WebLogic. The data is genrally available via wlst, but interfaces and data structures are so different, that UMC adds real value as wrapper around provided API.
+# Oracle Middleware
+UMC collects data from two sources: OSB, and SOA composite. The former gets data directly from OSB via wlst, and the latter uses DMS subsystem available in WebLogic. The data is generally available via wlst, but interfaces and data structures are so different, that UMC adds real value as wrapper around provided API.
 
 ## OSB ##
-OSB provides multiple metrices, and UMC harvets subset of them related to: (a) Proxy service, (b) Business service, and (c) URI. 
+OSB provides multiple metrics, and UMC harvest subset of them related to: (a) Proxy service, (b) Business service, and (c) URI. 
 
-Note that before ocllecting data you need to enable monitoring (sbconsole->service->operational settings->monitoring). Once enabled, UMC is able to harvest performence counters.
+Note that before collecting data you need to enable monitoring (sbconsole->service->operational settings->monitoring). Once enabled, UMC is able to harvest performance counters.
 
 Data collection from Proxy service:
 
@@ -433,4 +433,5 @@ rstyczynski@gmail.com, https://github.com/rstyczynski/umc
 
 # License
 I have no idea, but reuse and modify as you wish. The only thing is to add notice about source of the code.
+
 
