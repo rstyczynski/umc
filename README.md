@@ -71,14 +71,22 @@ $UMCRoot/tools/systat/9.0.4.................. directory with systat package in v
 
 Once located proper version of the wrapper, checks if source tool is available in a system. In case of problems stops with error. In case of success UMC returns data to standard output.
 
-# First time use
-To configure UMC one have to edit etc/umc.cfg to provide required information about middleware. 
+# Installation
+To install UMC in a current directory execute below one-liner. It will create umc directory, get UMC from github, and initialize it.
 
-# Regular use
+```bash
+mkdir umc; cd umc; curl  -Lk https://api.github.com/repos/rstyczynski/umc/tarball/master | tar -xz --strip=1; cd ..; . umc/bin/umc.h
+```
+
+Now you are ready to use UMC on Linux.
+
+# First time use
+To configure UMC for Oracle Middleware, edit etc/umc.cfg to provide required information about home and domain directories. Note that home directory is important, as UMC probes are started from domain directory to bypass a need of authentication. 
+
 Before use one have to source umc.h which adds command line functions to Bash environment. Apart of internal things, UMC extends classpath by SOA and OSB jars, and calls Oracle Miffleware environment confguration script.
 
 ```bash
-. ttMetrics/bin/umc.h 
+. umc/bin/umc.h 
 
 Universal Metrics Collector initialized.
 ```
@@ -112,309 +120,122 @@ Example:
 ```
 
 
-
-
-
 Current version supports regular Linux utilities, OSB, and SOA. 
 
-Universal Collector relays on regular OS utilities, which harvested by a data formatter generates data in desired format. To make metric collection compatible with any version of Unix-like operating system, set of utility specifice scripts is shipped with UMC together with required metainformation. Files are stored in durectory structure containing system tyle and version, what enables UMC to operate flawlesly on different platforms and versions.
-
-Each wrapper oover regular utility is shipped with meta-information file, which cotains description of CSV headersXXX
-
-
-
-OS specific information is stored in directory representing system type, major and minor version. Tool executor verifies if given utility is present in well known directory name. If not error is returned. 
-
-In the case of missing definition for OS being used, it's possible verify if definitions available for other OS releases are compatible with used system. 
-
-To verify compatibility UMC gets headers from executed utility, and compares it with header valid for other OS version. If header is the same, it's assumed that data produced by the utility is compatible as well.
-
-
-
-## vmstat
-Let's take a look at implementation of vmstat on Linux 3.11, which is identical to iostat.
-
-Raw header file is used as a fingerprint of OS specific utility. First line of the file contains information which part of the output should be used as a header to compare. For vmstat it's two first lines, thus directive says: cfg:lines:1,2. Internally it's passed to sed command, which takes first two lines from vmstat output. 
+# List available sensors
+To list available probes, execute umc with sensors paramter
 
 ```bash
-cat $UMCRoot/tools/Linux/3/0/vmstat.rawheader 
-cfg:line:1,2
-procs -----------memory---------- ---swap-- -----io---- -system-- ----cpu----
- r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa
+umc sensors
+
+vmstat free top uptime meminfo tcpext netstattcp ifconfig iostat soabindings businessservice
 ```
 
-Header file is added always on top of CSV data file. Note that apart from vmstat specific information there is always added set of four columns: date, time, hostname, and utility name.
+It means that this version of UMC is shipped with wide range of Linux probes, and two probes for SOA: one for OSB, and the other one for Composite.
+
+
+# Simple test
+Availability of probes does not mean that all of them will work. Packages may be missing in the Operating system or system may be host different version of utilities. To validate compatibility of tools UMC does two things: (a) checks general availability with known OS level technique, and calls the uyility to get returned headers to compare with signature stored in plugin meat-information. UMC 
 
 ```bash
-cat $UMCRoot/tools/Linux/3/0/vmstat.header 
-date,time,system,source,ProcessRunQueue,ProcessBlocked,MemSwpd,MemFree,MemBuff,MemCache,SwapReadBlocks,SwapWriteBlocks,IOReadBlocks,IOWriteBlocks,Interrupts,ContextSwitches,CPUuser,CPUsystem,CPUidle,CPUwaitIO
+umc test
+
+vmstat:Testing compatibility of /home/oracle/ttMetrics/tools/linux/procps/3.2.8 with vmstat ...OK
+free:Testing compatibility of /home/oracle/ttMetrics/tools/linux/procps/3.2.8 with free ...OK
+top:Testing compatibility of /home/oracle/ttMetrics/tools/linux/procps/3.2.8 with top ...OK
+uptime:Testing compatibility of /home/oracle/ttMetrics/tools/linux/procps/3.2.8 with uptime ...OK
+meminfo:Testing compatibility of /home/oracle/ttMetrics/tools/linux/procps/3.2.8 with meminfo ...OK
+tcpext:Testing compatibility of /home/oracle/ttMetrics/tools/linux/procps/3.2.8 with tcpext ...OK
+netstattcp:Testing compatibility of /home/oracle/ttMetrics/tools/linux/net-tools/1.60 with netstattcp ...OK
+ifconfig:Testing compatibility of /home/oracle/ttMetrics/tools/linux/net-tools/1.60 with ifconfig ...OK
+iostat:Testing compatibility of /home/oracle/ttMetrics/tools/linux/systat/9.0.4 with iostat ...OK
+soabindings:Testing compatibility of /home/oracle/ttMetrics/tools/linux/java/wls/soa/11/1/1/7.0 with soabindings ...OK
+businessservice:Testing compatibility of /home/oracle/ttMetrics/tools/linux/java/wls/soa/11/1/1/7.0 with businessservice ...OK
 ```
 
-Finally the vmstat invocation wrapper is an executable script formatting vmstat output to reach desired CSV format matching header in vmstat.header file.
+In case of errors you may need to do three things:
+1. install misising package
+2. configure Oracle Midlleware directories in etc/umc.cfg
+
+In the worst case you need to prepare new version of probe. It's descibed in separated part of the manual.
+
+
+# First data collection
+Now your UMC is ready to do data collection. Let's play with iostat.
+
+Regular iostat returns nice looking, but not very useful for data collection output.
 
 ```bash
-cat $UMCRoot/tools/Linux/3/0/vmstat
-#!/bin/bash
+iostat 1 2
+Linux 2.6.39-400.109.5.el6uek.x86_64 (soabpm-vm.site) 	02/28/2018 	_x86_64_	(4 CPU)
 
-delay=$1
-count=$2
-vmstat -n $delay $count
-| sed $sedBUFFER 's/  */,/g;s/^,//;s/,$//' \
-| sed -n $sedBUFFER '1,2!p'  \
-| sed -n $sedBUFFER '1!p'
-#Comments
-#1. vmstat -n -> prevents vmstat from printing headers after some number of lines
-#2. $sedBuffer - controls adding "-u" option which control buffering. On this stage script should work in unbuffered mode
-#3. s/... -> replace spaces to comma; removes first and last comma  
-#4. sed -n 1,2 -> remove first two lines - header lines
-#5. sed -n 1!p -> remove first line which contains average numbers measured from start of the system
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+           0.56    0.89    0.23    0.02    0.00   98.30
+
+Device:            tps   Blk_read/s   Blk_wrtn/s   Blk_read   Blk_wrtn
+sda               1.14         3.81        18.03    1175630    5561450
+sdc               0.67        14.78         8.97    4559104    2768814
+sdb               1.56         4.53        21.31    1399084    6574529
+dm-0              0.88         2.54        15.64     784530    4825160
+dm-1              0.45         1.25         2.39     384168     736272
+
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+           0.51    0.25    0.25    0.00    0.00   98.99
+
+Device:            tps   Blk_read/s   Blk_wrtn/s   Blk_read   Blk_wrtn
+sda               0.00         0.00         0.00          0          0
+sdc               0.00         0.00         0.00          0          0
+sdb               2.00         0.00        32.00          0         32
+dm-0              0.00         0.00         0.00          0          0
+dm-1              0.00         0.00         0.00          0          0
+
 ```
 
-The output of vmstat is the following:
+With UMC you get less nice, but more ready for automerted processing reposnse
 
 ```bash
-date,time,system,source,ProcessRunQueue,ProcessBlocked,MemSwpd,MemFree,MemBuff,MemCache,SwapReadBlocks,SwapWriteBlocks,IOReadBlocks,IOWriteBlocks,Interrupts,ContextSwitches,CPUuser,CPUsystem,CPUidle,CPUwaitIO
-2017-11-07,15:09:30,ubuntu,vmstat,0,0,0,518408,32812,125248,0,0,0,0,40,100,3,1,96,0
-2017-11-07,15:09:30,ubuntu,vmstat,1,0,0,518456,32812,125248,0,0,0,0,28,74,0,0,100,0
-2017-11-07,15:09:32,ubuntu,vmstat,0,0,0,518440,32812,125248,0,0,0,0,32,79,0,1,99,0
-2017-11-07,15:09:32,ubuntu,vmstat,0,0,0,518440,32812,125248,0,0,0,0,23,68,0,1,99,0
+umc iostat collect 1 2
+
+datetime,timezone,timestamp,system,source,Device,tps,kB_read/s,kB_wrtn/s,kB_read,kB_wrtn
+2018-02-28 00:30:22,-0800,1519806622,soabpm-vm.site,iostat,sdb,1.56,2.27,10.65,699558,3288220
+2018-02-28 00:30:22,-0800,1519806622,soabpm-vm.site,iostat,dm-0,0.88,1.27,7.82,392265,2412892
+2018-02-28 00:30:22,-0800,1519806622,soabpm-vm.site,iostat,dm-1,0.45,0.62,1.19,192084,368136
+2018-02-28 00:30:22,-0800,1519806623,soabpm-vm.site,iostat,sda,0.00,0.00,0.00,0,0
+2018-02-28 00:30:22,-0800,1519806623,soabpm-vm.site,iostat,sdc,3.00,0.00,36.00,0,36
+2018-02-28 00:30:22,-0800,1519806623,soabpm-vm.site,iostat,sdb,2.00,0.00,16.00,0,16
+2018-02-28 00:30:22,-0800,1519806623,soabpm-vm.site,iostat,dm-0,0.00,0.00,0.00,0,0
+2018-02-28 00:30:22,-0800,1519806623,soabpm-vm.site,iostat,dm-1,0.00,0.00,0.00,0,0
+2018-02-28 00:30:24,-0800,1519806624,soabpm-vm.site,iostat,sda,0.00,0.00,0.00,0,0
+2018-02-28 00:30:24,-0800,1519806624,soabpm-vm.site,iostat,sdc,0.00,0.00,0.00,0,0
+2018-02-28 00:30:24,-0800,1519806624,soabpm-vm.site,iostat,sdb,2.00,0.00,4.00,0,4
+2018-02-28 00:30:24,-0800,1519806624,soabpm-vm.site,iostat,dm-0,0.00,0.00,0.00,0,0
+2018-02-28 00:30:24,-0800,1519806624,soabpm-vm.site,iostat,dm-1,0.00,0.00,0.00,0,0
 ```
 
-## ifconfig
-Definition of ifconfig utility is more complex, as there is no simple header line and output generated by ifconfig is multiline per single interface.
+Notice change from Blk to kB, it's done by regular iostat parameter. Newer versions of iostat report performance using kB. 
 
-```bash
-ifconfig 
-eth0      Link encap:Ethernet  HWaddr 00:1c:42:ec:f5:ce  
-          inet addr:10.37.129.5  Bcast:10.37.129.255  Mask:255.255.255.0
-          inet6 addr: fdb2:2c26:f4e4:1:9dfb:894e:26ce:3d0/64 Scope:Global
-          inet6 addr: fdb2:2c26:f4e4:1:21c:42ff:feec:f5ce/64 Scope:Global
-          inet6 addr: fe80::21c:42ff:feec:f5ce/64 Scope:Link
-          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
-          RX packets:152755 errors:0 dropped:0 overruns:0 frame:0
-          TX packets:143897 errors:0 dropped:0 overruns:0 carrier:0
-          collisions:0 txqueuelen:1000 
-          RX bytes:10583719 (10.5 MB)  TX bytes:16034794 (16.0 MB)
-```
-
-Raw header, used to verify compatibility of ifconfig utility, is based on a script as it's not possible to just take some lines as it was doable with vmstat and iostat. Property file specifying raw header instructs that the script should be used, which will extract header information from executed ifconfig utility to produce output compared with expected header stored in second line.
-
-```bash
-cat $UMCRoot/tools/Linux/3/0/ifconfig.rawheader 
-cfg:script:ifconfig.validateheader.sh
-RXpackets:errors:dropped:overruns:frame:TXpackets:errors:dropped:overruns:carrier:collisions:txqueuelen:RXbytes:TXbytes:
-```
-
-Raw header extraction script extracts rows used by CVS data extraction logic, but instead of using numbers from the lines, uses ASCII characters. It's a perfect raw header fingerprint proving compatibility of ifconfig utility. 
-
-```bash
-cat $UMCRoot/tools/Linux/3/0/ifconfig.validateheader.sh 
-#!/usr/bin/bash
-
-ifname=$(ifconfig | cut -f1 -d' '| head -1)
-ifconfig $ifname | grep -i X | sed 's/[0-9]//g' | sed 's/(. \w*B)//g' | tr -d ' ' | tr -d '\n'
-
-Header file for ifconfig output looks following:
-
-cat $UMCRoot/tools/Linux/3/0/ifconfig.header 
-date,time,system,source,device,RXpackets,RXerrors,RXdropped,RXoverruns,RXframe,TXpackets,TXerrors,TXdropped,TXoverruns,TXcarrier,collisions,txqueuelen,RXbytes,TXbytes
-
-Finally the ifconfig invocation wrapper is an executable script formatting vmstat output to reach desired CSV format matching header in vmstat.header file.
-
-cat $UMCRoot/tools/Linux/3/0/ifconfig
-#!/bin/bash
-
-#get interface name
-netlist=$1
-
-#if no parameter is specified get data from all interfeces
-if [ -z $netlist ]; then
-  netlist=ALL
-fi
-
-#extract interface names
-if [ "$netlist" = "ALL" ]; then 
-  netlist=$(ifconfig | grep "^[a-zA-Z]" | cut -d ' ' -f1)
-fi
-
-#collect data for each interface
-for net in $netlist; do 
-   ifconfig $net \
-   | grep -i X \
-   | perl $toolsBin/joinlines.pl -stop "RX bytes" \
-   | sed $sedBUFFER 's/[a-zA-Z:]//g' \
-   | sed $sedBUFFER 's/  */,/g' \
-   | cut -d',' -f2-6,8-13,14-15,18,21  \
-   | perl -ne "$perlBUFFER; print \"$net,\$_\";"
-#1. grep -i X -> get rows with "x". It's set of rows in are of our interest
-#2. joinlines.pl -> join multiline information into one line. Note that on a third line there is "RX bytes" byte sequence
-#3. $sedBUFFER -> control buffering of data. Not used.
-#4. s/[a-zA-Z:]//g -> remove all non letters and semi colons
-#5. s/  */,/g -> replace spaces with comma
-#6. -f2-6,8-13,14-15,18,21 -> selects columns with information
-#7. print interface information at beginning of each line.
-done
-```
-
-The output of ifconfig is the following:
-
-```bash
-invoke ifconfig 1 5 eth0
-date,time,system,source,device,RXpackets,RXerrors,RXdropped,RXoverruns,RXframe,TXpackets,TXerrors,TXdropped,TXoverruns,TXcarrier,collisions,txqueuelen,RXbytes,TXbytes
-2017-11-07,16:00:22,ubuntu,ifconfig,eth0,154267,0,0,0,0,144759,0,0,0,0,,0,1000,10711689,16167120
-2017-11-07,16:00:22,ubuntu,ifconfig,eth0,154270,0,0,0,0,144762,0,0,0,0,,0,1000,10711887,16167614
-2017-11-07,16:00:24,ubuntu,ifconfig,eth0,154273,0,0,0,0,144766,0,0,0,0,,0,1000,10712085,16168182
-2017-11-07,16:00:24,ubuntu,ifconfig,eth0,154276,0,0,0,0,144768,0,0,0,0,,0,1000,10712283,16168410
-2017-11-07,16:00:26,ubuntu,ifconfig,eth0,154279,0,0,0,0,144771,0,0,0,0,,0,1000,10712481,16168808
-```
-
-By default ifconfig does not work in a loop, just presenting current data per invocation. That's correct, and the invocation loop is a special option of each utility, which is recognized and controlled by UMC. Special requriments of each utility are stored in $cmd.properties file. In case of ifconfig the file informs invocation logic that looped invocation must be handled by UMC.
-
-```bash
-cat $UMCRoot/tools/Linux/3/0/ifconfig.properties 
-loop:external
-```
-
-## invoke
-Heart of the UMC is an invoke function which takes parameters of utility name, optional debug flag, interval and number of executions. Invoke decodes operating system version, finds proper script directory, controls buffering, checks of utility is installed on the system, controls continuous run, and adds header, timestamp, and hostname.
-
-```bash
-function invoke {
-
-  unset DEBUG
-  if [ "$1" = "DEBUG" ]; then
-        export UMCDEBUG=DEBUG
-        shift
-  fi
-
-  export cmd=$1
-  shift
-
-  #setBuffered or not buffered operation
-  cfgBuffered
-
-  #decode current system version 
-  decodeVersion
-
-  #locate tool definition directory
-  locateToolExecDir $cmd
-  if [ $? -eq 3 ]; then
-    return 3
-  fi
-
-  #check if tool is installed on this platform
-  assertInvoke $cmd
-  if [ $? -eq 2 ]; then
-    return 2
-  fi
-
-  #check if looping is requited
-  if [ -f $toolExecDir/$cmd.properties ]; then
-    loop=$(cat $toolExecDir/$cmd.properties | grep loop | cut -d':' -f2)
-  fi
-
-  if [ "$loop" = "external" ]; then
-     loop=true
-     interval=$1
-     count=$2
-     shift 2
-  fi
-
-  #hostname
-  hostname=$(hostname)
-
-  #print headers
-  cat $toolExecDir/$cmd.header
-
-  #run the tool
-  if [ "$loop" = "true" ]; then
-    $toolsBin/timedExec.sh $interval $count $UMCDEBUG $toolExecDir/$cmd $1 $2 $3 $4 \
-    | perl -ne "$perlBUFFER; print \"$hostname,$cmd,\$_\";" \
-    | $toolsBin/addTimestamp.pl $addTimestampBUFFER
-  else
-    $toolExecDir/$cmd $1 $2 $3 $4 \
-    | perl -ne "$perlBUFFER; print \"$hostname,$cmd,\$_\";" \
-    | $toolsBin/addTimestamp.pl $addTimestampBUFFER
-  fi
-}
-```
-
-## locateCompatibleVersions
-For operating systems with not compatible scripts it's possible to execute header tests for all known minor versions for the same major version. Below scripts shows list of compatible versions using three utilities: vmstat, iostat, and ifconfig.
-
-Once executed automatically goes trough all versions, and generates summary report.
-
-```bash
-locateCompatibleVersions
-Locating compatible wrappers for iostat ...
-  - Testing compatibility of /home/ubuntu/ttMetrics/tools/Linux/3/0 with iostat ...OK
-  - Testing compatibility of /home/ubuntu/ttMetrics/tools/Linux/3/11 with iostat ...Error! Reason: The tool not found in given directory.
-  - Testing compatibility of /home/ubuntu/ttMetrics/tools/Linux/3/11.delete with iostat ...OK
-  - Testing compatibility of /home/ubuntu/ttMetrics/tools/Linux/3/11x with iostat ...OK
-  - Testing compatibility of /home/ubuntu/ttMetrics/tools/Linux/3/5 with iostat ...OK
-Locating compatible wrappers for vmstat ...
-  - Testing compatibility of /home/ubuntu/ttMetrics/tools/Linux/3/0 with vmstat ...OK
-  - Testing compatibility of /home/ubuntu/ttMetrics/tools/Linux/3/11 with vmstat ...Error! Reason: The tool not found in given directory.
-  - Testing compatibility of /home/ubuntu/ttMetrics/tools/Linux/3/11.delete with vmstat ...OK
-  - Testing compatibility of /home/ubuntu/ttMetrics/tools/Linux/3/11x with vmstat ...OK
-  - Testing compatibility of /home/ubuntu/ttMetrics/tools/Linux/3/5 with vmstat ...OK
-Locating compatible wrappers for ifconfig ...
-  - Testing compatibility of /home/ubuntu/ttMetrics/tools/Linux/3/0 with ifconfig ...OK
-  - Testing compatibility of /home/ubuntu/ttMetrics/tools/Linux/3/11 with ifconfig ...Error! Reason: The tool not found in given directory.
-  - Testing compatibility of /home/ubuntu/ttMetrics/tools/Linux/3/11.delete with ifconfig ...Error! Reason: The tool not found in given directory.
-  - Testing compatibility of /home/ubuntu/ttMetrics/tools/Linux/3/11x with ifconfig ...OK
-  - Testing compatibility of /home/ubuntu/ttMetrics/tools/Linux/3/5 with ifconfig ...OK
-
-Summary of compatible versions.
-      3 /home/ubuntu/ttMetrics/tools/Linux/3/5
-      3 /home/ubuntu/ttMetrics/tools/Linux/3/11x
-      3 /home/ubuntu/ttMetrics/tools/Linux/3/0
-```
-
-Details of the function are presented below.
-
-```bash
-function locateCompatibleVersions {
- tools=$1
-
- if [ -z $tools ]; then
-  tools="iostat vmstat ifconfig"
- fi
-
- rm -f $UMCRoot/tools/$system_type/$version_major/$version_minor/*.Success
- rm -f $UMCRoot/tools/$system_type/$version_major/$version_minor/*.Failure
- 
- toolCnt=0
- for toolCmd in $tools; do
-   locateCompatilbleExecDir $toolCmd
-   ((toolCnt ++))
- done
-
- echo
- echo Summary of compatible versions. 
- cat $UMCRoot/tools/$system_type/$version_major/$version_minor/*.Success | sort | uniq -c | sort -n -r | egrep "^\s+$toolCnt"
-}
-```
-
-# Regression
-1. fix locateCompatibleVersions after moving tools to utility directory
 
 # TODO Tools
 1. Ping
 2. Add node column to identify process e.g. WebLogic instance on a host
 3. Add long timestamp (raw long value of Linux time) as a generic column
 4. Add version information: os, utils
+5. switch iostat into extended mode
 
 # TODO General
 1. Automatically execute test for given OS with '0' level utilities. Once executed stores information in directory that test was passed or failed. Invoke should use this information.
 2. Invoke performs header test upon first run to write result to files. During next runs it's verified if test was passed or not.
 3. Add "procps version" e.g. free -V to validate comatibility of tools and scripts
+4. Recognize data formatting returned by OS tools. Is decimal delimiter a dot or comma?
+5. Add data description to fields: scale min, max, logarithmic, delta, data label as e.g. kB, MB/s
+6. Add data correlation information
+7. Add data hierarchy information to fields e.g. ProcessRunQueue -> cpu.ProcessRunQueue
 
 # Open issues
 1. Are extra columns allowed in CSV file?
-2. Recognize data formatting returned by OS tools. Is decimal delimiter a dot or comma?
-3. Add data description to fields: scale min, max, logarithmic, delta, data label as e.g. kB, MB/s
-4. Add data correlation information
-5. Add data hierarchy information to fields e.g. ProcessRunQueue -> cpu.ProcessRunQueue
 
+# Author
+ryszard.styczynski@oracle.com, https://github.com/rstyczynski/umc
 
+# License
+I have no idea, but reuse and modify as you wish. The only thing is to add notice about source of the code.

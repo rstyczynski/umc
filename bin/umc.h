@@ -2,7 +2,7 @@
 #--- Library
 #---
 
-umc_version=0.1
+umc_version=0.2
 
 export umcRoot="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
 
@@ -59,7 +59,7 @@ EOF
 function version {
     cat <<EOF
 umc version $umc_version
-ryszard.styczynski@oracle.com, https://github.com/rstyczynski/tools/tree/master/umc
+rstyczynski@gmail.com, https://github.com/rstyczynski/umc
 EOF
 }
 
