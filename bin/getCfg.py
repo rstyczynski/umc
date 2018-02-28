@@ -8,10 +8,13 @@ yamlFile=sys.argv[1]
 getData=sys.argv[2]
 
 
-with open(yamlFile, 'r') as yamlDoc:
-    doc = yaml.load(yamlDoc)
+try:
+    with open(yamlFile, 'r') as yamlDoc:
+        doc = yaml.load(yamlDoc)
 
-finalDoc=doc
-for cfgElement in getData.split('.'):
-    finalDoc = finalDoc[cfgElement]
-print finalDoc
+    finalDoc=doc
+    for cfgElement in getData.split('.'):
+        finalDoc = finalDoc[cfgElement]
+    print finalDoc
+except IOError:
+    pass

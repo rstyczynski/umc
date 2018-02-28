@@ -177,6 +177,7 @@ function locateToolExecDir {
   cmd_package=$(eval "echo $(echo \$$cmd\_package)")
   
   unset toolExecDir
+  
   directories=$(getDirectories $cmd_layer);
   for directory in $directories; do
     if [ -f $directory/$cmd ]; then
@@ -189,7 +190,6 @@ function locateToolExecDir {
             return 0
         fi
     fi
-    
   done
   
   if [ -z $toolExecDir ]; then
@@ -223,7 +223,6 @@ function cfgInfoFile {
     probeInfo=$toolExecDir/$cmd\_$UMC_PROBE_META_EXT.info
     probeYAMLRoot=$cmd\_$UMC_PROBE_META_EXT
   fi
-  
 }
 
 function assertInvoke {
