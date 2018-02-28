@@ -75,11 +75,10 @@ Once located proper version of the wrapper, checks if source tool is available i
 To install UMC in a current directory execute below one-liner. It will create umc directory, get UMC from github, and initialize it.
 
 ```bash
-mkdir umc; cd umc; curl  -Lk https://api.github.com/repos/rstyczynski/umc/tarball/master | tar -xz --strip=1; cd ..; . umc/bin/umc.h
+mkdir umc; cd umc; curl  -Lk https://github.com/rstyczynski/umc/archive/v0.2-beta.tar.gz| tar -xz --strip=1; cd ..; . umc/bin/umc.h
 ```
 
 Now you are ready to use UMC on Linux.
-
 
 # First time use
 Before use one have to source umc.h which adds command line functions to Bash environment. Apart of internal things, UMC extends classpath by SOA and OSB jars, and calls Oracle Middleware environment configuration script.
