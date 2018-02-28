@@ -235,6 +235,99 @@ datetime,timezone,timestamp,system,source,Device,tps,kB_read/s,kB_wrtn/s,kB_read
 
 Notice change from Blk to kB, it's done by regular iostat parameter. Newer versions of iostat report performance using kB. 
 
+# Oracle Middlware
+UMC collects data from two sources: OSB, and SOA composite. The former gets data directly from OSB via wlst, and the latter uses DMS subsystem available in WebLogic. The data is genrally available via wlst, but interfaces and data structures are so different, that UMC adds real value as wrapper around provided API.
+
+## OSB ##
+OSB provides multiple metrices, and UMC harvets subset of them related to: (a) Proxy service, (b) Business service, and (c) URI. 
+
+Note that before ocllecting data you need to enable monitoring. Once enabled, UMC is able to harvest performence counters.
+
+Data collection from Proxy service:
+
+```bash
+umc businessservice collect 1 2 --metrics_type=SERVICE
+datetime,timezone,timestamp,system,source,service_type,path,name,metrics_type,error-count_count,failover-count_count,failure-rate_count,message-count_count,response-time_average,response-time_max,response-time_min,response-time_sum,severity-all_count,sla-severity-all_count,sla-severity-critical_count,sla-severity-fatal_count,sla-severity-major_count,sla-severity-minor_count,sla-severity-normal_count,sla-severity-warning_count,success-rate_count,throttling-time_average,throttling-time_max,throttling-time_min,throttling-time_sum,uri-offline-count_current,uri-offline-count_initial,wss-error_count
+2018-02-28 04:46:32,-0800,1519821992,soabpm-vm.site,businessservice,SERVICE,TEST2,TriggerSOA,BusinessService,0,0,0,0,0,0,0,0.0,0,0,0,0,0,0,0,0,100,0,0,0,0.0,0,0,0
+2018-02-28 04:46:32,-0800,1519821992,soabpm-vm.site,businessservice,SERVICE,TEST1,TestService1,BusinessService,0,0,0,0,0,0,0,0.0,0,0,0,0,0,0,0,0,100,0,0,0,0.0,0,0,0
+2018-02-28 04:46:32,-0800,1519821993,soabpm-vm.site,businessservice,SERVICE,TEST2,TriggerSOA,BusinessService,0,0,0,0,0,0,0,0.0,0,0,0,0,0,0,0,0,100,0,0,0,0.0,0,0,0
+2018-02-28 04:46:32,-0800,1519821993,soabpm-vm.site,businessservice,SERVICE,TEST1,TestService1,BusinessService,0,0,0,0,0,0,0,0.0,0,0,0,0,0,0,0,0,100,0,0,0,0.0,0,0,0
+```
+
+Data collection from Business service:
+
+```bash
+umc businessservice collect 1 2 --metrics_type=OPERATION
+datetime,timezone,timestamp,system,source,service_type,path,name,metrics_type,elapsed-time#average,elapsed-time#max,elapsed-time#min,elapsed-time#sum,error-count#count,message-count#count
+2018-02-28 04:48:27,-0800,1519822107,soabpm-vm.site,businessservice,WEBSERVICE_OPERATION,TEST2,TriggerSOA,BusinessService,0,0,0,0.0,0,0
+2018-02-28 04:48:27,-0800,1519822107,soabpm-vm.site,businessservice,WEBSERVICE_OPERATION,TEST1,TestService1,BusinessService,0,0,0,0.0,0,0
+2018-02-28 04:48:27,-0800,1519822108,soabpm-vm.site,businessservice,WEBSERVICE_OPERATION,TEST2,TriggerSOA,BusinessService,0,0,0,0.0,0,0
+2018-02-28 04:48:27,-0800,1519822108,soabpm-vm.site,businessservice,WEBSERVICE_OPERATION,TEST1,TestService1,BusinessService,0,0,0,0.0,0,0
+```
+
+Data collection from URI:
+
+```bash
+umc businessservice collect 1 2 --metrics_type=URI
+datetime,timezone,timestamp,system,source,service_type,path,name,metrics_type,error-count#count,message-count#count,response-time#average,response-time#max,response-time#min,response-time#sum,status#current,status#initial
+2018-02-28 04:49:05,-0800,1519822145,soabpm-vm.site,businessservice,URI,TEST2,TriggerSOA,BusinessService,0,0,0,0,0,0.0,1,1
+2018-02-28 04:49:05,-0800,1519822145,soabpm-vm.site,businessservice,URI,TEST1,TestService1,BusinessService,0,0,0,0,0,0.0,1,1
+2018-02-28 04:49:05,-0800,1519822146,soabpm-vm.site,businessservice,URI,TEST2,TriggerSOA,BusinessService,0,0,0,0,0,0.0,1,1
+2018-02-28 04:49:05,-0800,1519822146,soabpm-vm.site,businessservice,URI,TEST1,TestService1,BusinessService,0,0,0,0,0,0.0,1,1
+```
+
+## Composite ##
+SOA provides massive information about internal systems. Out of all possibilities, UMC provides access to composite information, stored in DMS subsystem at 'oracle_soainfra:soainfra_binding_rollup_domain'.
+
+```bash
+umc soabindings collect 1 2
+datetime,timezone,timestamp,system,source,ServerName, soainfra_composite,soainfra_composite_assembly_member,soainfra_composite_assembly_member_type,soainfra_composite_revision,soainfra_domain, Messages.averageTime,Messages.completed,Messages.throughput,Messages.time,Messages.totalTime, MessagesEvents.count,MessagesEvents.throughput,Messages.count, error.rate,Errors.count,Errors.throughput
+2018-02-28 05:05:18,-0800,1519823118,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,SalesQuoteProcess,SaveQuote,REFERENCEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823118,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,EURent,AddDiscount.service,SERVICEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823118,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,EURent,UpgradeCustomer.service,SERVICEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823118,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,EURent,StartEURentCaseService_ep,SERVICEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823118,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,EURent,EURent.directBindingService,SERVICEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823118,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,EURent,GetCar.service,SERVICEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823118,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,EURent,GetCustomerStatus.service,SERVICEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823118,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,EURent,EURent.service,SERVICEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823118,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,EURent,ChargeCustomer.service,SERVICEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823118,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,EURent,DropOff.service,SERVICEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823118,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,validationForCC,getStatusByCC,SERVICEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823118,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,validationForCC,getCreditValidation,REFERENCEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823118,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,POProcessing,receivePO,SERVICEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823118,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,POProcessing,WriteApprovalResults,REFERENCEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823118,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,POProcessing,JMS_UPS,REFERENCEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823118,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,POProcessing,JMS_USPS,REFERENCEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823118,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,POProcessing,JMS_FedEx,REFERENCEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823118,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,POProcessing,getCreditCardStatus,REFERENCEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823118,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,DBTest,Service1,SERVICEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823118,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,DBTest,testdb,REFERENCEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823119,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,SalesQuoteProcess,SaveQuote,REFERENCEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823119,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,EURent,AddDiscount.service,SERVICEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823119,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,EURent,UpgradeCustomer.service,SERVICEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823119,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,EURent,StartEURentCaseService_ep,SERVICEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823119,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,EURent,EURent.directBindingService,SERVICEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823119,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,EURent,GetCar.service,SERVICEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823119,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,EURent,GetCustomerStatus.service,SERVICEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823119,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,EURent,EURent.service,SERVICEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823119,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,EURent,ChargeCustomer.service,SERVICEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823119,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,EURent,DropOff.service,SERVICEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823119,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,validationForCC,getStatusByCC,SERVICEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823119,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,validationForCC,getCreditValidation,REFERENCEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823119,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,POProcessing,receivePO,SERVICEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823119,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,POProcessing,WriteApprovalResults,REFERENCEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823119,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,POProcessing,JMS_UPS,REFERENCEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823119,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,POProcessing,JMS_USPS,REFERENCEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823119,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,POProcessing,JMS_FedEx,REFERENCEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823119,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,POProcessing,getCreditCardStatus,REFERENCEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823119,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,DBTest,Service1,SERVICEs,1.0,default
+2018-02-28 05:05:18,-0800,1519823119,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,DBTest,testdb,REFERENCEs,1.0,default
+
+```
+
+
+
+
 # Missing utility
 When the utility is missing umc will report the problem.
 
