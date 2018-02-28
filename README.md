@@ -235,6 +235,86 @@ datetime,timezone,timestamp,system,source,Device,tps,kB_read/s,kB_wrtn/s,kB_read
 
 Notice change from Blk to kB, it's done by regular iostat parameter. Newer versions of iostat report performance using kB. 
 
+# Missing utility
+When the utility is missing umc will report the problem.
+
+```bash
+sudo yum remove sysstat
+
+umc iostat collect 1 2
+Error! Reason: utility not recognized as supported tool.
+Available versions:
+--- /home/oracle/ttMetrics/tools/Linux/systat/9.0.4/iostat
+--- /home/oracle/ttMetrics/tools/Linux/systat/10.0.3/iostat
+--- /home/oracle/ttMetrics/tools/linux/systat/9.0.4/iostat
+--- /home/oracle/ttMetrics/tools/linux/systat/10.0.3/iostat
+Your version:
+--- systat/
+```
+
+The same will be reported by umc test.
+
+```bash
+umc test
+vmstat:Testing compatibility of /home/oracle/ttMetrics/tools/linux/procps/3.2.8 with vmstat ...OK
+free:Testing compatibility of /home/oracle/ttMetrics/tools/linux/procps/3.2.8 with free ...OK
+top:Testing compatibility of /home/oracle/ttMetrics/tools/linux/procps/3.2.8 with top ...OK
+uptime:Testing compatibility of /home/oracle/ttMetrics/tools/linux/procps/3.2.8 with uptime ...OK
+meminfo:Testing compatibility of /home/oracle/ttMetrics/tools/linux/procps/3.2.8 with meminfo ...OK
+tcpext:Testing compatibility of /home/oracle/ttMetrics/tools/linux/procps/3.2.8 with tcpext ...OK
+netstattcp:Testing compatibility of /home/oracle/ttMetrics/tools/linux/net-tools/1.60 with netstattcp ...OK
+ifconfig:Testing compatibility of /home/oracle/ttMetrics/tools/linux/net-tools/1.60 with ifconfig ...OK
+iostat:Error! Reason: utility not recognized as supported tool.
+Available versions:
+--- /home/oracle/ttMetrics/tools/Linux/systat/9.0.4/iostat
+--- /home/oracle/ttMetrics/tools/Linux/systat/10.0.3/iostat
+--- /home/oracle/ttMetrics/tools/linux/systat/9.0.4/iostat
+--- /home/oracle/ttMetrics/tools/linux/systat/10.0.3/iostat
+Your version:
+--- systat/
+Testing compatibility of with iostat ...Error! Reason: The tool not found in given directory.
+Error
+Error! Reason: utility not recognized as supported tool.
+Available versions:
+--- /home/oracle/ttMetrics/tools/Linux/systat/9.0.4/iostat
+--- /home/oracle/ttMetrics/tools/Linux/systat/10.0.3/iostat
+--- /home/oracle/ttMetrics/tools/linux/systat/9.0.4/iostat
+--- /home/oracle/ttMetrics/tools/linux/systat/10.0.3/iostat
+Your version:
+--- systat/
+soabindings:Testing compatibility of /home/oracle/ttMetrics/tools/linux/java/wls/soa/11/1/1/7.0 with soabindings ...OK
+businessservice:Testing compatibility of /home/oracle/ttMetrics/tools/linux/java/wls/soa/11/1/1/7.0 with businessservice ...OK
+```
+
+Just add missing package, and reinitialize UMC.
+
+```bash
+sudo yum install sysstat
+. umc/bin/umc.h 
+
+Universal Metrics Collector initialized.
+```
+
+Now you can use iostat probe.
+
+```bash
+umc iostat collect 1 2
+datetime,timezone,timestamp,system,source,Device,tps,kB_read/s,kB_wrtn/s,kB_read,kB_wrtn
+2018-02-28 02:42:51,-0800,1519814571,soabpm-vm.site,iostat,sdb,1.56,2.42,10.63,765586,3366132
+2018-02-28 02:42:51,-0800,1519814571,soabpm-vm.site,iostat,dm-0,0.98,2.61,10.56,826393,3342164
+2018-02-28 02:42:51,-0800,1519814571,soabpm-vm.site,iostat,dm-1,0.53,0.61,1.50,192980,474292
+2018-02-28 02:42:51,-0800,1519814572,soabpm-vm.site,iostat,sda,0.00,0.00,0.00,0,0
+2018-02-28 02:42:51,-0800,1519814572,soabpm-vm.site,iostat,sdc,0.00,0.00,0.00,0,0
+2018-02-28 02:42:51,-0800,1519814572,soabpm-vm.site,iostat,sdb,2.00,0.00,16.00,0,16
+2018-02-28 02:42:51,-0800,1519814572,soabpm-vm.site,iostat,dm-0,0.00,0.00,0.00,0,0
+2018-02-28 02:42:51,-0800,1519814572,soabpm-vm.site,iostat,dm-1,0.00,0.00,0.00,0,0
+2018-02-28 02:42:53,-0800,1519814573,soabpm-vm.site,iostat,sda,4.00,0.00,44.00,0,44
+2018-02-28 02:42:53,-0800,1519814573,soabpm-vm.site,iostat,sdc,0.00,0.00,0.00,0,0
+2018-02-28 02:42:53,-0800,1519814573,soabpm-vm.site,iostat,sdb,0.00,0.00,0.00,0,0
+2018-02-28 02:42:53,-0800,1519814573,soabpm-vm.site,iostat,dm-0,11.00,0.00,44.00,0,44
+2018-02-28 02:42:53,-0800,1519814573,soabpm-vm.site,iostat,dm-1,0.00,0.00,0.00,0,0
+```
+
 
 # TODO Tools
 1. Ping
