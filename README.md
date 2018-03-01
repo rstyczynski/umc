@@ -24,8 +24,9 @@ Note that order of columns may vary. Some columns may be missing. It's not clear
 # Example
 Regular vmstat command executed on Linux 3.11, responses in a following way:
 
-```bash
+```
 vmstat 2 3
+
 procs -----------memory---------- ---swap-- -----io---- --system-- -----cpu-----
  r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa st
  1  0 187016 358652 164580 795700    0    0     3     6    2    6  1  0 98  0  0	
@@ -35,8 +36,9 @@ procs -----------memory---------- ---swap-- -----io---- --system-- -----cpu-----
 
 UMC does the same job in the following way:
 
-```bash
+```
 umc vmstat collect 2 3
+
 datetime,timezone,timestamp,system,source,ProcessRunQueue, ProcessBlocked, MemSwpd,MemFree,MemBuff,MemCache, SwapReadBlocks,SwapWriteBlocks, IOReadBlocks,IOWriteBlocks, Interrupts,ContextSwitches, CPUuser,CPUsystem,CPUidle,CPUwaitIO,CPUVMStolenTime
 2018-02-27 05:59:19,-0800,1519739959,soabpm-vm.site,vmstat,0,0,187016,350988,164948,796648,0,0,0,8,319,517,1,0,99,0,0	
 2018-02-27 05:59:21,-0800,1519739961,soabpm-vm.site,vmstat,0,0,187016,350988,164948,796660,0,0,0,0,298,772,1,0,99,0,0	
@@ -55,7 +57,7 @@ Sensor wrappers are stored in a directory structure containing operating system 
 
 Before execution UMC verifies that wrapper is available in required version. Ideally UMC should use scripts from highest major version of the operating system. It's not yet implemented, but UMC will check compatibility of generic version. In case of issues should look for proper scripts in minor version directory.
 
-```bash
+```
 $UMCRoot..................................... root directory of UMC
 $UMCRoot/bin................................. shared scripts compatible with all os, based on gnu utilities
 $UMCRoot/tools............................... directory with top level OS type
@@ -83,7 +85,7 @@ Now you are ready to use UMC on Linux.
 # First time use
 Before use one have to source umc.h which adds command line functions to Bash environment. Apart of internal things, UMC extends classpath by SOA and OSB jars, and calls Oracle Middleware environment configuration script.
 
-```bash
+```
 . umc/bin/umc.h 
 
 Universal Metrics Collector initialized.
@@ -91,7 +93,9 @@ Universal Metrics Collector initialized.
 
 After initialization Bash is extended by `umc` command.
 
-```bash
+```
+umc
+
 Universal Metrics Collector. Collects system monitoring data and presents in CSV format.
 
 Usage: umc [sensors|test|help|-V] [SENSOR collect delay count] 
@@ -123,7 +127,7 @@ Current version supports regular Linux utilities, OSB, and SOA.
 # List available sensors
 To list available probes, execute umc with sensors paramter
 
-```bash
+```
 umc sensors
 
 vmstat free top uptime meminfo tcpext netstattcp ifconfig iostat soabindings businessservice
@@ -134,7 +138,7 @@ It means that this version of UMC is shipped with wide range of Linux probes, an
 # Configuration of Oracle Middleware
 To configure UMC for Oracle Middleware, edit etc/umc.cfg to provide required information about home and domain directories. Note that providing WebLogic domain directory is important, as UMC probes are started from domain directory to bypass a need of authentication. 
 
-```bash
+```
 vi umc/etc/umc.cfg
 
 #---------------------------------------------------------------------------------------
@@ -158,7 +162,7 @@ export CSVdelimiter=,
 # Simple test
 Availability of probes does not mean that all of them will work. Packages may be missing in the Operating system or system may be host different version of utilities. To validate compatibility of tools UMC does two things: (a) checks general availability with known OS level technique, and calls the utility to get returned headers to compare with signature stored in plugin meat-information. UMC 
 
-```bash
+```
 umc test
 
 vmstat:Testing compatibility of /home/oracle/ttMetrics/tools/linux/procps/3.2.8 with vmstat ...OK
@@ -186,7 +190,7 @@ Now your UMC is ready to do data collection. Let's play with iostat.
 
 Regular iostat returns nice looking, but not very useful for data collection output.
 
-```bash
+```
 iostat 1 2
 Linux 2.6.39-400.109.5.el6uek.x86_64 (soabpm-vm.site) 	02/28/2018 	_x86_64_	(4 CPU)
 
@@ -214,7 +218,7 @@ dm-1              0.00         0.00         0.00          0          0
 
 With UMC you get less nice response, but more ready for automated processing.
 
-```bash
+```
 umc iostat collect 1 2
 
 datetime,timezone,timestamp,system,source,Device,tps,kB_read/s,kB_wrtn/s,kB_read,kB_wrtn
@@ -245,7 +249,7 @@ Note that before collecting data you need to enable monitoring (sbconsole->servi
 
 Data collection from Proxy service:
 
-```bash
+```
 umc businessservice collect 1 2 --metrics_type=SERVICE
 datetime,timezone,timestamp,system,source,service_type,path,name,metrics_type,error-count_count,failover-count_count,failure-rate_count,message-count_count,response-time_average,response-time_max,response-time_min,response-time_sum,severity-all_count,sla-severity-all_count,sla-severity-critical_count,sla-severity-fatal_count,sla-severity-major_count,sla-severity-minor_count,sla-severity-normal_count,sla-severity-warning_count,success-rate_count,throttling-time_average,throttling-time_max,throttling-time_min,throttling-time_sum,uri-offline-count_current,uri-offline-count_initial,wss-error_count
 2018-02-28 04:46:32,-0800,1519821992,soabpm-vm.site,businessservice,SERVICE,TEST2,TriggerSOA,BusinessService,0,0,0,0,0,0,0,0.0,0,0,0,0,0,0,0,0,100,0,0,0,0.0,0,0,0
@@ -256,7 +260,7 @@ datetime,timezone,timestamp,system,source,service_type,path,name,metrics_type,er
 
 Data collection from Business service:
 
-```bash
+```
 umc businessservice collect 1 2 --metrics_type=OPERATION
 datetime,timezone,timestamp,system,source,service_type,path,name,metrics_type,elapsed-time#average,elapsed-time#max,elapsed-time#min,elapsed-time#sum,error-count#count,message-count#count
 2018-02-28 04:48:27,-0800,1519822107,soabpm-vm.site,businessservice,WEBSERVICE_OPERATION,TEST2,TriggerSOA,BusinessService,0,0,0,0.0,0,0
@@ -267,7 +271,7 @@ datetime,timezone,timestamp,system,source,service_type,path,name,metrics_type,el
 
 Data collection from URI:
 
-```bash
+```
 umc businessservice collect 1 2 --metrics_type=URI
 datetime,timezone,timestamp,system,source,service_type,path,name,metrics_type,error-count#count,message-count#count,response-time#average,response-time#max,response-time#min,response-time#sum,status#current,status#initial
 2018-02-28 04:49:05,-0800,1519822145,soabpm-vm.site,businessservice,URI,TEST2,TriggerSOA,BusinessService,0,0,0,0,0,0.0,1,1
@@ -279,7 +283,7 @@ datetime,timezone,timestamp,system,source,service_type,path,name,metrics_type,er
 ## Composite ##
 SOA provides massive information about internal systems. Out of all possibilities, UMC provides access to composite information, stored in DMS subsystem at 'oracle_soainfra:soainfra_binding_rollup_domain'. DMS data collection is enabled by default.
 
-```bash
+```
 umc soabindings collect 1 2
 datetime,timezone,timestamp,system,source,ServerName, soainfra_composite,soainfra_composite_assembly_member,soainfra_composite_assembly_member_type,soainfra_composite_revision,soainfra_domain, Messages.averageTime,Messages.completed,Messages.throughput,Messages.time,Messages.totalTime, MessagesEvents.count,MessagesEvents.throughput,Messages.count, error.rate,Errors.count,Errors.throughput
 2018-02-28 05:05:18,-0800,1519823118,soabpm-vm.site,soabindings,0.0,0,0.0,0.0,0,0.0,0.0,0.0,0,0.0,0,AdminServer,SalesQuoteProcess,SaveQuote,REFERENCEs,1.0,default
@@ -331,7 +335,7 @@ datetime,timezone,timestamp,system,source,ServerName, soainfra_composite,soainfr
 # Missing utility
 When the utility is missing umc will report the problem.
 
-```bash
+```
 sudo yum remove sysstat
 
 umc iostat collect 1 2
@@ -347,7 +351,7 @@ Your version:
 
 The same will be reported by umc test.
 
-```bash
+```
 umc test
 vmstat:Testing compatibility of /home/oracle/ttMetrics/tools/linux/procps/3.2.8 with vmstat ...OK
 free:Testing compatibility of /home/oracle/ttMetrics/tools/linux/procps/3.2.8 with free ...OK
@@ -381,7 +385,7 @@ businessservice:Testing compatibility of /home/oracle/ttMetrics/tools/linux/java
 
 Just add missing package, and reinitialize UMC.
 
-```bash
+```
 sudo yum install sysstat
 . umc/bin/umc.h 
 
@@ -390,7 +394,7 @@ Universal Metrics Collector initialized.
 
 Now you can use iostat probe.
 
-```bash
+```
 umc iostat collect 1 2
 datetime,timezone,timestamp,system,source,Device,tps,kB_read/s,kB_wrtn/s,kB_read,kB_wrtn
 2018-02-28 02:42:51,-0800,1519814571,soabpm-vm.site,iostat,sdb,1.56,2.42,10.63,765586,3366132
