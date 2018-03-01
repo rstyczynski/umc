@@ -182,8 +182,7 @@ In case of errors you may need to do three things:
 1. install missing package
 2. configure Oracle Middleware directories in etc/umc.cfg
 
-In the worst case you need to prepare new version of probe. It's described in separated part of the manual.
-
+In the worst case you need to prepare a new version of probe. It's described in separated part of the manual.
 
 # First data collection
 Now your UMC is ready to do data collection. Let's play with iostat.
@@ -411,6 +410,24 @@ datetime,timezone,timestamp,system,source,Device,tps,kB_read/s,kB_wrtn/s,kB_read
 2018-02-28 02:42:53,-0800,1519814573,soabpm-vm.site,iostat,dm-0,11.00,0.00,44.00,0,44
 2018-02-28 02:42:53,-0800,1519814573,soabpm-vm.site,iostat,dm-1,0.00,0.00,0.00,0,0
 ```
+
+# Required packages
+UMC is based mainly on python, however requires set of packages to work properly. 
+
+```bash
+apt-get clean
+apt-get update
+apt-get install -y curl
+apt-get install -y python python-yaml
+apt-get install -y perl
+apt-get install -y locales
+locale-gen en_US.UTF-8
+apt-get install -y sysstat
+apt-get install -y net-tools
+```
+
+# Extend probe definition
+TODO
 
 
 # TODO Tools
