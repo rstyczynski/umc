@@ -329,8 +329,6 @@ datetime,timezone,timestamp,system,source,ServerName, soainfra_composite,soainfr
 ```
 
 
-
-
 # Missing utility
 When the utility is missing umc will report the problem.
 
@@ -412,7 +410,7 @@ datetime,timezone,timestamp,system,source,Device,tps,kB_read/s,kB_wrtn/s,kB_read
 ```
 
 # Required packages
-UMC is based mainly on python, however requires set of packages to work properly. 
+UMC is based mainly on bash, however requires set of packages to work properly. Python and perl are used by utility scripts supporting UMC in some aspects as reading yaml configuration, or prefixing stream with timestamps.
 
 ```bash
 apt-get clean
@@ -421,9 +419,9 @@ apt-get install -y curl
 apt-get install -y python python-yaml
 apt-get install -y perl
 apt-get install -y locales
-locale-gen en_US.UTF-8
 apt-get install -y sysstat
 apt-get install -y net-tools
+locale-gen en_US.UTF-8
 ```
 
 # Extend probe definition
