@@ -49,7 +49,7 @@ datetime,timezone,timestamp,system,source,ProcessRunQueue, ProcessBlocked, MemSw
 Universal Collector is written in Bash with some scripts in Python. The package consist of:
 1. umc.h - set of routines to handle all required interaction with generic data sources,
 2. set of utilities to handle yaml, text, etc., 
-3. umcConfig.h - configuration file,
+3. umc.cfg - configuration file,
 4. set of sensor wrappers to handle regular utilities,
 5. set of sensor meta-information to describe regular utilities.
 
