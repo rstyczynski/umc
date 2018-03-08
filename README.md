@@ -239,7 +239,115 @@ datetime,timezone,timestamp,system,source,Device,tps,kB_read/s,kB_wrtn/s,kB_read
 Notice change from Blk to kB, it's done by regular iostat parameter. Newer versions of iostat report performance using kB. 
 
 # Oracle Middleware
-UMC collects data from two sources: OSB, and SOA composite. The former gets data directly from OSB via wlst, and the latter uses DMS subsystem available in WebLogic. The data is generally available via wlst, but interfaces and data structures are so different, that UMC adds real value as wrapper around provided API.
+UMC collects data from: WebLogic, OSB, and SOA composite. WebLogic data is collected trough regular mBeans, OSB via wlst, and SOA uses DMS subsystem available in WebLogic. 
+
+## WebLogic ##
+WebLogic metrics are collected in several areas: socket, requests, threads, channel, jmsruntime, jmsserver, and datasource. Use --subsytem option to set which part should be harvested. By default it takes general set of data.
+
+
+Default set of data:
+```
+umc wls collect 1 2
+
+datetime,timezone,timestamp,system,source,domain,serverName,subsystem,sockets_open,sockets_opened,heap_size,heap_size_max,heap_free,heap_free_pct,jvm_uptime,thread_total,thread_idle,thread_hogging,thread_standby,request_queue,request_pending,request_completed,request_troughput
+2018-03-08 00:14:33,-0800,1520496873,soabpm-vm.site,wls,dev_soasuite,UCM_server1,general,3,3,536870912,n/a,106960216,19,n/a,6,1,0,4,0,0,38792,1.4992503748125936
+2018-03-08 00:14:33,-0800,1520496873,soabpm-vm.site,wls,dev_soasuite,AdminServer,general,8,8,2147483648,n/a,308482224,14,n/a,27,20,0,5,0,0,1188447,10.494752623688155
+2018-03-08 00:14:33,-0800,1520496874,soabpm-vm.site,wls,dev_soasuite,UCM_server1,general,3,3,536870912,n/a,106960216,19,n/a,6,1,0,4,0,0,38792,1.4992503748125936
+2018-03-08 00:14:33,-0800,1520496874,soabpm-vm.site,wls,dev_soasuite,AdminServer,general,8,8,2147483648,n/a,308482224,14,n/a,27,20,0,5,0,0,1188447,10.494752623688155
+```
+
+
+Data collected from channel:
+```
+umc wls collect 1 2 --subsystem=channel
+
+datetime,timezone,timestamp,system,source,domain,serverName,subsystem,channelName,accepts,bytesReceived,byteSent,connections,msgReceived,msgSent
+2018-03-08 00:02:33,-0800,1520496153,soabpm-vm.site,wls,dev_soasuite,UCM_server1,channel,iiop,Default[iiop],0,0,0,0,0,0
+2018-03-08 00:02:33,-0800,1520496153,soabpm-vm.site,wls,dev_soasuite,UCM_server1,channel,http,Default[http],169,446329,22815,0,169,169
+2018-03-08 00:02:33,-0800,1520496153,soabpm-vm.site,wls,dev_soasuite,UCM_server1,channel,t3,Default[t3],1,12497514,13909908,1,8196,8196
+2018-03-08 00:02:33,-0800,1520496153,soabpm-vm.site,wls,dev_soasuite,UCM_server1,channel,ldap,Default[ldap],1,13835852,0,1,6745,0
+2018-03-08 00:02:33,-0800,1520496153,soabpm-vm.site,wls,dev_soasuite,AdminServer,channel,iiop,Default[iiop],0,0,0,0,0,0
+2018-03-08 00:02:33,-0800,1520496153,soabpm-vm.site,wls,dev_soasuite,AdminServer,channel,http,Default[http],0,0,0,0,0,0
+2018-03-08 00:02:33,-0800,1520496153,soabpm-vm.site,wls,dev_soasuite,AdminServer,channel,t3,Default[t3],0,0,0,0,0,0
+2018-03-08 00:02:33,-0800,1520496153,soabpm-vm.site,wls,dev_soasuite,AdminServer,channel,ldap,Default[ldap],0,0,0,0,0,0
+2018-03-08 00:02:33,-0800,1520496154,soabpm-vm.site,wls,dev_soasuite,UCM_server1,channel,iiop,Default[iiop],0,0,0,0,0,0
+2018-03-08 00:02:33,-0800,1520496154,soabpm-vm.site,wls,dev_soasuite,UCM_server1,channel,http,Default[http],169,446329,22815,0,169,169
+2018-03-08 00:02:33,-0800,1520496154,soabpm-vm.site,wls,dev_soasuite,UCM_server1,channel,t3,Default[t3],1,12497514,13909908,1,8196,8196
+2018-03-08 00:02:33,-0800,1520496154,soabpm-vm.site,wls,dev_soasuite,UCM_server1,channel,ldap,Default[ldap],1,13835852,0,1,6745,0
+2018-03-08 00:02:33,-0800,1520496154,soabpm-vm.site,wls,dev_soasuite,AdminServer,channel,iiop,Default[iiop],0,0,0,0,0,0
+2018-03-08 00:02:33,-0800,1520496154,soabpm-vm.site,wls,dev_soasuite,AdminServer,channel,http,Default[http],0,0,0,0,0,0
+2018-03-08 00:02:33,-0800,1520496154,soabpm-vm.site,wls,dev_soasuite,AdminServer,channel,t3,Default[t3],0,0,0,0,0,0
+2018-03-08 00:02:33,-0800,1520496154,soabpm-vm.site,wls,dev_soasuite,AdminServer,channel,ldap,Default[ldap],0,0,0,0,0,0
+```
+
+JMS runtime:
+```
+umc wls collect 1 2 --subsystem=jmsruntime
+
+datetime,timezone,timestamp,system,source,domain,serverName,subsystem,runtimeName,connections,connectionsHigh,connectionsTotal,servers,serversHigh,serversTotal
+2018-03-08 00:16:09,-0800,1520496969,soabpm-vm.site,wls,dev_soasuite,UCM_server1,jmsruntime,UCM_server1.jms,0,0,0,0,0,0
+2018-03-08 00:16:09,-0800,1520496969,soabpm-vm.site,wls,dev_soasuite,AdminServer,jmsruntime,AdminServer.jms,44,44,27668,9,9,9
+2018-03-08 00:16:09,-0800,1520496970,soabpm-vm.site,wls,dev_soasuite,UCM_server1,jmsruntime,UCM_server1.jms,0,0,0,0,0,0
+2018-03-08 00:16:09,-0800,1520496970,soabpm-vm.site,wls,dev_soasuite,AdminServer,jmsruntime,AdminServer.jms,44,44,27668,9,9,9
+```
+
+JMS Servers:
+```
+umc wls collect 1 2 --subsystem=jmsserver
+
+datetime,timezone,timestamp,system,source,domain,serverName,subsystem,jmsServerName,bytes,bytesHigh,bytesPageable,bytesPagedIn,bytesPagedOut,bytesPending,bytesReceived,bytesThresholdTime,destinations,destinationsHigh,destinationsTotal,messages,messagesHigh,messagesPageable,messagesPagedIn,messagesPagedOut,messagesPending,messagesReceived,messagesThresholdTime,pending,transactions,sessionPoolsCurrent,sessionPoolsHigh,sessionPoolsTotal
+2018-03-08 00:16:51,-0800,1520497011,soabpm-vm.site,wls,dev_soasuite,AdminServer,jmsserver,WseeJmsServer,0,0,0,0,0,0,0,0,2,2,2,0,0,0,0,0,0,0,0,None,None,0,0,0
+2018-03-08 00:16:51,-0800,1520497011,soabpm-vm.site,wls,dev_soasuite,AdminServer,jmsserver,BPMJMSServer,0,0,0,0,0,0,0,0,2,2,2,0,0,0,0,0,0,0,0,None,None,0,0,0
+2018-03-08 00:16:51,-0800,1520497011,soabpm-vm.site,wls,dev_soasuite,AdminServer,jmsserver,SOAJMSServer,1529,1529,1529,0,0,0,0,0,10,10,10,3,3,0,0,0,0,0,0,None,None,0,0,0
+2018-03-08 00:16:51,-0800,1520497011,soabpm-vm.site,wls,dev_soasuite,AdminServer,jmsserver,AGJMSServer,0,61,0,0,0,0,28072,0,2,2,2,0,1,0,0,0,0,462,0,None,None,0,0,0
+2018-03-08 00:16:51,-0800,1520497011,soabpm-vm.site,wls,dev_soasuite,AdminServer,jmsserver,PS6SOAJMSServer,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,None,None,0,0,0
+2018-03-08 00:16:51,-0800,1520497011,soabpm-vm.site,wls,dev_soasuite,AdminServer,jmsserver,JRFWSAsyncJmsServer,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,None,None,0,0,0
+2018-03-08 00:16:51,-0800,1520497011,soabpm-vm.site,wls,dev_soasuite,AdminServer,jmsserver,UMSJMSServer,0,0,0,0,0,0,0,0,6,6,6,0,0,0,0,0,0,0,0,None,None,0,0,0
+2018-03-08 00:16:51,-0800,1520497011,soabpm-vm.site,wls,dev_soasuite,AdminServer,jmsserver,wlsbJMSServer,0,0,0,0,0,0,0,0,8,8,8,0,0,0,0,0,0,0,0,None,None,0,0,0
+2018-03-08 00:16:51,-0800,1520497012,soabpm-vm.site,wls,dev_soasuite,AdminServer,jmsserver,WseeJmsServer,0,0,0,0,0,0,0,0,2,2,2,0,0,0,0,0,0,0,0,None,None,0,0,0
+2018-03-08 00:16:51,-0800,1520497012,soabpm-vm.site,wls,dev_soasuite,AdminServer,jmsserver,BPMJMSServer,0,0,0,0,0,0,0,0,2,2,2,0,0,0,0,0,0,0,0,None,None,0,0,0
+2018-03-08 00:16:51,-0800,1520497012,soabpm-vm.site,wls,dev_soasuite,AdminServer,jmsserver,SOAJMSServer,1529,1529,1529,0,0,0,0,0,10,10,10,3,3,0,0,0,0,0,0,None,None,0,0,0
+2018-03-08 00:16:51,-0800,1520497012,soabpm-vm.site,wls,dev_soasuite,AdminServer,jmsserver,AGJMSServer,0,61,0,0,0,0,28072,0,2,2,2,0,1,0,0,0,0,462,0,None,None,0,0,0
+2018-03-08 00:16:51,-0800,1520497012,soabpm-vm.site,wls,dev_soasuite,AdminServer,jmsserver,PS6SOAJMSServer,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,None,None,0,0,0
+2018-03-08 00:16:51,-0800,1520497012,soabpm-vm.site,wls,dev_soasuite,AdminServer,jmsserver,JRFWSAsyncJmsServer,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,None,None,0,0,0
+2018-03-08 00:16:51,-0800,1520497012,soabpm-vm.site,wls,dev_soasuite,AdminServer,jmsserver,UMSJMSServer,0,0,0,0,0,0,0,0,6,6,6,0,0,0,0,0,0,0,0,None,None,0,0,0
+2018-03-08 00:16:51,-0800,1520497012,soabpm-vm.site,wls,dev_soasuite,AdminServer,jmsserver,wlsbJMSServer,0,0,0,0,0,0,0,0,8,8,8,0,0,0,0,0,0,0,0,None,None,0,0,0
+```
+
+Data sources:
+```
+umc wls collect 1 2 --subsystem=datasource
+
+datetime,timezone,timestamp,system,source,domain,serverName,subsystem,dsName,capacity,capacityHigh,numAvailable,numUnavailable,highestNumAvailable,highestNumUnavailable,activeConnectionsAverage,activeConnectionsCurrent,activeConnectionsHigh,connectionsTotal,connectionDelayTime,leakedConnections,reserveRequest,failedReserveRequest,failuresToReconnect,waitingForConnectionCurrent,waitingForConnectionFailureTotal,waitingForConnectionHigh,waitingForConnectionSuccessTotal,waitingForConnectionTotal,waitSecondsHigh,prepStmtCacheAccess,prepStmtCacheAdd,prepStmtCacheCurrentSize,prepStmtCacheDelete,prepStmtCacheHit,prepStmtCacheMiss
+2018-03-08 00:20:28,-0800,1520497228,soabpm-vm.site,wls,dev_soasuite,UCM_server1,datasource,CSDS,2,3,2,0,3,3,0,0,3,16,102,0,695,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+2018-03-08 00:20:28,-0800,1520497228,soabpm-vm.site,wls,dev_soasuite,AdminServer,datasource,quoteDS,1,1,1,0,1,1,0,0,1,1,22,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+2018-03-08 00:20:28,-0800,1520497228,soabpm-vm.site,wls,dev_soasuite,AdminServer,datasource,jndi/test,1,1,1,0,1,1,0,0,1,1,454,0,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+2018-03-08 00:20:28,-0800,1520497228,soabpm-vm.site,wls,dev_soasuite,AdminServer,datasource,EDNDataSource,1,2,0,1,1,2,1,1,2,2,48,0,11113,0,0,0,0,0,0,0,0,11112,1,1,0,11111,1
+2018-03-08 00:20:28,-0800,1520497228,soabpm-vm.site,wls,dev_soasuite,AdminServer,datasource,wlsbjmsrpDataSource,5,5,5,0,5,1,0,0,1,5,22,0,3,0,0,0,0,0,0,0,0,9,3,3,0,6,3
+2018-03-08 00:20:28,-0800,1520497228,soabpm-vm.site,wls,dev_soasuite,AdminServer,datasource,mds-owsm,1,1,1,0,1,1,0,0,1,63,18,0,3545,0,0,0,0,0,0,0,0,2,1,1,0,1,1
+2018-03-08 00:20:28,-0800,1520497228,soabpm-vm.site,wls,dev_soasuite,AdminServer,datasource,mds-soa,1,2,1,0,2,2,0,0,2,63,19,0,5301,0,0,0,0,0,0,0,0,6,1,1,0,5,1
+2018-03-08 00:20:28,-0800,1520497228,soabpm-vm.site,wls,dev_soasuite,AdminServer,datasource,OraSDPMDataSource,1,1,1,0,1,1,0,0,1,63,19,0,938,0,0,0,0,0,0,0,0,2,1,1,0,1,1
+2018-03-08 00:20:28,-0800,1520497228,soabpm-vm.site,wls,dev_soasuite,AdminServer,datasource,mds-SpacesDS,10,10,10,0,10,1,0,0,1,10,21,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+2018-03-08 00:20:28,-0800,1520497228,soabpm-vm.site,wls,dev_soasuite,AdminServer,datasource,EDNLocalTxDataSource,2,3,0,2,2,3,2,2,3,3,50,0,22230,0,0,0,0,0,0,0,0,22231,5,5,0,22226,5
+2018-03-08 00:20:28,-0800,1520497228,soabpm-vm.site,wls,dev_soasuite,AdminServer,datasource,SOALocalTxDataSource,1,2,1,0,2,2,0,0,2,63,19,0,3129,0,0,0,0,0,0,0,0,3,2,2,0,1,2
+2018-03-08 00:20:28,-0800,1520497228,soabpm-vm.site,wls,dev_soasuite,AdminServer,datasource,SOADataSource,1,2,1,0,2,2,0,0,2,63,21,0,109315,0,0,0,0,0,0,0,0,2818,56,10,46,2762,56
+2018-03-08 00:20:28,-0800,1520497228,soabpm-vm.site,wls,dev_soasuite,AdminServer,datasource,soademoDatabase,1,1,1,0,1,1,0,0,1,1,22,0,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+2018-03-08 00:20:28,-0800,1520497228,soabpm-vm.site,wls,dev_soasuite,AdminServer,datasource,ps6workshop,1,1,1,0,1,1,0,0,1,1,24,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+2018-03-08 00:20:28,-0800,1520497229,soabpm-vm.site,wls,dev_soasuite,UCM_server1,datasource,CSDS,2,3,2,0,3,3,0,0,3,16,102,0,695,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+2018-03-08 00:20:28,-0800,1520497229,soabpm-vm.site,wls,dev_soasuite,AdminServer,datasource,quoteDS,1,1,1,0,1,1,0,0,1,1,22,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+2018-03-08 00:20:28,-0800,1520497229,soabpm-vm.site,wls,dev_soasuite,AdminServer,datasource,jndi/test,1,1,1,0,1,1,0,0,1,1,454,0,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+2018-03-08 00:20:28,-0800,1520497229,soabpm-vm.site,wls,dev_soasuite,AdminServer,datasource,EDNDataSource,1,2,0,1,1,2,1,1,2,2,48,0,11113,0,0,0,0,0,0,0,0,11112,1,1,0,11111,1
+2018-03-08 00:20:28,-0800,1520497229,soabpm-vm.site,wls,dev_soasuite,AdminServer,datasource,wlsbjmsrpDataSource,5,5,5,0,5,1,0,0,1,5,22,0,3,0,0,0,0,0,0,0,0,9,3,3,0,6,3
+2018-03-08 00:20:28,-0800,1520497229,soabpm-vm.site,wls,dev_soasuite,AdminServer,datasource,mds-owsm,1,1,1,0,1,1,0,0,1,63,18,0,3545,0,0,0,0,0,0,0,0,2,1,1,0,1,1
+2018-03-08 00:20:28,-0800,1520497229,soabpm-vm.site,wls,dev_soasuite,AdminServer,datasource,mds-soa,1,2,1,0,2,2,0,0,2,63,19,0,5301,0,0,0,0,0,0,0,0,6,1,1,0,5,1
+2018-03-08 00:20:28,-0800,1520497229,soabpm-vm.site,wls,dev_soasuite,AdminServer,datasource,OraSDPMDataSource,1,1,1,0,1,1,0,0,1,63,19,0,938,0,0,0,0,0,0,0,0,2,1,1,0,1,1
+2018-03-08 00:20:28,-0800,1520497229,soabpm-vm.site,wls,dev_soasuite,AdminServer,datasource,mds-SpacesDS,10,10,10,0,10,1,0,0,1,10,21,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+2018-03-08 00:20:28,-0800,1520497229,soabpm-vm.site,wls,dev_soasuite,AdminServer,datasource,EDNLocalTxDataSource,2,3,0,2,2,3,2,2,3,3,50,0,22230,0,0,0,0,0,0,0,0,22231,5,5,0,22226,5
+2018-03-08 00:20:28,-0800,1520497229,soabpm-vm.site,wls,dev_soasuite,AdminServer,datasource,SOALocalTxDataSource,1,2,1,0,2,2,0,0,2,63,19,0,3129,0,0,0,0,0,0,0,0,3,2,2,0,1,2
+2018-03-08 00:20:28,-0800,1520497229,soabpm-vm.site,wls,dev_soasuite,AdminServer,datasource,SOADataSource,1,2,1,0,2,2,0,0,2,63,21,0,109315,0,0,0,0,0,0,0,0,2818,56,10,46,2762,56
+2018-03-08 00:20:28,-0800,1520497229,soabpm-vm.site,wls,dev_soasuite,AdminServer,datasource,soademoDatabase,1,1,1,0,1,1,0,0,1,1,22,0,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+2018-03-08 00:20:28,-0800,1520497229,soabpm-vm.site,wls,dev_soasuite,AdminServer,datasource,ps6workshop,1,1,1,0,1,1,0,0,1,1,24,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+```
 
 ## OSB ##
 OSB provides multiple metrics, and UMC harvest subset of them related to: (a) Proxy service, (b) Business service, and (c) URI. 
