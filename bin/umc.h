@@ -8,18 +8,37 @@ export umcRoot="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
 
 export toolsBin=$umcRoot/bin
 
+#---------------------------------------------------------------------------------------
+#--- call cfg scripts
+#---------------------------------------------------------------------------------------
 # configure user params
 . $umcRoot/etc/umc.cfg
 
 # configure global params
 . $toolsBin/global.cfg
 
-# ATTENTION!
-# Do not use buffered!
-# Timestamps added to data rows will contain not correct information. 
-# It will be moment of buffer flush not a proper moment of collecting data.
-export BUFFERED=no
+#---------------------------------------------------------------------------------------
+#--- check required python modules
+#---------------------------------------------------------------------------------------
+if python $toolsBin/checkModule.py pyyaml; then
+    echo "Note: pyyaml module not available. Installing in user space..."
+    oldDir=$PWD
+    cd /tmp
+    unzip -o $umcRoot/varia/pyyaml-master.zip >/dev/null 2>&1
+    cd pyyaml-master
+    python setup.py install --user >/dev/null 2>&1
+    cd ..
+    rm -rf pyyaml-master
+    cd $oldDir
+fi
 
+#---------------------------------------------------------------------------------------
+#--- # ATTENTION!
+#--- Do not use buffered!
+#--- Timestamps added to data rows will contain not correct information. 
+#--- It will be moment of buffer flush not a proper moment of collecting data.
+#---------------------------------------------------------------------------------------
+export BUFFERED=no
 
 function availableSensors {
     cat $umcRoot/bin/global.cfg | grep "_layer=" | cut -f1 -d'=' | cut -f2 -d' ' | cut -f1 -d'_'
