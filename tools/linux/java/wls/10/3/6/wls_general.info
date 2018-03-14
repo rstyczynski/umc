@@ -18,6 +18,9 @@ wls_general:
     loop:
         method:     options
         directive:  -c $count -d $interval --noheader
+    timestamp:
+        method:     
+        directive:  
     metrics:
         info: 
             domain:

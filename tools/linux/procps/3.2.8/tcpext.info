@@ -16,6 +16,9 @@ tcpext:
     loop:
         method:     external
         directive:  
+    timestamp:
+        method:     
+        directive:  
     metrics:
         Syncookies:
             SyncookiesSent:

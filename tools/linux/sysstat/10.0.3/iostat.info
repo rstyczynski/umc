@@ -13,6 +13,9 @@ iostat:
         directive:  iostat -V
     loop:
         method:     
+        directive:
+    timestamp:
+        method:     
         directive:  
     metrics:
         Name:

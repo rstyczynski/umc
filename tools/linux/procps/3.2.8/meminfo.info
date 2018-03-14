@@ -15,6 +15,9 @@ meminfo:
     loop:
         method:     external
         directive:  
+    timestamp:
+        method:     
+        directive:  
     metrics:
         Memory:
             MemTotal:

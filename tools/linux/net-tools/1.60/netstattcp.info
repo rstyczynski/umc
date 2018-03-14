@@ -15,6 +15,9 @@ netstattcp:
     loop:
         method:     external
         directive:  
+    timestamp:
+        method:     
+        directive:  
     metrics:
         Connections:
             active_connections_openings:

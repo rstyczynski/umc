@@ -14,6 +14,9 @@ iostat:
     loop:
         method:     
         directive:  
+    timestamp:
+        method:     
+        directive:  
     metrics:
         Name:
             Device:

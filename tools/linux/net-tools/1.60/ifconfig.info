@@ -19,6 +19,9 @@ ifconfig:
     loop:
         method:     external
         directive:  
+    timestamp:
+        method:     
+        directive:  
     metrics:
         packets:
             RXpackets:

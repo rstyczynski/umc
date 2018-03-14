@@ -15,6 +15,9 @@ uptime:
     loop:
         method:     external
         directive:  
+    timestamp:
+        method:     
+        directive:  
     metrics:
         Users:
             users:

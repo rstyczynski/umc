@@ -21,6 +21,9 @@ vmstat:
     loop:
         method:     
         directive:  
+    timestamp:
+        method:     
+        directive:  
     metrics:
         Interrupt:
             Interrupts: interrupt

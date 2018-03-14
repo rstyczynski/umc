@@ -15,6 +15,9 @@ XXX:
     loop:
         method:     
         directive:  
+    timestamp:
+        method:     
+        directive:  
     metrics:
         XXX:
             XXX: XXX
