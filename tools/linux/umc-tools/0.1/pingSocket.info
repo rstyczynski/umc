@@ -1,0 +1,38 @@
+pingSocket:
+    version:    1.0
+    layer:      OS
+    system:     OS
+    subsystem:  network
+    header:     targetName,targetPort,address,dnsInfo,resolve,resolveFull,connect,send,response,close,response,error
+    rawheader:
+        method:     script
+        directive:  pingSocket.py --printrawheader
+        expected:   targetName,targetPort,address,dnsInfo,resolve,resolveFull,connect,send,response,close,response,error
+    availability:
+        method:     env
+        directive:  WL_HOME
+    loop:
+        method:     options
+        directive:  -c $count -d $interval --noheader
+    timestamp:
+        method:     internal
+        directive:  --timestamp 
+    metrics:
+        info: 
+            targetName:
+            targetPort:
+        latency:
+            resolve:
+            resolveFull:
+            connect:
+            send:
+            response:
+            close:
+        informative:
+            address:
+            dnsInfo:
+            response:
+            error:
+            
+
+

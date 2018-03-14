@@ -7,7 +7,18 @@ import socket
 import datetime
 import time as pytime
 
-
+class Unbuffered(object):
+   def __init__(self, stream):
+       self.stream = stream
+   def write(self, data):
+       self.stream.write(data)
+       self.stream.flush()
+   def writelines(self, datas):
+       self.stream.writelines(datas)
+       self.stream.flush()
+   def __getattr__(self, attr):
+       return getattr(self.stream, attr)
+       
 allSubsystems=['general', 'channel', 'jmsruntime', 'jmsserver', 'datasource']
 
 header = {}
@@ -370,7 +381,7 @@ for opt, arg in opts:
         else:
             monitor_subsystems = arg.split(',')
     elif opt in ('--subsystem'):
-        monitor_subsystems = [subsystem]
+        monitor_subsystems = [arg]
     elif opt in ('--timedelimiter'):
         timedelimiter = arg
     elif opt in ('--delimiter'):

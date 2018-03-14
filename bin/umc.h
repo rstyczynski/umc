@@ -385,22 +385,44 @@ function invoke {
   # tool header is available in $cmd.info
   CSVheader="$CSVheader$($toolsBin/getCfg.py $probeInfo $probeYAMLRoot.header)"
  
-  #TODO pass header to log director
+  #TODO pass header to log director 
   echo $CSVheader
+
+  #add timestamp
+  timestampMethod=$($toolsBin/getCfg.py $probeInfo $probeYAMLRoot.timestamp.method)
+  if [ $? -eq 0 ]; then
+    timestampDirective=$($toolsBin/getCfg.py $probeInfo $probeYAMLRoot.timestamp.directive)
+  else
+    timestampMethod=external
+    timestampDirective=""
+  fi
+  
 
   #run the tool
   if [ "$loop" = "external" ]; then
-    $toolsBin/timedExec.sh $interval $count $uosmcDEBUG $toolExecDir/$cmd $@ \
-    | perl -ne "$perlBUFFER; print \"$hostname,$cmd,\$_\";" \
-    | $toolsBin/addTimestamp.pl $addTimestampBUFFER -timedelimiter=" " -delimiter=$CSVdelimiter
+    if [ "$timestampMethod" = "internal" ]; then
+        $toolsBin/timedExec.sh $interval $count $uosmcDEBUG $toolExecDir/$cmd $timestampDirective $@
+    else
+        $toolsBin/timedExec.sh $interval $count $uosmcDEBUG $toolExecDir/$cmd $@ \
+        | perl -ne "$perlBUFFER; print \"$hostname,$cmd,\$_\";" \
+        | $toolsBin/addTimestamp.pl $addTimestampBUFFER -timedelimiter=" " -delimiter=$CSVdelimiter
+    fi
   elif [ "$loop" = "options" ]; then
-    $toolExecDir/$cmd $loop_options $@ \
-    | perl -ne "$perlBUFFER; print \"$hostname,$cmd,\$_\";" \
-    | $toolsBin/addTimestamp.pl $addTimestampBUFFER -timedelimiter=" " -delimiter=$CSVdelimiter
+    if [ "$timestampMethod" = "internal" ]; then
+        $toolExecDir/$cmd $loop_options $timestampDirective $@
+    else
+        $toolExecDir/$cmd $loop_options $@ \
+        | perl -ne "$perlBUFFER; print \"$hostname,$cmd,\$_\";" \
+        | $toolsBin/addTimestamp.pl $addTimestampBUFFER -timedelimiter=" " -delimiter=$CSVdelimiter
+    fi
   else
-    $toolExecDir/$cmd $@ \
-    | perl -ne "$perlBUFFER; print \"$hostname,$cmd,\$_\";" \
-    | $toolsBin/addTimestamp.pl $addTimestampBUFFER -timedelimiter=" " -delimiter=$CSVdelimiter
+    if [ "$timestampMethod" = "internal" ]; then
+        $toolExecDir/$cmd $timestampDirective $@ 
+    else
+        $toolExecDir/$cmd $@ \
+        | perl -ne "$perlBUFFER; print \"$hostname,$cmd,\$_\";" \
+        | $toolsBin/addTimestamp.pl $addTimestampBUFFER -timedelimiter=" " -delimiter=$CSVdelimiter
+    fi
   fi
 }
 
