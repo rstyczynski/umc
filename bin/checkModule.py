@@ -8,7 +8,7 @@ module = sys.argv[1]
 
 try:
     imp.find_module(module)
-    found = exit(0)
+    exit(0)
 except ImportError:
-    found = exit(1)
+    exit(1)
     
