@@ -65,6 +65,8 @@ def getStats(targetSystem, targetPort):
         responseStr = s.recv(4096)
         ms = (time.time() - start_time ) * 1000
         response=ms
+        if makeResponseShort:
+            responseStr = responseStr[:10]
         #
         start_time = time.time()
         s.close
@@ -131,9 +133,12 @@ timestamp = False
 notbuffered = False
 noheader=False
 printrawheader=False
+
+makeResponseShort = True
+
 #
 try:
-    opts, args = getopt.getopt( sys.argv[1:], 's:p:u:c:d:h', ['server=','port=','ulr=', 'count=','delay=','subsystem=','subsystems=','help', 'helpInternal', 'timedelimiter=','delimiter=','system=','source=', 'globalheader=', 'noheader', 'timestamp', 'notbuffered', 'printrawheader'] )
+    opts, args = getopt.getopt( sys.argv[1:], 's:p:u:c:d:h', ['server=','port=','ulr=', 'count=','delay=','subsystem=','subsystems=','help', 'helpInternal', 'timedelimiter=','delimiter=','system=','source=', 'globalheader=', 'noheader', 'timestamp', 'notbuffered', 'printrawheader', 'longResponse'] )
 except getopt.GetoptError, err:
     print str(err)
     usage()
@@ -151,6 +156,8 @@ for opt, arg in opts:
         monitor_subsystems = arg.split(',')
     elif opt in ('--subsystem'):
         monitor_subsystems = arg
+    elif opt in ('--longResponse'):
+        makeResponseShort = False
     elif opt in ('--timedelimiter'):
         timedelimiter = arg
     elif opt in ('--delimiter'):
