@@ -35,8 +35,14 @@ for tool in $tools; do
         subsystem_name=$cmd
     fi
     
-    #execute
+    # execute
     umc $cmd collect $count $delay $args | perl $umcRoot/bin/logdirector.pl -n $subsystem_name -rotateByTime clock -timeLimit 5 -addDateSubDir -alwaysRotate -prefixDate -detectHeader & 
+    
+    # clean
+    unset UMC_PROBE_LOG_NAME
+    unset subsystem_name
+    unset cmd
+    unset args
 done
 
 echo
