@@ -9,8 +9,8 @@ getData=sys.argv[2]
 
 
 try:
-    with open(yamlFile, 'r') as yamlDoc:
-        doc = yaml.load(yamlDoc)
+    yamlDoc = open(yamlFile, 'r')
+    doc = yaml.load(yamlDoc)
 
     finalDoc=doc
     for cfgElement in getData.split('.'):
