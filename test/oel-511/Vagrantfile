@@ -1,0 +1,20 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# This is the vagrant file for umc test machine based on Oracle Enterprise Linux 5.11
+# in order to use this, you need to import the box as follows:
+#
+# 	vagrant add --name oel511 http://cloud.terry.im/vagrant/oraclelinux-5-x86_64.box
+#
+Vagrant.configure("2") do |config|
+  config.vm.box = "oel511"
+
+  # this will map the umc root to the vagrant's home umc directory
+  config.vm.synced_folder "../../", "/home/vagrant/umc"
+
+  config.vm.provider "virtualbox" do |vb|
+      vb.name = "umc_oel511_vm"
+      vb.memory = "512"
+  end
+
+end
