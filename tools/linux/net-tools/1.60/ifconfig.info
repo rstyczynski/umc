@@ -9,13 +9,13 @@ ifconfig:
         collisions,txqueuelen,
         RXbytes,TXbytes
     rawheader:
-        method:     script
+        method:     bash
         directive:  ifconfig.validateheader.sh
         expected: |-
             RXpackets:errors:dropped:overruns:frame:TXpackets:errors:dropped:overruns:carrier:collisions:txqueuelen:RXbytes:TXbytes:
     availability:
-        method:
-        directive:
+        method:     file
+        directive:  /sbin/ifconfig
     loop:
         method:     external
         directive:  

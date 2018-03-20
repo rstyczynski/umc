@@ -7,7 +7,8 @@ pingSocket:
     rawheader:
         method:     script
         directive:  pingSocket.py --printrawheader
-        expected:   targetName,targetPort,address,dnsInfo,resolve,resolveFull,connect,send,response,close,response,error
+        expected: |-  
+            targetName,targetPort,address,dnsInfo,resolve,resolveFull,connect,send,response,close,response,error
     availability:
         method:     env
         directive:  WL_HOME

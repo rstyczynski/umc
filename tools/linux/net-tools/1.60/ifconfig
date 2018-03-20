@@ -15,7 +15,7 @@ fi
 
 #collect data for each interface
 for net in $netlist; do 
-   ifconfig $net \
+   /sbin/ifconfig $net \
    | grep -i X \
    | perl $toolsBin/joinlines.pl -stop "RX bytes" \
    | sed $sedBUFFER 's/[a-zA-Z:]//g' \

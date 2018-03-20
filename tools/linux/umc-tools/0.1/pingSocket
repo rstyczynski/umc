@@ -2,4 +2,4 @@
 
 toolDir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
-$toolDir/pingSocket.py $@
+python $toolDir/pingSocket.py $@

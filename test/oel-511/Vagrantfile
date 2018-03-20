@@ -4,7 +4,7 @@
 # This is the vagrant file for umc test machine based on Oracle Enterprise Linux 5.11
 # in order to use this, you need to import the box as follows:
 #
-# 	vagrant add --name oel511 http://cloud.terry.im/vagrant/oraclelinux-5-x86_64.box
+# 	vagrant box add --name oel511 http://cloud.terry.im/vagrant/oraclelinux-5-x86_64.box
 #
 Vagrant.configure("2") do |config|
   config.vm.box = "oel511"

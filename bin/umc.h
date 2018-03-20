@@ -8,6 +8,8 @@ export umcRoot="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
 
 export toolsBin=$umcRoot/bin
 
+PATH=$PATH:/sbin
+
 #---------------------------------------------------------------------------------------
 #--- call cfg scripts
 #---------------------------------------------------------------------------------------
@@ -20,7 +22,8 @@ export toolsBin=$umcRoot/bin
 #---------------------------------------------------------------------------------------
 #--- check required python modules
 #---------------------------------------------------------------------------------------
-if python $toolsBin/checkModule.py pyyaml; then
+python $toolsBin/checkModule.py yaml
+if [ $? -ne 0 ]; then
     echo "Note: pyyaml module not available. Installing in user space..."
     oldDir=$PWD
     cd /tmp
@@ -503,10 +506,19 @@ function testCompatibility {
       return 0
     fi
   fi
-  
-  if [[ "$rawHeaderMethod" == "script" ]]; then
+
+  if [[ "$rawHeaderMethod" == "bash" ]]; then
     systemHeader=$(. $toolExecDir/$rawHeaderDirective)
     if [ "$rawHeader" = "$systemHeader" ]; then
+      echo OK
+      #reportCompatibilityResult $toolCmd Success $toolExecDir
+      return 0
+    fi
+  fi
+  
+  if [[ "$rawHeaderMethod" == "script" ]]; then
+    systemHeader=$($toolExecDir/$rawHeaderDirective | tr -d '\r')
+    if [[ "$rawHeader" = "$systemHeader" ]]; then
       echo OK
       #reportCompatibilityResult $toolCmd Success $toolExecDir
       return 0
@@ -515,7 +527,9 @@ function testCompatibility {
 
   echo "Error! Reason: different header"
   echo "Reported header: $systemHeader"
+  echo $systemHeader | hexdump
   echo "Expected header: $rawHeader"
+  echo $rawHeader | hexdump
   #reportCompatibilityResult $toolCmd Failure $toolExecDir
   return 1
 }
