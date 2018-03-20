@@ -19,6 +19,24 @@ PATH=$PATH:/sbin
 # configure global params
 . $toolsBin/global.cfg
 
+
+#---------------------------------------------------------------------------------------
+#--- check required python version
+#---------------------------------------------------------------------------------------
+python_version_major=$(python -V 2>&1 | cut -f2 -d' ' | cut -d'.' -f1)
+python_version_minor=$(python -V 2>&1 | cut -f2 -d' ' | cut -d'.' -f2)
+python_version_patch=$(python -V 2>&1 | cut -f2 -d' ' | cut -d'.' -f3)
+
+python_version=$(( $(( 1000 * $python_version_major )) + $(( 100 * $python_version_minor)) + $python_version_patch  ))
+    
+if [ $python_version -lt 2700 ]; then
+    echo "Error: you need bython >=2.7 to run umc."
+    echo
+    echo "Install python in a system or in your home directory. Details here: http://thelazylog.com/install-python-as-local-user-on-linux/"
+    return 1
+fi
+    
+    
 #---------------------------------------------------------------------------------------
 #--- check required python modules
 #---------------------------------------------------------------------------------------
