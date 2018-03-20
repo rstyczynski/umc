@@ -17,4 +17,25 @@ Vagrant.configure("2") do |config|
       vb.memory = "512"
   end
 
+  config.vm.provision "shell", privileged: false, inline: <<-SHELL
+	# install python 2.7.11 locally
+        mkdir ~/python
+        cd ~/python
+        wget --progress=bar:force https://www.python.org/ftp/python/2.7.11/Python-2.7.11.tgz
+        tar zxfv Python-2.7.11.tgz
+        find ~/python -type d | xargs chmod 0755
+        cd Python-2.7.11
+
+        # build python binaries
+        ./configure --prefix=$HOME/python
+        make && make install
+
+        # update environment variables 
+        echo "" >>~/.bash_profile
+	echo "# environment for local python" >>~/.bash_profile
+	echo "export PATH=$HOME/python/Python-2.7.11/:$PATH" >>~/.bash_profile
+        echo "export PYTHONPATH=$HOME/python/Python-2.7.11" >>~/.bash_profile
+  SHELL
+  
+
 end
