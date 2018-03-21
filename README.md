@@ -441,7 +441,9 @@ datetime,timezone,timestamp,system,source,ServerName, soainfra_composite,soainfr
 ```
 
 # Bulk data collection #
-In real sutiation e.g. during performace tests it's needed to start collections of multiple (if not all) pieces of information. UMC is equipped with utility to support start of multiple probes at the same time. Bulk utility splits log files every 15 minutes (clock time) and saves in directory with current date. 
+In real sutiation e.g. during performace tests it's needed to start collections of multiple (if not all) pieces of information. UMC is equipped with utility to support start of multiple probes at the same time.
+
+Bulk utility additionally uses log splitter, which splits log files every 15 minutes (clock time) and saves in directory with current date. 
 
 To start 10 collections with 1 second interval use the following command:
 
@@ -504,7 +506,7 @@ total 40
 ```
 
 ## special use ##
-To specify probes parameters use colon instead of spaces. To write data to another directory, use --logDir argument. To store files in a subdirectory - possibly to given test data, use --testId argument. Finally to run data collection in background use --nonblocking flag. 
+To specify probes parameters use colon instead of spaces. To write data to another directory, use --logDir argument. To store files in a subdirectory - possibly to given test identifier, use --testId argument. Finally to run data collection in background use --nonblocking flag. 
 
 ```
 umc_collectAll.sh 1 10 "iostat vmstat free uptime ifconfig:eth0" --logDir=/home/vagrant/perfdata --testId=A --nonblocking
@@ -668,7 +670,7 @@ datetime,timezone,timestamp,system,source,Device,tps,kB_read/s,kB_wrtn/s,kB_read
 # Required packages
 UMC is based mainly on bash, however requires set of packages to work properly. Python 2.7 and perl are used by utility scripts supporting UMC in some aspects as reading yaml configuration, or prefixing stream with timestamps.
 
-Install for Ubuntu:
+Install packages for Ubuntu:
 ```bash
 apt-get clean
 apt-get update
@@ -681,7 +683,7 @@ apt-get install -y net-tools
 locale-gen en_US.UTF-8
 ```
 
-If it's not possible to install python 2.7 due to lack of priviliges, you may install it in your home directory. Details n this blog: http://thelazylog.com/install-python-as-local-user-on-linux/
+If it's not possible to install python 2.7 due to lack of priviliges, you may install it in your home directory. Details at this blog: http://thelazylog.com/install-python-as-local-user-on-linux/
 
 
 # Extend probe definition
