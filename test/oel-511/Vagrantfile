@@ -18,6 +18,9 @@ Vagrant.configure("2") do |config|
   end
 
   config.vm.provision "shell", privileged: false, inline: <<-SHELL
+	# set Europe/Prague timezone 
+	sudo rm /etc/localtime && sudo ln -s /usr/share/zoneinfo/Europe/Prague /etc/localtime
+
 	# install python 2.7.11 locally
         mkdir ~/python
         cd ~/python
@@ -37,9 +40,10 @@ Vagrant.configure("2") do |config|
 	echo "export PATH=$HOME/python/Python-2.7.11/:$PATH" >>~/.bash_profile
         echo "export PYTHONPATH=$HOME/python/Python-2.7.11" >>~/.bash_profile
 	echo "source $HOME/umc/bin/umc.h &>/dev/null" >>~/.bash_profile
+	echo "umc" >>~/.bash_profile
 
         # umc scripts use python2 in shebang
-	# hence reate a symbolic link for python2 to point to python 2.7.11
+	# hence create a symbolic link for python2 to point to python 2.7.11
 	cd $HOME/python/Python-2.7.11/
 	ln -s python python2
          
