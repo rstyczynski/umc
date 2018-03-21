@@ -8,7 +8,7 @@ export umcRoot="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
 
 export toolsBin=$umcRoot/bin
 
-PATH=$PATH:/sbin
+PATH=$PATH:/sbin:$toolsBin
 
 #---------------------------------------------------------------------------------------
 #--- call cfg scripts
@@ -353,9 +353,6 @@ function invoke {
         export uosmcDEBUG=DEBUG
         shift
   fi
-
-  export LC_CTYPE=en_US.UTF-8
-  export LC_ALL=en_US.UTF-8
 
   export cmd=$1
   shift
