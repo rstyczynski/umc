@@ -440,6 +440,150 @@ datetime,timezone,timestamp,system,source,ServerName, soainfra_composite,soainfr
 
 ```
 
+# Bulk data collection #
+In real sutiation e.g. during performace tests it's needed to start collections of multiple (if not all) pieces of information. UMC is equipped with utility to support start of multiple probes at the same time.
+
+Bulk utility additionally uses log splitter, which splits log files every 15 minutes (clock time) and saves in directory with current date. 
+
+To start 10 collections with 1 second interval use the following command:
+
+```
+umc_collectAll.sh 1 10 "vmstat free top uptime meminfo tcpext netstattcp ifconfig iostat pingSocket" 
+
+Note: Oracle SOA not configured. Update etc/umc.cfg to be able to use SOA related components of the package.
+Universal Metrics Collector initialized.
+
+Batch UMC collector initializes data collection for following probes:
+-> vmstat
+-> free
+-> top
+-> uptime
+-> meminfo
+-> tcpext
+-> netstattcp
+-> ifconfig
+-> iostat
+-> pingSocket
+
+Starting umc vmstat collect 10 1 ...
+Starting umc free collect 10 1 ...
+Starting umc top collect 10 1 ...
+Starting umc uptime collect 10 1 ...
+Starting umc meminfo collect 10 1 ...
+Starting umc tcpext collect 10 1 ...
+Starting umc netstattcp collect 10 1 ...
+Starting umc ifconfig collect 10 1 ...
+Starting umc iostat collect 10 1 ...
+Starting umc pingSocket collect 10 1 ...
+
+Waiting for probes to finish data collection.
+10,9,8,7,6,5,4,3,2,1,done.
+```
+
+Note that following error may be reported, which may be ignored:
+
+```
+close failed in file object destructor:
+sys.excepthook is missing
+lost sys.stderr
+```
+
+Data files are written in directory named with current date. 
+
+```
+[vagrant@oracle ~]$ ls -l 2018-03-22
+total 40
+-rw-r----- 1 vagrant vagrant  276 Mar 22 08:00 2018-03-22-080036_free.log
+-rw-r----- 1 vagrant vagrant  413 Mar 22 08:00 2018-03-22-080036_ifconfig.log
+-rw-r----- 1 vagrant vagrant 1053 Mar 22 08:00 2018-03-22-080036_iostat.log
+-rw-r----- 1 vagrant vagrant  772 Mar 22 08:00 2018-03-22-080036_meminfo.log
+-rw-r----- 1 vagrant vagrant  366 Mar 22 08:00 2018-03-22-080036_netstattcp.log
+-rw-r----- 1 vagrant vagrant  998 Mar 22 08:00 2018-03-22-080036_pingSocket_general.log
+-rw-r----- 1 vagrant vagrant 1478 Mar 22 08:00 2018-03-22-080036_tcpext.log
+-rw-r----- 1 vagrant vagrant 1451 Mar 22 08:00 2018-03-22-080036_top.log
+-rw-r----- 1 vagrant vagrant  158 Mar 22 08:00 2018-03-22-080036_uptime.log
+-rw-r----- 1 vagrant vagrant  369 Mar 22 08:00 2018-03-22-080036_vmstat.log
+```
+
+## special use ##
+To specify probes parameters use colon instead of spaces. To write data to another directory, use --logDir argument. To store files in a subdirectory - possibly to given test identifier, use --testId argument. Finally to run data collection in background use --nonblocking flag. 
+
+```
+umc_collectAll.sh 1 10 "iostat vmstat free uptime ifconfig:eth0" --logDir=/home/vagrant/perfdata --testId=A --nonblocking
+
+Note: Oracle SOA not configured. Update etc/umc.cfg to be able to use SOA related components of the package.
+Universal Metrics Collector initialized.
+
+Batch UMC collector initializes data collection for following probes:
+-> iostat
+-> vmstat
+-> free
+-> uptime
+-> ifconfig eth0
+
+Starting umc iostat collect 10 1 ...
+Starting umc vmstat collect 10 1 ...
+Starting umc free collect 10 1 ...
+Starting umc uptime collect 10 1 ...
+Starting umc ifconfig collect 10 1 eth0 ...
+
+Probes left running in background. Use umc_stopAll.sh to stop.
+```
+
+Process runs in background, writing files to date directory under /home/vagrant/perfdata/A.
+
+```
+[vagrant@oracle ~]$ ls -l /home/vagrant/perfdata/A
+total 4
+drwxr-x--- 2 vagrant vagrant 4096 Mar 22 08:34 2018-03-22
+
+[vagrant@oracle ~]$ ls -l /home/vagrant/perfdata/A/2018-03-22/
+total 20
+-rw-r----- 1 vagrant vagrant  276 Mar 22 08:34 2018-03-22-083456_free.log
+-rw-r----- 1 vagrant vagrant  314 Mar 22 08:35 2018-03-22-083456_ifconfig.log
+-rw-r----- 1 vagrant vagrant 1027 Mar 22 08:35 2018-03-22-083456_iostat.log
+-rw-r----- 1 vagrant vagrant  158 Mar 22 08:35 2018-03-22-083456_uptime.log
+-rw-r----- 1 vagrant vagrant  366 Mar 22 08:35 2018-03-22-083456_vmstat.log
+```
+
+To stop background data collection use umc_stopAll.sh
+
+```
+umc_collectAll.sh 1 10 "iostat vmstat free uptime ifconfig:eth0" --logDir=/home/vagrant/perfdata --testId=A --nonblocking
+
+Note: Oracle SOA not configured. Update etc/umc.cfg to be able to use SOA related components of the package.
+Universal Metrics Collector initialized.
+
+Batch UMC collector initializes data collection for following probes:
+-> iostat
+-> vmstat
+-> free
+-> uptime
+-> ifconfig eth0
+
+Starting umc iostat collect 10 1 ...
+Starting umc vmstat collect 10 1 ...
+Starting umc free collect 10 1 ...
+Starting umc uptime collect 10 1 ...
+Starting umc ifconfig collect 10 1 eth0 ...
+
+Probes left running in background. Use umc_stopAll.sh to stop.
+
+
+[vagrant@oracle ~]$ umc_stopAll.sh
+Active processes:
+vagrant  11474  0.0  0.1  64036   836 pts/0    S    08:38   0:00 /bin/bash /home/vagrant/umc/bin/umc_collectAll.sh 1 10 iostat vmstat free uptime ifconfig:eth0 --logDir=/home/vagrant/perfdata --testId=A --nonblocking
+vagrant  11511  0.0  0.1  64036   836 pts/0    S    08:38   0:00 /bin/bash /home/vagrant/umc/bin/umc_collectAll.sh 1 10 iostat vmstat free uptime ifconfig:eth0 --logDir=/home/vagrant/perfdata --testId=A --nonblocking
+vagrant  11586  0.0  0.1  64036   836 pts/0    S    08:38   0:00 /bin/bash /home/vagrant/umc/bin/umc_collectAll.sh 1 10 iostat vmstat free uptime ifconfig:eth0 --logDir=/home/vagrant/perfdata --testId=A --nonblocking
+vagrant  11627  0.0  0.1  64036   828 pts/0    S    08:38   0:00 /bin/bash /home/vagrant/umc/bin/umc_collectAll.sh 1 10 iostat vmstat free uptime ifconfig:eth0 --logDir=/home/vagrant/perfdata --testId=A --nonblocking
+
+Stopped umc process 11474 and all child processes.
+Stopped umc process 11511 and all child processes.
+Stopped umc process 11586 and all child processes.
+Stopped umc process 11627 and all child processes.
+All clean.
+```
+
 
 # Missing utility
 When the utility is missing umc will report the problem.
@@ -524,8 +668,9 @@ datetime,timezone,timestamp,system,source,Device,tps,kB_read/s,kB_wrtn/s,kB_read
 ```
 
 # Required packages
-UMC is based mainly on bash, however requires set of packages to work properly. Python and perl are used by utility scripts supporting UMC in some aspects as reading yaml configuration, or prefixing stream with timestamps.
+UMC is based mainly on bash, however requires set of packages to work properly. Python 2.7 and perl are used by utility scripts supporting UMC in some aspects as reading yaml configuration, or prefixing stream with timestamps.
 
+Install packages for Ubuntu:
 ```bash
 apt-get clean
 apt-get update
@@ -537,6 +682,9 @@ apt-get install -y sysstat
 apt-get install -y net-tools
 locale-gen en_US.UTF-8
 ```
+
+If it's not possible to install python 2.7 due to lack of priviliges, you may install it in your home directory. Details at this blog: http://thelazylog.com/install-python-as-local-user-on-linux/
+
 
 # Extend probe definition
 TODO
