@@ -18,35 +18,21 @@ Vagrant.configure("2") do |config|
   end
 
   config.vm.provision "shell", privileged: false, inline: <<-SHELL
-	# set Europe/Prague timezone 
-	sudo rm /etc/localtime && sudo ln -s /usr/share/zoneinfo/Europe/Prague /etc/localtime
+    # set Europe/Prague timezone 
+    sudo rm /etc/localtime && sudo ln -s /usr/share/zoneinfo/Europe/Prague /etc/localtime
 
-	# install python 2.7.11 locally
-        mkdir ~/python
-        cd ~/python
-        wget --progress=bar:force https://www.python.org/ftp/python/2.7.11/Python-2.7.11.tgz
-        tar zxfv Python-2.7.11.tgz
-        find ~/python -type d | xargs chmod 0755
-	rm Python-2.7.11.tgz
-        cd Python-2.7.11
+    # install python 2.7.11 locally
+    echo "Installing python-2.7.11 locally, this will take few minutes..."
+    echo "Check python-2.7.11-install.log"
+    ~/umc/test/oel-511/python-2.7.11-install.sh &>~/umc/test/oel-511/python-2.7.11-install.log
+    if [ $? != 0 ]; then
+    	echo >&2 "Error when installing python 2.7.11 locally, check ~/umc/test/oel-511/python-2.7.11-install.log for details"
+    fi
 
-        # build python binaries
-        ./configure --prefix=$HOME/python
-        make && make install
-
-        # update environment variables 
-        echo "" >>~/.bash_profile
-	echo "# environment for local python" >>~/.bash_profile
-	echo "export PATH=$HOME/python/Python-2.7.11/:$PATH" >>~/.bash_profile
-        echo "export PYTHONPATH=$HOME/python/Python-2.7.11" >>~/.bash_profile
-	echo "source $HOME/umc/bin/umc.h &>/dev/null" >>~/.bash_profile
-	echo "umc" >>~/.bash_profile
-
-        # umc scripts use python2 in shebang
-	# hence create a symbolic link for python2 to point to python 2.7.11
-	cd $HOME/python/Python-2.7.11/
-	ln -s python python2
-         
+    # initialize umc on user login
+    echo "Setting up environment variables for umc"
+    echo "source $HOME/umc/bin/umc.h &>/dev/null" >>~/.bash_profile
+    echo "umc" >>~/.bash_profile
   SHELL
   
 
