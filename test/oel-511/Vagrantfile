@@ -29,10 +29,36 @@ Vagrant.configure("2") do |config|
     	echo >&2 "Error when installing python 2.7.11 locally, check ~/umc/test/oel-511/python-2.7.11-install.log for details"
     fi
 
+    # install jdk locally
+    echo "Installing jdk-8u162 locally..."
+    echo "Check jdk-8u162-install.log"
+    ~/umc/test/oel-511/jdk-8u162-install.sh &>~/umc/test/oel-511/jdk-8u162-install.log
+    if [ $? != 0 ]; then
+      echo >&2 "Error when installing jdk-8u162 locally, check ~/umc/test/oel-511/jdk-8u162-install.log for details"
+    fi
+
+    # install sqlcl locally
+    echo "Installing sqlcl-17.4.0 locally..."
+    echo "Check sqlcl-17.4.0-install.log"
+    ~/umc/test/oel-511/sqlcl-17.4.0-install.sh &>~/umc/test/oel-511/sqlcl-17.4.0-install.log
+    if [ $? != 0 ]; then
+      echo >&2 "Error when installing sqlcl 17.4.0 locally, check ~/umc/test/oel-511/sqlcl-17.4.0-install.log for details"
+    fi
+
+    # other settings on user login
+    echo "Setting up other settings on user logon" 
+    echo "" >>~/.bash_profile
+    echo "# various settings" >>~/.bash_profile
+    echo "export LS_COLORS=''" >>~/.bash_profile
+    echo "alias ll='ls -all --color=always'" >>~/.bash_profile
+
     # initialize umc on user login
     echo "Setting up environment variables for umc"
+    echo "" >>~/.bash_profile
+    echo "# umc settings" >>~/.bash_profile
     echo "source $HOME/umc/bin/umc.h &>/dev/null" >>~/.bash_profile
     echo "umc" >>~/.bash_profile
+
   SHELL
   
 
