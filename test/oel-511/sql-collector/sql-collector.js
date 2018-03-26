@@ -15,7 +15,7 @@ var Files = Java.type('java.nio.file.Files');
 //print(System.getenv("DB_CONNSTR"));
 
 var optionDef = [
-  { name: 'connect',            type: String,    required: true,  desc : "DB connection string. Set '/nolog' for no connection." },
+  { name: 'connect',            type: String,    required: true,  desc : "DB connection string." },
   { name: 'query',              type: String,    required: true,  desc : "SQL query file." },
   { name: 'count',              type: Number,    required: true,  desc : "Number of iterations the query will run." },
   { name: 'interval',           type: Number,    required: true,  desc : "Delay in seconds betwen iterations." },
@@ -23,7 +23,7 @@ var optionDef = [
   { name: 'showSQLErrors',                       required: false, desc : "SQL errors will be written to the output." },  
   { name: '#([a-zA-Z0-9_\\-\\*\\+\\.]+)',
                                 type: String,    required: false, desc : "A regular expression to replace a string with a value in the query." }, 
-  { name: 'test',                                required: false, desc : "Do not run anything, just test and be verbose." },
+  { name: 'test',                                required: false, desc : "Test and be verbose, will run only one iteration of the query." },
 ]
 
 // clean arguments
@@ -82,22 +82,31 @@ if (argv) {
   runSQL("SET SQLBLANKLINES ON");
   runSQL("SET TRIMSPOOL ON");
 
-  if (!argv.showSQLErrors) {
+  if (!argv.showSQLErrors && !argv.test) {
     runSQL("SET ECHO OFF");
     runSQL("SET FEEDBACK OFF");
   }
 
-  if (!argv.test) {
+  if (argv.test) {
+    print("* Connecting to the DB...");
+  }
 
-    runSQL("CONNECT " + argv.connect.value);
+  // connect to the DB
+  runSQL("CONNECT " + argv.connect.value);
 
-    // run SQL count times with interval bettwen runs
-    for (var i = 0; i < argv.count.value; i++) {
-      runSQLIteration(i + 1);
+  // if testing, run only once
+  if (argv.test) argv.count.value = 1;
 
-      if (i < argv.count.value - 1)
-        Thread.sleep(argv.interval.value * 1000);
-    }
+  if (argv.test) {
+    print("* Running one iteration of the query...");
+  }
+
+  // run SQL count times with interval bettwen runs
+  for (var i = 0; i < argv.count.value; i++) {
+    runSQLIteration(i + 1);
+
+    if (i < argv.count.value - 1)
+      Thread.sleep(argv.interval.value * 1000);
   }
 
 }
