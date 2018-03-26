@@ -1,0 +1,3 @@
+[submodule "varia/sql-collector"]
+	path = varia/sql-collector
+	url = https://github.com/tomvit/sql-collector.git
