@@ -1,0 +1,2 @@
+source env.sh
+../bin/sql-collector --connect $DB_CONNSTR --query sys-long-running-queries.sql --count 2 --interval 2

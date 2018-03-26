@@ -1,0 +1,29 @@
+#!/bin/bash
+# Oracle SQL query metric collector
+# sql-collector uses SQLcl to run SQL in a Oracle DB
+
+# directory of sqlc script
+export sqlcDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# check environment
+# check that sql command exist
+if ! type "sql" &> /dev/null; then
+    echo >&2 "sql command is not available. Is SQLcl installed and on the system path?"
+    exit 1
+fi
+
+# generate sql file for sqlcl to execute
+# her§edoc did not work very well for sqlcl, there was always a newline 
+# generated on execution which was a problem for the purpsoe of this script
+tmpfile=".sql-executor-$((1 + RANDOM % 1000)).sql"
+echo "script $sqlcDir/sql-collector.js &1" >$tmpfile
+echo "exit" >>$tmpfile
+
+# remove the tmpfile on exit
+function cleanup {
+	rm $tmpfile
+}
+trap cleanup EXIT
+
+# run sqlcl
+sql -S /nolog @$tmpfile "$*"

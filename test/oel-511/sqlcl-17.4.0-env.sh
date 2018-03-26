@@ -25,5 +25,6 @@ if [ ! $? -eq 0 ]; then
 	echo >&2 "Perhaps you can use a docker image wnameless/oracle-xe-11g ?"
 fi
 
+# the u/p here is valid for XE db running as a docker container wnameless/oracle-xe-11g
 export DB_CONNSTR="sys/oracle@$DB_HOST:$DB_PORT:$DB_SERVICE as sysdba"
 echo "DB connection string is $DB_CONNSTR"
