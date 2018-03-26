@@ -15,6 +15,7 @@ var Files = Java.type('java.nio.file.Files');
 //print(System.getenv("DB_CONNSTR"));
 
 var optionDef = [
+  { name: 'connect',            type: String,    required: true,  desc : "DB connection string. Set '/nolog' for no connection." },
   { name: 'query',              type: String,    required: true,  desc : "SQL query file." },
   { name: 'count',              type: Number,    required: true,  desc : "Number of iterations the query will run." },
   { name: 'interval',           type: Number,    required: true,  desc : "Delay in seconds betwen iterations." },
@@ -22,6 +23,7 @@ var optionDef = [
   { name: 'showSQLErrors',                       required: false, desc : "SQL errors will be written to the output." },  
   { name: '#([a-zA-Z0-9_\\-\\*\\+\\.]+)',
                                 type: String,    required: false, desc : "A regular expression to replace a string with a value in the query." }, 
+  { name: 'test',                                required: false, desc : "Do not run anything, just test and be verbose." },
 ]
 
 // clean arguments
@@ -48,6 +50,13 @@ var argv = parseArgsAndHelp(programName, cmdargs, optionDef);
 
 if (argv) {
 
+  if (argv.test) {
+    print("* sql-collector executed in the test mode.");
+    print("* Arguments parsed as JSON object:");
+    print(JSON.stringify(argv));
+    print('');
+  }
+
   // load sql query from the input file
   var sql = loadSQLTemplate(argv.query.value);
 
@@ -55,6 +64,12 @@ if (argv) {
   for (var arg in argv) {
     if (argv[arg].name.startsWith("#"))
       sql = sql.replace(new RegExp(argv[arg].name.substr(1), 'g'), argv[arg].value);  
+  }
+
+  if (argv.test) {
+    print("* SQL query:");
+    print(sql);
+    print('');
   }
 
   function runSQLIteration(iteration) {
@@ -72,12 +87,17 @@ if (argv) {
     runSQL("SET FEEDBACK OFF");
   }
 
-  // run SQL count times with interval bettwen runs
-  for (var i = 0; i < argv.count.value; i++) {
-    runSQLIteration(i + 1);
+  if (!argv.test) {
 
-    if (i < argv.count.value - 1)
-      Thread.sleep(argv.interval.value * 1000);
+    runSQL("CONNECT " + argv.connect.value);
+
+    // run SQL count times with interval bettwen runs
+    for (var i = 0; i < argv.count.value; i++) {
+      runSQLIteration(i + 1);
+
+      if (i < argv.count.value - 1)
+        Thread.sleep(argv.interval.value * 1000);
+    }
   }
 
 }

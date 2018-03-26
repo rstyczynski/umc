@@ -67,28 +67,36 @@ var parseArgs = function(args, optionDefinitions) {
     // expects arg name on this pposition
     if (exp === 0) {
       // parse the arg name, it must start with leading ARG_PREFIX
-      if (!item.startsWith(ARG_PREFIX))
-        throw "Argument name expected, the name '" + item + "' is invalid. The argument name must be prefixed with '" + ARG_PREFIX + "'."
-
-      // find the arg in option definitions
-      arg = findArgDef(item.substr(ARG_PREFIX.length), optionDefinitions);
-
-      // error when not found
-      if (!arg)
-        throw "Argument '" + item + "' is not defined.";
-
-      // increase the use of the arg in options defitions
-      arg.def.__use ? arg.def.__use++ : arg.def.__use = 1;
-
-      // determine what should be next
-      // if the arg is pf type switch (type == null), add arg to argv, and the next expected value is arg name
-      // otherwise the next expected value is the value of the argument
-      if (!arg.def.type) {
-        argv[arg.name] = arg;
-        arg = null;
-        exp = 0;
+      if (!item.startsWith(ARG_PREFIX)) {
+        // if this is not arg definition and the last arg is of type String then add this to its value
+        // this is required when the arg value has spaces
+        if (arg && arg.def && arg.def.type == String) 
+          arg.value = !arg.value ? item : arg.value + " " + item;
+        else
+          throw "Argument name expected, the name '" + item + "' is invalid. The argument name must be prefixed with '" + ARG_PREFIX + "'."
       } else {
-        exp = 1;
+
+        // find the arg in option definitions
+        arg = findArgDef(item.substr(ARG_PREFIX.length), optionDefinitions);
+
+        // error when not found
+        if (!arg)
+          throw "Argument '" + item + "' is not defined.";
+
+        // increase the use of the arg in options defitions
+        arg.def.__use ? arg.def.__use++ : arg.def.__use = 1;
+
+        // determine what should be next
+        // if the arg is pf type switch (type == null), add arg to argv, and the next expected value is arg name
+        // otherwise the next expected value is the value of the argument
+        if (!arg.def.type) {
+          argv[arg.name] = arg;
+          arg = null;
+          exp = 0;
+        } else {
+          exp = 1;
+        }
+
       }
     } else
 
@@ -96,7 +104,7 @@ var parseArgs = function(args, optionDefinitions) {
     if (exp === 1) {
       // this should never happen but better check here
       if (!arg)
-        throw "Internal error. The argt value is null."
+        throw "Internal error. The arg value is null."
       
       // the item should not start with leading ARG_PREFIX
       if (item.startsWith(ARG_PREFIX))
@@ -192,7 +200,7 @@ var showArgsHelp = function(programName, optionDefs) {
 
 var parseArgsAndHelp = function(programName, args, optionDefs) {
   
-  function showHelp() {
+  var showHelp = function() {
     showArgsHelp(programName, optionDef);
     print("");
   }
