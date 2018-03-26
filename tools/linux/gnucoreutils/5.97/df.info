@@ -1,0 +1,33 @@
+df:
+    version: 1.0
+    layer: OS
+    system: OS
+    subsystem: storage
+    header: >-
+        filesystem, type, 1024-blocks,
+        used, available, capacity, mounted_on
+    metrics:
+        info:
+            filesystem:
+            type:
+            mounted_on:
+        blocks:
+            1024-blocks:
+            used:
+            available:
+        percent:
+            capacity:
+    rawheader:
+        method: line
+        directive: 1,1
+        expected: |-
+            Filesystem Type 1024-blocks Used Available Capacity Mounted on
+    availability:
+        method: command
+        directive: df
+    loop:
+        method: external
+        directive:
+    timestamp:
+        method:
+        directive:
