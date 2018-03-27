@@ -43,13 +43,18 @@ fi
 python $toolsBin/checkModule.py yaml
 if [ $? -ne 0 ]; then
     echo "Note: pyyaml module not available. Installing in user space..."
+    if [ ! -d $umcRoot/varia/pyyaml ]; then
+    	echo "Error: Directory $umcRoot/varia/pyyaml does not exist. Have you cloned umc with submodules?"
+	return 1
+    fi
     oldDir=$PWD
     cd /tmp
-    unzip -o $umcRoot/varia/pyyaml-master.zip >/dev/null 2>&1
-    cd pyyaml-master
+    rm -fr pyyaml
+    cp -R $umcRoot/varia/pyyaml . >/dev/null 2>&1
+    cd pyyaml
     python setup.py install --user >/dev/null 2>&1
     cd ..
-    rm -rf pyyaml-master
+    rm -rf pyyaml
     cd $oldDir
 fi
 

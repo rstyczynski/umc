@@ -1,3 +1,6 @@
 [submodule "varia/sql-collector"]
 	path = varia/sql-collector
 	url = https://github.com/tomvit/sql-collector.git
+[submodule "varia/pyyaml"]
+	path = varia/pyyaml
+	url = https://github.com/yaml/pyyaml.git

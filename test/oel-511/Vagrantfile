@@ -56,10 +56,9 @@ Vagrant.configure("2") do |config|
     # initialize umc on user login
     echo "Writing umc settings to bash_profile"
     w2p ""
-    w2p "# umc settings"
-    w2p "source $HOME/umc/bin/umc.h &>/dev/null"
-    w2p "umc"
-
+    w2p "# umc startup"
+    w2p "~/umc/test/oel-511/umc-startup.sh"
+  
   SHELL
   
 
