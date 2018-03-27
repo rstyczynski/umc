@@ -44,6 +44,7 @@ Vagrant.configure("2") do |config|
     install_lib python-2.7.11
     install_lib jdk-8u162
     install_lib sqlcl-17.4.0
+    install_lib sql-collector
 
     # other settings on user login
     echo "Writing misc settings to bash_profile" 
