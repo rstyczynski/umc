@@ -21,7 +21,7 @@ df:
         method: line
         directive: 1,1
         expected: |-
-            Filesystem Type 1024-blocks Used Available Capacity Mounted on
+            Filesystem           1K-blocks      Used Available Use% Mounted on
     availability:
         method: command
         directive: df
@@ -31,3 +31,4 @@ df:
     timestamp:
         method:
         directive:
+            
