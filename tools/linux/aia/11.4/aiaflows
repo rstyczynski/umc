@@ -1,7 +1,9 @@
 #!/bin/bash
 
+getSensorData_bin=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+
 delay=$1 && shift
 count=$1 && shift
 
-sql-collector --connect $DB_CONNSTR --query aiaflows.sql --count $count --interval $delay "$*" 
+sql-collector --connect $DB_CONNSTR --query $getSensorData_bin/aiaflows.sql --count $count --interval $delay "$*" 
 
