@@ -236,7 +236,7 @@ function locateToolExecDir {
         fi
     fi
   done
-  
+ 
   if [ -z $toolExecDir ]; then
     echo "Error! Reason: utility not recognized as supported tool."
     echo "Available versions:"
@@ -426,9 +426,13 @@ function invoke {
 
   # tool header is available in $cmd.info
   CSVheader="$CSVheader$($toolsBin/getCfg.py $probeInfo $probeYAMLRoot.header)"
+
+  rawHeaderMethod=$($toolsBin/getCfg.py $toolExecDir/$cmd.info $cmd.rawheader.method)
  
   #TODO pass header to log director 
-  echo $CSVheader
+  if [ "$rawHeaderMethod" != "firstline" ]; then
+    echo $CSVheader
+  fi
 
   #add timestamp
   timestampMethod=$($toolsBin/getCfg.py $probeInfo $probeYAMLRoot.timestamp.method)
@@ -438,7 +442,6 @@ function invoke {
     timestampMethod=external
     timestampDirective=""
   fi
-  
 
   #run the tool
   if [ "$loop" = "external" ]; then
@@ -461,9 +464,17 @@ function invoke {
     if [ "$timestampMethod" = "internal" ]; then
         $toolExecDir/$cmd $timestampDirective $@ 
     else
-        $toolExecDir/$cmd $@ \
-        | perl -ne "$perlBUFFER; print \"$hostname,$cmd,\$_\";" \
-        | $toolsBin/addTimestamp.pl $addTimestampBUFFER -timedelimiter=" " -delimiter=$CSVdelimiter
+	cnt=0
+	$toolExecDir/$cmd $@ | \
+	while read line; do 
+		if [ $cnt -gt 0 ] || [ "$rawHeaderMethod" != "firstline" ]; then
+			echo $line | perl -ne "$perlBUFFER; print \"$hostname,$cmd,\$_\";" \
+        		| $toolsBin/addTimestamp.pl $addTimestampBUFFER -timedelimiter=" " -delimiter=$CSVdelimiter
+		else
+			echo $CSVheader$line
+		fi
+		cnt=$((cnt+1))
+	done
     fi
   fi
 }
