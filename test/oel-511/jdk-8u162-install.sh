@@ -14,6 +14,10 @@ fi
 # install sqlcl locally
 mkdir -p ~/libs && rm -fr ~/libs/jdk1.8.0_162 && cd ~/libs && tar xvzf ~/umc/varia/jdk-8u162-linux-x64.tar.gz
 
+# replace random with urandom
+sed -i.bckp s#securerandom.source=file:/dev/random#securerandom.source=file:/dev/urandom#g ~/libs/jdk1.8.0_162/jre/lib/security/java.security
+echo "/dev/random replace by /dev/urandom in ~/libs/jdk1.8.0_162/jre/lib/security/java.security"
+
 # environment variables
 echo "" >>~/.bash_profile
 echo "# jdk environment variables" >>~/.bash_profile
