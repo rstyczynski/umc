@@ -425,12 +425,14 @@ function invoke {
   CSVheader="$CSVheader$CSVdelimiter"
 
   # tool header is available in $cmd.info
-  CSVheader="$CSVheader$($toolsBin/getCfg.py $probeInfo $probeYAMLRoot.header)"
-
-  rawHeaderMethod=$($toolsBin/getCfg.py $toolExecDir/$cmd.info $cmd.rawheader.method)
+  headerMethod="$($toolsBin/getCfg.py $probeInfo $probeYAMLRoot.header.method)"
+   
+  if [ "$headerMethod" != "internal" ]; then
+  	CSVheader="$CSVheader$($toolsBin/getCfg.py $probeInfo $probeYAMLRoot.header)"
+  fi
  
-  #TODO pass header to log director 
-  if [ "$rawHeaderMethod" != "firstline" ]; then
+  if [ "$headerMethod" != "internal" ]; then
+    #TODO pass header to log director
     echo $CSVheader
   fi
 
@@ -445,7 +447,7 @@ function invoke {
 
   #run the tool
   if [ "$loop" = "external" ]; then
-    if [ "$timestampMethod" = "internal" ]; then
+    if [ "$timestampMethod" = "internal" ] || [ "$headerMethod" = "internal" ] ; then
         $toolsBin/timedExec.sh $interval $count $uosmcDEBUG $toolExecDir/$cmd $timestampDirective $@
     else
         $toolsBin/timedExec.sh $interval $count $uosmcDEBUG $toolExecDir/$cmd $@ \
@@ -453,7 +455,7 @@ function invoke {
         | $toolsBin/addTimestamp.pl $addTimestampBUFFER -timedelimiter=" " -delimiter=$CSVdelimiter
     fi
   elif [ "$loop" = "options" ]; then
-    if [ "$timestampMethod" = "internal" ]; then
+    if [ "$timestampMethod" = "internal" ] || [ "$headerMethod" = "internal" ]; then
         $toolExecDir/$cmd $loop_options $timestampDirective $@
     else
         $toolExecDir/$cmd $loop_options $@ \
@@ -461,20 +463,12 @@ function invoke {
         | $toolsBin/addTimestamp.pl $addTimestampBUFFER -timedelimiter=" " -delimiter=$CSVdelimiter
     fi
   else
-    if [ "$timestampMethod" = "internal" ]; then
-        $toolExecDir/$cmd $timestampDirective $@ 
+    if [ "$timestampMethod" = "internal" ] || [ "$headerMethod" = "internal" ]; then
+	$toolExecDir/$cmd $timestampDirective $@ 
     else
-	cnt=0
-	$toolExecDir/$cmd $@ | \
-	while read line; do 
-		if [ $cnt -gt 0 ] || [ "$rawHeaderMethod" != "firstline" ]; then
-			echo $line | perl -ne "$perlBUFFER; print \"$hostname,$cmd,\$_\";" \
-        		| $toolsBin/addTimestamp.pl $addTimestampBUFFER -timedelimiter=" " -delimiter=$CSVdelimiter
-		else
-			echo $CSVheader$line
-		fi
-		cnt=$((cnt+1))
-	done
+	 $toolExecDir/$cmd $@ \
+         | perl -ne "$perlBUFFER; print \"$hostname,$cmd,\$_\";" \
+         | $toolsBin/addTimestamp.pl $addTimestampBUFFER -timedelimiter=" " -delimiter=$CSVdelimiter
     fi
   fi
 }

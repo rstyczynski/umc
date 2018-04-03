@@ -2,6 +2,9 @@
 
 getSensorData_bin=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
+# timestamp directive is not set for this probe
+timestampDirective=$1 && shift
+
 delay=$1 && shift
 count=$1 && shift
 
