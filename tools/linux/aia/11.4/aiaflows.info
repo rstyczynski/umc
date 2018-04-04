@@ -3,9 +3,10 @@ aiaflows:
      layer:      Middleware
      system:     SOA
      subsystem:  AIA
-     header: >-
+     header:
+         method: internal
      rawheader:
-         method: firstline    
+         method:   
          directive: 
      availability:
          method:     command
