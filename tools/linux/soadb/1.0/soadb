@@ -1,0 +1,42 @@
+#!/bin/bash
+
+getSensorData_bin=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+
+args=("$@")
+
+function getArgument {
+    for ((i=0; i <= ${#args[@]}; i++)); do
+        if [ "${args[i]}" == "$1" ]; then
+            echo "${args[i]}"
+            exit 0
+        fi
+    done
+    echo ""
+}
+
+# we do not use timestamp directive
+timestampDirective=$1 && shift
+
+delay=$1 && shift
+count=$1 && shift
+metric=$1 && shift
+
+# check that the metric file exists
+if [ ! -f "$getSensorData_bin/$metric.sql" ]; then
+    echo "Invalid metric definition. There is no file with name $getSensorData_bin/$metric.sql."
+    exit 1
+fi
+
+# db connection string, use the default if none is specified as argument
+if [ "$(getArgument "--connect")" == "" ]; then 
+    connstr="--connect $DB_CONNSTR"; 
+else 
+    connstr=""; 
+fi
+
+sql-collector $connstr --query $getSensorData_bin/$metric.sql \
+    --count $count \
+    --interval $delay \
+    --delimiter "$CSVdelimiter" \
+    "$*" 
+
