@@ -236,7 +236,7 @@ function locateToolExecDir {
         fi
     fi
   done
-  
+ 
   if [ -z $toolExecDir ]; then
     echo "Error! Reason: utility not recognized as supported tool."
     echo "Available versions:"
@@ -425,10 +425,16 @@ function invoke {
   CSVheader="$CSVheader$CSVdelimiter"
 
   # tool header is available in $cmd.info
-  CSVheader="$CSVheader$($toolsBin/getCfg.py $probeInfo $probeYAMLRoot.header)"
+  headerMethod="$($toolsBin/getCfg.py $probeInfo $probeYAMLRoot.header.method)"
+   
+  if [ "$headerMethod" != "internal" ]; then
+  	CSVheader="$CSVheader$($toolsBin/getCfg.py $probeInfo $probeYAMLRoot.header)"
+  fi
  
-  #TODO pass header to log director 
-  echo $CSVheader
+  if [ "$headerMethod" != "internal" ]; then
+    #TODO pass header to log director
+    echo $CSVheader
+  fi
 
   #add timestamp
   timestampMethod=$($toolsBin/getCfg.py $probeInfo $probeYAMLRoot.timestamp.method)
@@ -438,11 +444,10 @@ function invoke {
     timestampMethod=external
     timestampDirective=""
   fi
-  
 
   #run the tool
   if [ "$loop" = "external" ]; then
-    if [ "$timestampMethod" = "internal" ]; then
+    if [ "$timestampMethod" = "internal" ] || [ "$headerMethod" = "internal" ] ; then
         $toolsBin/timedExec.sh $interval $count $uosmcDEBUG $toolExecDir/$cmd $timestampDirective $@
     else
         $toolsBin/timedExec.sh $interval $count $uosmcDEBUG $toolExecDir/$cmd $@ \
@@ -450,7 +455,7 @@ function invoke {
         | $toolsBin/addTimestamp.pl $addTimestampBUFFER -timedelimiter=" " -delimiter=$CSVdelimiter
     fi
   elif [ "$loop" = "options" ]; then
-    if [ "$timestampMethod" = "internal" ]; then
+    if [ "$timestampMethod" = "internal" ] || [ "$headerMethod" = "internal" ]; then
         $toolExecDir/$cmd $loop_options $timestampDirective $@
     else
         $toolExecDir/$cmd $loop_options $@ \
@@ -458,12 +463,12 @@ function invoke {
         | $toolsBin/addTimestamp.pl $addTimestampBUFFER -timedelimiter=" " -delimiter=$CSVdelimiter
     fi
   else
-    if [ "$timestampMethod" = "internal" ]; then
-        $toolExecDir/$cmd $timestampDirective $@ 
+    if [ "$timestampMethod" = "internal" ] || [ "$headerMethod" = "internal" ]; then
+	$toolExecDir/$cmd $timestampDirective $@ 
     else
-        $toolExecDir/$cmd $@ \
-        | perl -ne "$perlBUFFER; print \"$hostname,$cmd,\$_\";" \
-        | $toolsBin/addTimestamp.pl $addTimestampBUFFER -timedelimiter=" " -delimiter=$CSVdelimiter
+	 $toolExecDir/$cmd $@ \
+         | perl -ne "$perlBUFFER; print \"$hostname,$cmd,\$_\";" \
+         | $toolsBin/addTimestamp.pl $addTimestampBUFFER -timedelimiter=" " -delimiter=$CSVdelimiter
     fi
   fi
 }

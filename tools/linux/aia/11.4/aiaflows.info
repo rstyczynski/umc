@@ -1,0 +1,21 @@
+aiaflows:
+     version:    1.0
+     layer:      Middleware
+     system:     SOA
+     subsystem:  AIA
+     header:
+         method: internal
+     rawheader:
+         method:   
+         directive: 
+     availability:
+         method:     command
+         directive:  sql-collector
+     loop:
+         method:      
+         directive:  
+     timestamp:
+         method: 
+         directive:
+     metrics:
+

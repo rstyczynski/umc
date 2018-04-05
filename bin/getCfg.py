@@ -7,14 +7,16 @@ import yaml
 yamlFile=sys.argv[1]
 getData=sys.argv[2]
 
-
 try:
     yamlDoc = open(yamlFile, 'r')
     doc = yaml.load(yamlDoc)
 
     finalDoc=doc
     for cfgElement in getData.split('.'):
-        finalDoc = finalDoc[cfgElement]
+	try:
+		finalDoc = finalDoc[cfgElement]
+	except:
+		finalDoc = '';
     print finalDoc
 except IOError:
     pass
