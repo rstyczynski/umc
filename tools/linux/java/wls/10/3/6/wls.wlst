@@ -401,7 +401,7 @@ noheader=false
 printrawheader=false
 #
 try:
-    opts, args = getopt.getopt( sys.argv[1:], 's:p:u:c:d:h', ['server=','port=','ulr=', 'count=','delay=','subsystem=','subsystems=','help', 'helpInternal', 'timedelimiter=','delimiter=','system=','source=', 'globalheader=', 'noheader', 'timestamp', 'notbuffered', 'printrawheader'] )
+    opts, args = getopt.getopt( sys.argv[1:], 's:p:u:c:d:h', ['server=','port=','url=', 'count=','delay=','subsystem=','subsystems=','help', 'helpInternal', 'timedelimiter=','delimiter=','system=','source=', 'globalheader=', 'noheader', 'timestamp', 'notbuffered', 'printrawheader'] )
 except getopt.GetoptError, err:
     print str(err)
     usage()

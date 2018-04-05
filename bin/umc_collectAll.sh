@@ -85,7 +85,7 @@ for tool in $tools; do
         mkdir -p $logDir/$testId
     fi
     # execute
-    umc $cmd collect $count $delay $args | perl $umcRoot/bin/logdirector.pl -dir $logDir/$testId -n $subsystem_name -rotateByTime clock -timeLimit 900 -addDateSubDir -alwaysRotate -prefixDate -detectHeader & 
+    umc $cmd collect $delay $count $args | perl $umcRoot/bin/logdirector.pl -dir $logDir/$testId -n $subsystem_name -rotateByTime clock -timeLimit 900 -addDateSubDir -alwaysRotate -prefixDate -detectHeader & 
     
     # clean
     unset UMC_PROBE_LOG_NAME
@@ -104,6 +104,8 @@ if [ $blocking -eq 1 ]; then
         count=$(( $count - 1 ))
     done
     echo done.
+    echo
+    echo It may take few more seconds to finalize...
     wait
     exit 0
 else
