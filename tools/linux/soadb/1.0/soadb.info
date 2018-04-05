@@ -1,8 +1,8 @@
-aiaflows:
+soadb:
      version:    1.0
      layer:      Middleware
      system:     SOA
-     subsystem:  AIA
+     subsystem:  DB
      header:
          method: internal
      rawheader:

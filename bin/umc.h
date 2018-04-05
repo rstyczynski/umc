@@ -220,7 +220,7 @@ function locateToolExecDir {
   cmd=$1
   cmd_layer=$(eval "echo $(echo \$$cmd\_layer)")
   cmd_package=$(eval "echo $(echo \$$cmd\_package)")
-  
+ 
   unset toolExecDir
   
   directories=$(getDirectories $cmd_layer);

@@ -1,1 +1,0 @@
-SELECT sysdate, 123 as COL1, 453 as COL2 FROM DUAL;
