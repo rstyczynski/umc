@@ -5,6 +5,7 @@
 #
 
 UMC_PROBE_META_EXT=SERVICE
+UMC_PROBE_LOG_NAME=SERVICE
 while [ "$#" -gt 0 ]
 do  
     option=$(echo $1 | cut -f1 -d'=')
@@ -12,6 +13,7 @@ do
 	case "$option" in
 	--metrics_type)
 		export UMC_PROBE_META_EXT="$arg"
+        export UMC_PROBE_LOG_NAME="$arg"
 		;;
 	--)
 		break
