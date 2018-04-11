@@ -4,11 +4,9 @@ soabindings:
     system:     SOA
     subsystem:  Bindings
     header: >-
-        ServerName,
-        soainfra_composite,soainfra_composite_assembly_member,soainfra_composite_assembly_member_type,soainfra_composite_revision,soainfra_domain,
-        Messages.averageTime,Messages.completed,Messages.throughput,Messages.time,Messages.totalTime,
-        MessagesEvents.count,MessagesEvents.throughput,Messages.count,
-        error.rate,Errors.count,Errors.throughput
+        error.rate,Errors.count,Errors.throughput,Messages.averageTime,Messages.completed,Messages.throughput,Messages.time,
+        Messages.totalTime,MessagesEvents.count,MessagesEvents.throughput,Messages.count,ServerName,soainfra_composite,
+        soainfra_composite_assembly_member,soainfra_composite_assembly_member_type,soainfra_composite_revision,soainfra_domain
     rawheader:
         method:     script
         directive:  soabindings --printrawheader
