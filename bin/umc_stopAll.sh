@@ -1,7 +1,7 @@
 #!/bin/bash
-
-filterBy="umc/bin/umc_collectAll.sh"
-
+ 
+filterBy="/umc/"
+ 
 if [ "$umcRoot" ]; then
   pids=$(ps aux | grep -v 'grep' |  grep "$filterBy" | tr -s ' ' | cut -d' ' -f2)
   while [ ! -z "$pids" ]; do
@@ -14,5 +14,5 @@ if [ "$umcRoot" ]; then
     pids=$(ps aux | grep -v 'grep' |  grep "$filterBy" | tr -s ' ' | cut -d' ' -f2)
   done
   echo "All clean."
-  
+ 
 fi

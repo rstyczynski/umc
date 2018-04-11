@@ -179,10 +179,12 @@ def getSensorMetrics( sensorList , resourceType):
             #
             metricsType, fullName = str(statsKey).split(' ')
             #metricsType, fullName = BusinessService, TEST2/TriggerSOA
+            #metricsType, fullName = BusinessService, TE/ST/2/TriggerSOA <-- this is a real data. user uses slash in PATH
             #
-            parent, name = str(fullName).split('/')
+            # Works with newer python only: parent, name = str(fullName).rsplit('/',1)
             #
-            #parent, name = TEST2, TriggerSOA
+            parent = "/".join(str(fullName).split('/')[0:-1])
+            name = str(fullName).split('/')[-1]
             #
             # 
             ###>to keep resource data: BusinessService
@@ -472,7 +474,7 @@ debugFlag=false
 
 #
 try:
-    opts, args = getopt.getopt( sys.argv[1:], 's:p:u:c:d:h', ['server=','port=','ulr=', 'count=','delay=','services=', 'metrics_types=', 'help', 'helpInternal', 'timedelimiter=','delimiter=','system=','source=', 'globalheader=', 'noheader', 'timestamp', 'notbuffered', 'printrawheader'] )
+    opts, args = getopt.getopt( sys.argv[1:], 's:p:u:c:d:h', ['server=','port=','url=', 'count=','delay=','services=', 'metrics_types=', 'help', 'helpInternal', 'timedelimiter=','delimiter=','system=','source=', 'globalheader=', 'noheader', 'timestamp', 'notbuffered', 'printrawheader', 'debug'] )
 except getopt.GetoptError, err:
     print str(err)
     usage()
