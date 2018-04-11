@@ -29,8 +29,8 @@ python_version_patch=$(python -V 2>&1 | cut -f2 -d' ' | cut -d'.' -f3)
 
 python_version=$(( $(( 1000 * $python_version_major )) + $(( 100 * $python_version_minor)) + $python_version_patch  ))
     
-if [ $python_version -lt 2700 ]; then
-    echo "Error: you need bython >=2.7 to run umc."
+if [ $python_version -lt 2600 ]; then
+    echo "Error: you need bython >=2.6 to run umc."
     echo
     echo "Install python in a system or in your home directory. Details here: http://thelazylog.com/install-python-as-local-user-on-linux/"
     return 1
@@ -49,12 +49,11 @@ if [ $? -ne 0 ]; then
     fi
     oldDir=$PWD
     cd /tmp
-    rm -fr pyyaml
-    cp -R $umcRoot/varia/pyyaml . >/dev/null 2>&1
-    cd pyyaml
+    unzip -o $umcRoot/varia/pyyaml-master.zip >/dev/null 2>&1
+    cd pyyaml-master
     python setup.py install --user >/dev/null 2>&1
     cd ..
-    rm -rf pyyaml
+    rm -rf pyyaml-master
     cd $oldDir
 fi
 
