@@ -14,16 +14,24 @@ function getArgument {
     echo ""
 }
 
-# we do not use timestamp directive
-timestampDirective=$1 && shift
+# the first parameter is timestamp directive
+# since we do not use it, we skip it (the value is None)
+shift
 
+# the next arguments are delay, count and metric
+# metric argument is soadb probe specific
 delay=$1 && shift
 count=$1 && shift
 metric=$1 && shift
 
-# check that the metric file exists
+# check that the metric file exists and print help if it does not
 if [ ! -f "$getSensorData_bin/$metric.sql" ]; then
     echo "Invalid metric definition. There is no file with name $getSensorData_bin/$metric.sql."
+    echo "Available values for a metric are:"
+    ls | grep ".sql$" | \
+    while read line; do
+        printf "  ${line%.*}%-$((20-$(expr length $line)))s  $(cat $line | head -n 1 | grep "\-\-")\n"
+    done
     exit 1
 fi
 
@@ -38,5 +46,6 @@ sql-collector $connstr --query $getSensorData_bin/$metric.sql \
     --count $count \
     --interval $delay \
     --delimiter "$CSVdelimiter" \
+    $(cat $getSensorData_bin/global-args | grep -v ^# ) \
     "$*" 
 

@@ -1,0 +1,3 @@
+# global arguments applied on all metrics
+# this needs to be a single line
+--#__SOAINFRA_SCHEMA__ PRFMX_SOAINFRA

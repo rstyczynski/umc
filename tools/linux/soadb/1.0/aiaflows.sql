@@ -1,4 +1,5 @@
-select 
+-- retrieves metrics for AIA flows (order management, update customer accounts) in the past minute
+SELECT 
   created_time as TIME, 
   flow as FLOW, 
   count(1) as COUNT_OK, 
@@ -6,150 +7,164 @@ select
   Round(min(durati0n),2) as MIN, 
   Round(max(durati0n),2) as MAX, 
   Round(avg(durati0n),2) as AVG 
-from (
-  select 
+FROM (
+  SELECT 
     flow, 
     title, 
     to_char(trunc(created_time,'MI'), 'YY-MM-DD HH24:MI') created_time,
-    extract(minute from durati0n)*60+extract(second from durati0n) durati0n, 
+    extract(minute FROM durati0n)*60+extract(second FROM durati0n) durati0n, 
     err 
-  from (
-        select * from (
+  FROM (
+        SELECT * 
+        FROM (
+
+          -- Order Management Process Flows
           -- PSO: Process Sales Order
-          select 'PSO' flow, a1.title, a1.created_time, a1.created_time-a2.created_time durati0n, null err 
-          from composite_instance a1, composite_instance a2
-          where a1.composite_dn like 'default/ProcessSalesOrderFulfillmentOSMCFSCommsJMSProducer%' and 
-                a2.composite_dn like 'default/ProcessSalesOrderFulfillmentSiebelCommsJMSConsumer%' and
+          SELECT 'PSO' flow, a1.title, a1.created_time, a1.created_time-a2.created_time durati0n, null err 
+          FROM __SOAINFRA_SCHEMA__.composite_instance a1, __SOAINFRA_SCHEMA__.composite_instance a2
+          WHERE a1.composite_dn LIKE 'default/ProcessSalesOrderFulfillmentOSMCFSCommsJMSProducer%' AND 
+                a2.composite_dn LIKE 'default/ProcessSalesOrderFulfillmentSiebelCommsJMSConsumer%' AND
                 a1.ecid = a2.ecid  
-          union all
-          select 'PSO' flow, a1.title, a1.created_time, null durati0n, 'ERROR' err
-          from composite_instance a1, composite_instance_fault f
-          where a1.id = f.composite_instance_id and 
-                a1.composite_dn like 'default/ProcessSalesOrderFulfillmentSiebelCommsJMSConsumer%'
+          UNION ALL
+          SELECT 'PSO' flow, a1.title, a1.created_time, null durati0n, 'ERROR' err
+          FROM __SOAINFRA_SCHEMA__.composite_instance a1, __SOAINFRA_SCHEMA__.composite_instance_fault f
+          WHERE a1.id = f.composite_instance_id AND 
+                a1.composite_dn LIKE 'default/ProcessSalesOrderFulfillmentSiebelCommsJMSConsumer%'
           
-          union all
+          UNION ALL
           
           -- SFOBA: Sync Customer
-          select 'SFOBA' flow, a1.title, a1.created_time, a1.created_time-a2.created_time durati0n, null err 
-          from composite_instance a1, composite_instance a2
-          where a1.composite_dn like 'default/ProcessFOBillingAccountListRespOSMCFSCommsJMSProducer%' and 
-                a2.composite_dn like 'default/ProcessFulfillmentOrderBillingAccountListOSMCFSCommsJMSConsumer%' and
+          SELECT 'SFOBA' flow, a1.title, a1.created_time, a1.created_time-a2.created_time durati0n, null err 
+          FROM __SOAINFRA_SCHEMA__.composite_instance a1, __SOAINFRA_SCHEMA__.composite_instance a2
+          WHERE a1.composite_dn LIKE 'default/ProcessFOBillingAccountListRespOSMCFSCommsJMSProducer%' AND 
+                a2.composite_dn LIKE 'default/ProcessFulfillmentOrderBillingAccountListOSMCFSCommsJMSConsumer%' AND
                 a1.ecid = a2.ecid  
-          union all
-          select 'SFOBA' flow, a1.title, a1.created_time, null durati0n, 'ERROR' err
-          from composite_instance a1, composite_instance_fault f
-          where a1.id = f.composite_instance_id and 
-                a1.composite_dn like 'default/ProcessFulfillmentOrderBillingAccountListOSMCFSCommsJMSConsumer%'
+          UNION ALL
+          SELECT 'SFOBA' flow, a1.title, a1.created_time, null durati0n, 'ERROR' err
+          FROM __SOAINFRA_SCHEMA__.composite_instance a1, __SOAINFRA_SCHEMA__.composite_instance_fault f
+          WHERE a1.id = f.composite_instance_id AND 
+                a1.composite_dn LIKE 'default/ProcessFulfillmentOrderBillingAccountListOSMCFSCommsJMSConsumer%'
           
-          union all
+          UNION ALL
           
           -- BFO: Bill Fullfilment Order
-          select 'BFO' flow, a1.title, a1.created_time, a1.created_time-a2.created_time durati0n, null err 
-          from composite_instance a1, composite_instance a2
-          where a1.composite_dn like 'default/ProcessFulfillmentOrderBillingResponseOSMCFSCommsJMSProducer%' and 
-                a2.composite_dn like 'default/ProcessFulfillmentOrderBillingOSMCFSCommsJMSConsumer%' and
+          SELECT 'BFO' flow, a1.title, a1.created_time, a1.created_time-a2.created_time durati0n, null err 
+          FROM __SOAINFRA_SCHEMA__.composite_instance a1, __SOAINFRA_SCHEMA__.composite_instance a2
+          WHERE a1.composite_dn LIKE 'default/ProcessFulfillmentOrderBillingResponseOSMCFSCommsJMSProducer%' AND 
+                a2.composite_dn LIKE 'default/ProcessFulfillmentOrderBillingOSMCFSCommsJMSConsumer%' AND
                 a1.ecid = a2.ecid  
-          union all
-          select 'BFO' flow, a1.title, a1.created_time, null durati0n, 'ERROR' err
-          from composite_instance a1, composite_instance_fault f
-          where a1.id = f.composite_instance_id and 
-                a1.composite_dn like 'default/ProcessFulfillmentOrderBillingOSMCFSCommsJMSConsumer%'
+          UNION ALL
+          SELECT 'BFO' flow, a1.title, a1.created_time, null durati0n, 'ERROR' err
+          FROM __SOAINFRA_SCHEMA__.composite_instance a1, __SOAINFRA_SCHEMA__.composite_instance_fault f
+          WHERE a1.id = f.composite_instance_id AND 
+                a1.composite_dn LIKE 'default/ProcessFulfillmentOrderBillingOSMCFSCommsJMSConsumer%'
           
-          union all
+          UNION ALL
           
           -- UPDSO: Update Sales Order
-          select 'UPDSO' flow, a1.title, a1.created_time, a1.created_time-a2.created_time durati0n, null err 
-          from composite_instance a1, composite_instance a2
-          where a1.composite_dn like 'default/UpdateSalesOrderSiebelCommsProvABCSImpl%' and 
-                a2.composite_dn like 'default/UpdateSalesOrderOSMCFSCommsJMSConsumer%' and
+          SELECT 'UPDSO' flow, a1.title, a1.created_time, a1.created_time-a2.created_time durati0n, null err 
+          FROM __SOAINFRA_SCHEMA__.composite_instance a1, __SOAINFRA_SCHEMA__.composite_instance a2
+          WHERE a1.composite_dn LIKE 'default/UpdateSalesOrderSiebelCommsProvABCSImpl%' AND 
+                a2.composite_dn LIKE 'default/UpdateSalesOrderOSMCFSCommsJMSConsumer%' AND
                 a1.ecid = a2.ecid  
-          union all
-          select 'UPDSO' flow, a1.title, a1.created_time, null durati0n, 'ERROR' err
-          from composite_instance a1, composite_instance_fault f
-          where a1.id = f.composite_instance_id and 
-                a1.composite_dn like 'default/UpdateSalesOrderSiebelCommsProvABCSImpl%'            
+          UNION ALL
+          SELECT 'UPDSO' flow, a1.title, a1.created_time, null durati0n, 'ERROR' err
+          FROM __SOAINFRA_SCHEMA__.composite_instance a1, __SOAINFRA_SCHEMA__.composite_instance_fault f
+          WHERE a1.id = f.composite_instance_id AND 
+                a1.composite_dn LIKE 'default/UpdateSalesOrderSiebelCommsProvABCSImpl%'            
 	        
-          union all	
+          UNION ALL	
           
-          select 'UPDCA-ACNT' flow, a1.title, a1.created_time, a1.created_time-a2.created_time durati0n, null err
-          from composite_instance a1, composite_instance a2
-          where a1.composite_dn like 'default/SyncAccountSiebelAggregatorAdapter%' and
-                a2.composite_dn like 'default/SyncCustomerSiebelEventAggregator%' and
+          -- UPDCA: Update Customer Accounts Process Flows
+          -- The below SQLs represent UPDCA flow leg 1 (events are inject from Siebel to AIA)
+          -- Account events
+          SELECT 'UPDCA-ACNT' flow, a1.title, a1.created_time, a1.created_time-a2.created_time durati0n, null err
+          FROM __SOAINFRA_SCHEMA__.composite_instance a1, __SOAINFRA_SCHEMA__.composite_instance a2
+          WHERE a1.composite_dn LIKE 'default/SyncAccountSiebelAggregatorAdapter%' AND
+                a2.composite_dn LIKE 'default/SyncCustomerSiebelEventAggregator%' AND
                 a1.ecid = a2.ecid
-          union all
-          select 'UPDCA-ACNT' flow, a1.title, a1.created_time, null durati0n, 'ERROR' err
-          from composite_instance a1, composite_instance_fault f
-          where a1.id = f.composite_instance_id and
-                a1.composite_dn like 'default/SyncAccountSiebelAggregatorAdapter%'
+          UNION ALL
+          SELECT 'UPDCA-ACNT' flow, a1.title, a1.created_time, null durati0n, 'ERROR' err
+          FROM __SOAINFRA_SCHEMA__.composite_instance a1, __SOAINFRA_SCHEMA__.composite_instance_fault f
+          WHERE a1.id = f.composite_instance_id AND
+                a1.composite_dn LIKE 'default/SyncAccountSiebelAggregatorAdapter%'
           
-          union all
+          UNION ALL
           
-          select 'UPDCA-ADDR' flow, a1.title, a1.created_time, a1.created_time-a2.created_time durati0n, null err
-          from composite_instance a1, composite_instance a2
-          where a1.composite_dn like 'default/SyncAddressSiebelAggregatorAdapter%' and
-                a2.composite_dn like 'default/SyncCustomerSiebelEventAggregator%' and
+          -- Address events
+          SELECT 'UPDCA-ADDR' flow, a1.title, a1.created_time, a1.created_time-a2.created_time durati0n, null err
+          FROM __SOAINFRA_SCHEMA__.composite_instance a1, __SOAINFRA_SCHEMA__.composite_instance a2
+          WHERE a1.composite_dn LIKE 'default/SyncAddressSiebelAggregatorAdapter%' AND
+                a2.composite_dn LIKE 'default/SyncCustomerSiebelEventAggregator%' AND
                 a1.ecid = a2.ecid
-          union all
-          select 'UPDCA-ADDR' flow, a1.title, a1.created_time, null durati0n, 'ERROR' err
-          from composite_instance a1, composite_instance_fault f
-          where a1.id = f.composite_instance_id and
-                a1.composite_dn like 'default/SyncAddressSiebelAggregatorAdapter%'
+          UNION ALL
+          SELECT 'UPDCA-ADDR' flow, a1.title, a1.created_time, null durati0n, 'ERROR' err
+          FROM __SOAINFRA_SCHEMA__.composite_instance a1, __SOAINFRA_SCHEMA__.composite_instance_fault f
+          WHERE a1.id = f.composite_instance_id AND
+                a1.composite_dn LIKE 'default/SyncAddressSiebelAggregatorAdapter%'
           
-          union all
+          UNION ALL
           
-          select 'UPDCA-CONT' flow, a1.title, a1.created_time, a1.created_time-a2.created_time durati0n, null err
-          from composite_instance a1, composite_instance a2
-          where a1.composite_dn like 'default/SyncContactSiebelAggregatorAdapter%' and
-                a2.composite_dn like 'default/SyncCustomerSiebelEventAggregator%' and
+          -- Contact events
+          SELECT 'UPDCA-CONT' flow, a1.title, a1.created_time, a1.created_time-a2.created_time durati0n, null err
+          FROM __SOAINFRA_SCHEMA__.composite_instance a1, __SOAINFRA_SCHEMA__.composite_instance a2
+          WHERE a1.composite_dn LIKE 'default/SyncContactSiebelAggregatorAdapter%' AND
+                a2.composite_dn LIKE 'default/SyncCustomerSiebelEventAggregator%' AND
                 a1.ecid = a2.ecid
-          union all
-          select 'UPDCA-CONT' flow, a1.title, a1.created_time, null durati0n, 'ERROR' err
-          from composite_instance a1, composite_instance_fault f
-          where a1.id = f.composite_instance_id and
-                a1.composite_dn like 'default/SyncContactSiebelAggregatorAdapter%'
+          UNION ALL
+          SELECT 'UPDCA-CONT' flow, a1.title, a1.created_time, null durati0n, 'ERROR' err
+          FROM __SOAINFRA_SCHEMA__.composite_instance a1, __SOAINFRA_SCHEMA__.composite_instance_fault f
+          WHERE a1.id = f.composite_instance_id AND
+                a1.composite_dn LIKE 'default/SyncContactSiebelAggregatorAdapter%'
           
-          union all
+          UNION ALL
           
-          select 'UPDCA-BP' flow, a1.title, a1.created_time, a1.created_time-a2.created_time durati0n, null err
-          from composite_instance a1, composite_instance a2
-          where a1.composite_dn like 'default/SyncBPSiebelAggregatorAdapter%' and
-                a2.composite_dn like 'default/SyncCustomerSiebelEventAggregator%' and
+          -- Billing Profile events
+          SELECT 'UPDCA-BP' flow, a1.title, a1.created_time, a1.created_time-a2.created_time durati0n, null err
+          FROM __SOAINFRA_SCHEMA__.composite_instance a1, __SOAINFRA_SCHEMA__.composite_instance a2
+          WHERE a1.composite_dn LIKE 'default/SyncBPSiebelAggregatorAdapter%' AND
+                a2.composite_dn LIKE 'default/SyncCustomerSiebelEventAggregator%' AND
                 a1.ecid = a2.ecid
-          union all
-          select 'UPDCA-BP' flow, a1.title, a1.created_time, null durati0n, 'ERROR' err
-          from composite_instance a1, composite_instance_fault f
-          where a1.id = f.composite_instance_id and
-                a1.composite_dn like 'default/SyncBPSiebelAggregatorAdapter%'
+          UNION ALL
+          SELECT 'UPDCA-BP' flow, a1.title, a1.created_time, null durati0n, 'ERROR' err
+          FROM __SOAINFRA_SCHEMA__.composite_instance a1, __SOAINFRA_SCHEMA__.composite_instance_fault f
+          WHERE a1.id = f.composite_instance_id AND
+                a1.composite_dn LIKE 'default/SyncBPSiebelAggregatorAdapter%'
           
-          union all
+          UNION ALL
           
-          select 'UPDCA-EC' flow, a1.title, a1.created_time, a1.created_time-a2.created_time durati0n, null err
-          from composite_instance a1, composite_instance a2
-          where a1.composite_dn like 'default/SyncCustomerPartyListBRMCommsJMSProducer%' and
-                a2.composite_dn like 'default/SyncAcctSiebelAggrEventConsumer%' and
+          -- UPDCA flow leg 2 - events are consumed from the AIA_AGGREGATED_ENTITIES table
+          -- this is the flow that spans across a reseuqnecer, check resequencer XYZ for additional details 
+          -- also check the stats on AIA_AGGREGATED_ENTITIES table
+          SELECT 'UPDCA-EC' flow, a1.title, a1.created_time, a1.created_time-a2.created_time durati0n, null err
+          FROM __SOAINFRA_SCHEMA__.composite_instance a1, __SOAINFRA_SCHEMA__.composite_instance a2
+          WHERE a1.composite_dn LIKE 'default/SyncCustomerPartyListBRMCommsJMSProducer%' AND
+                a2.composite_dn LIKE 'default/SyncAcctSiebelAggrEventConsumer%' AND
                 a1.ecid = a2.ecid
-          union all
-          select 'UPDCA-EC' flow, a1.title, a1.created_time, null durati0n, 'ERROR' err
-          from composite_instance a1, composite_instance_fault f
-          where a1.id = f.composite_instance_id and
-                a1.composite_dn like 'default/SyncAcctSiebelAggrEventConsumer%'
-          union all
+          UNION ALL
+          SELECT 'UPDCA-EC' flow, a1.title, a1.created_time, null durati0n, 'ERROR' err
+          FROM __SOAINFRA_SCHEMA__.composite_instance a1, __SOAINFRA_SCHEMA__.composite_instance_fault f
+          WHERE a1.id = f.composite_instance_id AND
+                a1.composite_dn LIKE 'default/SyncAcctSiebelAggrEventConsumer%'
+          UNION ALL
           
-          select 'UPDCA-BRM' flow, a1.title, a1.created_time, a1.created_time-a2.created_time durati0n, null err
-          from composite_instance a1, composite_instance a2
-          where a1.composite_dn like 'default/SyncCustomerPartyListBRMCommsProvABCSImpl%' and
-                a2.composite_dn like 'default/SyncCustomerPartyListBRM_01CommsJMSConsumer%' and
+          -- UPDCA flow leg 3 - the event is consumed from CPARTY Topic and sent over to BRM
+          SELECT 'UPDCA-BRM' flow, a1.title, a1.created_time, a1.created_time-a2.created_time durati0n, null err
+          FROM __SOAINFRA_SCHEMA__.composite_instance a1, __SOAINFRA_SCHEMA__.composite_instance a2
+          WHERE a1.composite_dn LIKE 'default/SyncCustomerPartyListBRMCommsProvABCSImpl%' AND
+                a2.composite_dn LIKE 'default/SyncCustomerPartyListBRM_01CommsJMSConsumer%' AND
                 a1.ecid = a2.ecid
-          union all
-          select 'UPDCA-BRM' flow, a1.title, a1.created_time, null durati0n, 'ERROR' err
-          from composite_instance a1, composite_instance_fault f
-          where a1.id = f.composite_instance_id and
-                a1.composite_dn like 'default/SyncCustomerPartyListBRM_01CommsJMSConsumer%'
+          UNION ALL
+          SELECT 'UPDCA-BRM' flow, a1.title, a1.created_time, null durati0n, 'ERROR' err
+          FROM __SOAINFRA_SCHEMA__.composite_instance a1, __SOAINFRA_SCHEMA__.composite_instance_fault f
+          WHERE a1.id = f.composite_instance_id AND
+                a1.composite_dn LIKE 'default/SyncCustomerPartyListBRM_01CommsJMSConsumer%'
           
           )
         ) 
-        where
-	  created_time >= trunc(sysdate - 2/1440, 'MI') AND created_time < trunc(sysdate - 1/1440, 'MI') 
-          --created_time BETWEEN trunc(sysdate - 2/1440, 'MI') AND trunc(sysdate - 1/1440, 'MI')
-) group by flow, created_time
-order by created_time;
+        WHERE
+	        --created_time >= trunc(sysdate - 2/1440, 'MI') AND created_time < trunc(sysdate - 1/1440, 'MI') 
+          created_time BETWEEN to_date('21-03-2018 14:05:00', 'DD-MM-YYYY HH24:MI:SS') AND to_date('21-03-2018 14:10:00', 'DD-MM-YYYY HH24:MI:SS')
+) 
+GROUP BY flow, created_time
+ORDER BY created_time;

@@ -10,7 +10,7 @@ soadb:
          directive: 
      availability:
          method:     command
-         directive:  sql-collector
+         directive:  type sql-collector &>/dev/null; if [ $? -gt 0 ]; then (exit 127); fi
      loop:
          method:      
          directive:  
