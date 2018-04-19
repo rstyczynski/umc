@@ -20,7 +20,6 @@ allSubsystemsId['jmsruntime']=[3]
 allSubsystemsId['jmsserver']=[4]
 allSubsystemsId['datasource']=[5]
 
-
 def collectWLSdata(subsystems=[]):
     #
     seletedIds = getSelectedIds(subsystems)

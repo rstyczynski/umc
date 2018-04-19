@@ -100,7 +100,7 @@ for tool in $tools; do
     arg6=$(echo $args | cut -f6 -d' ')
     echo umc $cmd collect $delay $count $arg1 $arg2 $arg3 $arg4 $arg5 $arg6
  
-    umc $cmd collect $delay $count $arg1 $arg2 $arg3 $arg4 $arg5 $arg6 | perl $umcRoot/bin/logdirector.pl -dir $logDir/$testId -n $subsystem_name -rotateByTime clock -timeLimit 900 -addDateSubDir -alwaysRotate -prefixDate -detectHeader &
+    umc $cmd collect $delay $count $arg1 $arg2 $arg3 $arg4 $arg5 $arg6 | perl $umcRoot/bin/logdirector.pl -dir $logDir/$testId -n $subsystem_name -rotateByTime clock -timeLimit 3600 -addDateSubDir -alwaysRotate -prefixDate -detectHeader &
  
     # clean
     unset UMC_PROBE_LOG_NAME
