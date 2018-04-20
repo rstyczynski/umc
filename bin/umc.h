@@ -155,8 +155,7 @@ function umc {
         
         cluster)
             # fix arguments for subcommands
-            # currently $1 is $sensor :(
-            cfgCluster $sensor
+            cfgCluster $1
         ;;
         
         -V)
