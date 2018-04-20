@@ -14,11 +14,20 @@ PATH=$PATH:/sbin:$toolsBin
 #--- call cfg scripts
 #---------------------------------------------------------------------------------------
 # configure user params
-. $umcRoot/etc/umc.cfg
+if [ -f ~/etc/umc.cfg ]; then
+    . ~/etc/umc.cfg
+else
+    . $umcRoot/etc/umc.cfg
+fi
 
 # configure global params
 . $toolsBin/global.cfg
 
+#prepare secret directory
+if [ ! -f ~/.umc ]; then
+    mkdir ~/.umc 
+    chmod 600 ~/.umc 
+fi
 
 #---------------------------------------------------------------------------------------
 #--- check required python version
