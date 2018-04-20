@@ -26,7 +26,9 @@ fi
 #prepare secret directory
 if [ ! -f ~/.umc ]; then
     mkdir ~/.umc 
-    chmod 600 ~/.umc 
+    if [ $(stat -c %a) != "700" ]; then
+       chmod 700 ~/.umc 
+    fi
 fi
 
 #---------------------------------------------------------------------------------------
@@ -149,6 +151,11 @@ function umc {
         
         test)
             umcTestRun
+        ;;
+        
+        cfgCluster)
+            #
+            cfgCluster $sensor
         ;;
         
         -V)
