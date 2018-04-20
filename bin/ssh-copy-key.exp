@@ -1,0 +1,36 @@
+#!/usr/bin/expect -f
+
+set port [lindex $argv 0];
+set connectString [lindex $argv 1];
+set pwd [lindex $argv 2];
+
+set timeout 60
+
+#exp_internal 1
+
+spawn ssh-copy-id $connectString -p $port
+expect {
+    "assword: " {
+        send "$pwd\n"
+        expect { 
+            "again."     { exit 1 }
+            "expecting." { }
+            timeout      { exit 1 }
+        } 
+    }
+    "(yes/no)? " { 
+        send "yes\n" 
+        expect {
+            "assword: " {
+                send "$pwd\n"
+                expect { 
+                    "again."     { exit 1 }
+                    "expecting." { }
+                    timeout      { exit 1 }
+                } 
+            }
+        }
+    }
+}
+#Source: https://blog.fpmurphy.com/2007/06/using-expect-to-transfer-ssh-keys.html
+
