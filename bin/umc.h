@@ -127,7 +127,7 @@ function umc {
         sensor=$1; shift
     fi
 
-    if [ $sensor = help -o $sensor = -V -o $sensor = test -o $sensor = sensors ]; then
+    if [ $sensor = help -o $sensor = -V -o $sensor = test -o $sensor = sensors -o $sensor = cluster ]; then
         command=$sensor
     else
         command=sensor_$1; shift
@@ -135,7 +135,7 @@ function umc {
         count=$1; shift
         params=$@
     fi
-     
+    
     case $command in
         sensor_help)
             invoke $sensor help
@@ -153,7 +153,7 @@ function umc {
             umcTestRun
         ;;
         
-        cfgCluster)
+        cluster)
             # fix arguments for subcommands
             # currently $1 is $sensor :(
             cfgCluster $sensor
@@ -686,10 +686,19 @@ function getPassword {
         read -p "Enter password:" -s pwd
         echo -n $pwd > ~/.umc/pwd
         unset pwd
+        echo
     fi
 
 }
- 
+
+function delPassword {
+
+    if [ ! -f ~/.umc/pwd ]; then
+        rm ~/.umc/pwd
+    fi
+
+}
+
 function copyCfg {
     #
     # --- Copy configuration to Middleware Admin hosts
@@ -723,6 +732,12 @@ function measureLinux {
     #
     # --- Linux
     #
+    
+    if [ -z "$HOSTS" ]; then
+        echo "Error: HOSTS are not configured."
+        return 1
+    fi
+            
     DURATION_OS=$(( $DURATION * $DURATION_BASE / $INTERVAL_OS ))
 
     for host in $HOSTS; do
@@ -743,11 +758,13 @@ function measureLinux {
     iostat\" –nonblocking --testId=$TESTID --logDir=/tmp/umc >/dev/null 2>&1 &
 
     '"
-
+    
+    getPassword
+        
     if [ $host != $(hostname -s) ]; then
-      cat pwd | ssh $host sudo -kS su oracle -c  "$commandToExecute"
+      cat ~/.umc/pwd | ssh $host sudo -kS su oracle -c  "$commandToExecute"
     else
-      cat pwd | sudo -kS su oracle -c "$commandToExecute"
+      cat ~/.umc/pwd | sudo -kS su oracle -c "$commandToExecute"
     fi
 
     done
@@ -758,6 +775,12 @@ function measureSOA {
     #
     # --- SOA
     #
+    
+    if [ -z "$SOA" ]; then
+        echo "Error: SOA not configured."
+        return 1
+    fi
+        
     host=$SOA_ADMIN
     DURATION_WLS=$(( $DURATION * $DURATION_BASE / $INTERVAL_WLS ))
 
@@ -790,6 +813,12 @@ function measureOSB {
     #
     # --- OSB
     #
+    
+    if [ -z "$OSB" ]; then
+        echo "Error: OSB not configured."
+        return 1
+    fi
+    
     host=$OSB_ADMIN
     DURATION_WLS=$(( $DURATION * $DURATION_BASE / $INTERVAL_WLS ))
 
@@ -810,6 +839,8 @@ function measureOSB {
 
     '"
 
+    getPassword
+        
     if [ $host != $(hostname -s) ]; then
       cat ~/.umc/pwd | ssh $host sudo -kS su oracle -c  "$commandToExecute"
     else
@@ -822,6 +853,12 @@ function stopMeasurements {
     #
     # --- Stop
     #
+
+    if [ -z "$HOSTS" ]; then
+        echo "Error: HOSTS are not configured."
+        return 1
+    fi
+        
     for host in $HOSTS; do
 
     commandToExecute="bash -c '
@@ -831,6 +868,8 @@ function stopMeasurements {
 
     '"
 
+    getPassword
+        
     if [ $host != $(hostname -s) ]; then
       cat ~/.umc/pwd | ssh $host sudo -kS su oracle -c  "$commandToExecute"
     else
@@ -845,6 +884,12 @@ function getDataFiles {
     #
     # --- Change permission
     #
+    
+    if [ -z "$HOSTS" ]; then
+        echo "Error: HOSTS are not configured."
+        return 1
+    fi
+        
     for host in $HOSTS; do
 
     commandToExecute="bash -c '
@@ -857,6 +902,8 @@ function getDataFiles {
 
     '"
 
+    getPassword
+        
     if [ $host != $(hostname -s) ]; then
       cat ~/.umc/pwd | ssh $host sudo -kS su oracle -c  "$commandToExecute"
     else
@@ -892,7 +939,6 @@ function getDataFiles {
     done
     chmod -R 777 /tmp/umc_archive
 }
- 
 
 
 echo Universal Metrics Collector initialized.
