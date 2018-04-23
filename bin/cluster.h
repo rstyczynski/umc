@@ -116,7 +116,7 @@ function copyCfg {
     echo -n "Copy SOA cfg..."
     ssh $SOA_ADMIN "if [ ! -d etc ]; then mkdir etc; fi"
     echo "$SOA_CFG" | ssh $SOA_ADMIN "cat >etc/umc.cfg"
-    if [ ?$ -eq 0 ]; then
+    if [ $? -eq 0 ]; then
         echo "Done."
     else
         echo "Error."
@@ -126,7 +126,7 @@ function copyCfg {
     echo -n "Copy OSB cfg..."
     ssh $OSB_ADMIN "if [ ! -d etc ]; then mkdir etc; fi"
     echo "$OSB_CFG" | ssh $OSB_ADMIN "cat >etc/umc.cfg"
-    if [ ?$ -eq 0 ]; then
+    if [ $? -eq 0 ]; then
         echo "Done."
     else
         echo "Error."
@@ -136,8 +136,30 @@ function copyCfg {
     if [ "$error" == NO ]; then
         echo Done.
     else
-        ecgo Done with errors.
+        echo Done with errors.
     fi
+
+
+    for host in $SOA_ADMIN $OSB_ADMIN; do
+    # add etc to oracle
+
+    commandToExecute="bash -c '
+
+    ln -c $PWD/etc ~/etc
+
+    '"
+    
+    getPassword
+
+    if [ $host != $(hostname -s) ]; then
+      cat ~/.umc/pwd | ssh $host sudo -kS su oracle -c  "$commandToExecute"
+    else
+      cat ~/.umc/pwd | sudo -kS su oracle -c "$commandToExecute"
+    fi
+
+    done
+
+
 }
 
 function distributeUmc {
@@ -147,7 +169,7 @@ function distributeUmc {
     for host in $HOSTS; do
 
     if [ $host != $(hostname -s) ]; then
-      scp -r $uscRoot $host:$(dirname $uscRoot)
+      scp -r $umcRoot $host:$(dirname $umcRoot)
     fi
 
     done
@@ -160,6 +182,7 @@ function prepareUmc {
     for host in $HOSTS; do
 
     commandToExecute="
+    chmod -R a+xr etc
     chmod -R a+xr umc
     ls -lh
     "
@@ -171,6 +194,8 @@ function prepareUmc {
     fi
 
     done
+
+
 }
  
 function measureLinux {
@@ -203,7 +228,9 @@ function measureLinux {
     iostat\" –nonblocking --testId=$TESTID --logDir=/tmp/umc >/dev/null 2>&1 &
 
     '"
-       
+    
+    getPassword
+
     if [ $host != $(hostname -s) ]; then
       cat ~/.umc/pwd | ssh $host sudo -kS su oracle -c  "$commandToExecute"
     else
