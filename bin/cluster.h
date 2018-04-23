@@ -92,6 +92,7 @@ function getPassword {
     if [ ! -f ~/.umc/pwd ]; then
         read -p "Enter password:" -s pwd
         echo -n $pwd > ~/.umc/pwd
+	chmod 600 ~/.umc/pwd
         unset pwd
         echo
     fi
@@ -136,16 +137,28 @@ function copyCfg {
         ecgo Done with errors.
     fi
 }
- 
 
-function prepareUMC {
+function distributeUmc {
+    #
+    # --- Copy umc to all hosts
+    #
+    for host in $HOSTS; do
+
+    if [ $host != $(hostname -s) ]; then
+      scp -r $uscRoot $host:$(dirname $uscRoot)
+    fi
+
+    done
+}
+
+function prepareUmc {
     #
     # --- Change permission to very wide to make oracle user able to use umc files.
     #
     for host in $HOSTS; do
 
     commandToExecute="
-    chmod -R 777 umc
+    chmod -R a+xr umc
     ls -lh
     "
 

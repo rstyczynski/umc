@@ -22,8 +22,8 @@ ssh-check-key.sh "$HOSTS"
 ##
 ## Prepare config
 ##
-copyCfg
 prepareUMC
+copyCfg
 
 ##
 ##
