@@ -181,6 +181,54 @@ function copyCfg {
 
 }
 
+
+function removeUmc {
+    #
+    # --- Copy configuration to Middleware Admin hosts
+    #
+   
+    getPassword
+
+    #
+    # prepare etc 
+    #
+    for host in $SOA_ADMIN $OSB_ADMIN; do
+
+    commandToExecute="
+    rm etc/umc.cfg
+    rmdir etc
+
+    mkdir DELETE.ME
+    mv umc DELETE.ME/umc.$RANDOM.$PID
+     "
+
+    if [ $host != $(hostname -s) ]; then
+      ssh $host "$commandToExecute"
+    fi
+
+    done
+
+    #
+    # add etc to oracle
+    #    
+    for host in $SOA_ADMIN $OSB_ADMIN; do
+
+    commandToExecute="bash -c '
+
+    rm ~/etc
+
+    '"
+    
+    if [ $host != $(hostname -s) ]; then
+      cat ~/.umc/pwd | ssh $host sudo -kS su oracle -c  "$commandToExecute"
+    fi
+
+    done
+
+
+}
+
+
 function distributeUmc {
     #
     # --- Copy umc to all hosts
