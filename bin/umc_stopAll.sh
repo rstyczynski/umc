@@ -3,7 +3,7 @@
 filterBy="/umc/"
  
 if [ "$umcRoot" ]; then
-  pids=$(ps aux | grep -v 'grep' |  grep "$filterBy" | tr -s ' ' | cut -d' ' -f2)
+	  pids=$(ps aux | grep -v 'grep' |  grep "$filterBy" | grep -v umc_stopAll.sh | tr -s ' ' | cut -d' ' -f2)
   while [ ! -z "$pids" ]; do
     echo Active processes:
     ps aux | grep -v 'grep' |  grep "$filterBy"
