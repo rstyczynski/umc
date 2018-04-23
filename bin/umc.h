@@ -24,12 +24,14 @@ fi
 . $toolsBin/global.cfg
 
 #prepare secret directory
-if [ ! -f ~/.umc ]; then
+if [ ! -d ~/.umc ]; then
     mkdir ~/.umc 
-    if [ $(stat -c %a) != "700" ]; then
-       chmod 700 ~/.umc 
-    fi
 fi
+
+if [ $(stat -c %a ~/.umc) != "700" ]; then
+   chmod 700 ~/.umc 
+fi
+
 
 #---------------------------------------------------------------------------------------
 #--- check required python version
@@ -154,8 +156,10 @@ function umc {
         ;;
         
         cluster)
+	    . $toolsBin/cluster.h
+
             # fix arguments for subcommands
-            cfgCluster $1
+	    cfgCluster $1
         ;;
         
         -V)
@@ -251,6 +255,8 @@ function cfgCluster {
        
        HOSTS="$OHS $SOA $OSB $TEST"
        
+       echo 
+       echo "Envirionment configured for the cluster."
    fi
 
 }
@@ -672,271 +678,6 @@ function umcTestRun {
         locateToolExecDir $cmd
     fi
  done
-}
-
-
-#
-# Cluster functions
-# 
-
-function getPassword {
-
-    if [ ! -f ~/.umc/pwd ]; then
-        read -p "Enter password:" -s pwd
-        echo -n $pwd > ~/.umc/pwd
-        unset pwd
-        echo
-    fi
-
-}
-
-function delPassword {
-
-    if [ ! -f ~/.umc/pwd ]; then
-        rm ~/.umc/pwd
-    fi
-
-}
-
-function copyCfg {
-    #
-    # --- Copy configuration to Middleware Admin hosts
-    #
-    echo "$SOA_CFG" | ssh $SOA_ADMIN "cat >umc/etc/umc.cfg"
-    echo "$OSB_CFG" | ssh $OSB_ADMIN "cat >umc/etc/umc.cfg"
-}
- 
-
-function prepareUMC {
-    #
-    # --- Change permission to very wide to make oracle user able to use umc files.
-    #
-    for host in $HOSTS; do
-
-    commandToExecute="
-    chmod -R 777 umc
-    ls -lh
-    "
-
-    if [ $host != $(hostname -s) ]; then
-      ssh $host "$commandToExecute"
-    else
-       eval $commandToExecute
-    fi
-
-    done
-}
- 
-function measureLinux {
-    #
-    # --- Linux
-    #
-    
-    if [ -z "$HOSTS" ]; then
-        echo "Error: HOSTS are not configured."
-        return 1
-    fi
-            
-    DURATION_OS=$(( $DURATION * $DURATION_BASE / $INTERVAL_OS ))
-
-    for host in $HOSTS; do
-
-    commandToExecute="bash -c '
-
-    . umc/bin/umc.h;
-    mkdir -p /tmp/umc;
-    chmod 777 /tmp/umc;
-    cd /tmp/umc;
-    nohup umc_collectAll.sh $INTERVAL_OS $DURATION_OS \"vmstat
-    free
-    top
-    uptime
-    meminfo
-    netstattcp
-    ifconfig
-    iostat\" –nonblocking --testId=$TESTID --logDir=/tmp/umc >/dev/null 2>&1 &
-
-    '"
-    
-    getPassword
-        
-    if [ $host != $(hostname -s) ]; then
-      cat ~/.umc/pwd | ssh $host sudo -kS su oracle -c  "$commandToExecute"
-    else
-      cat ~/.umc/pwd | sudo -kS su oracle -c "$commandToExecute"
-    fi
-
-    done
-}
- 
- 
-function measureSOA {
-    #
-    # --- SOA
-    #
-    
-    if [ -z "$SOA" ]; then
-        echo "Error: SOA not configured."
-        return 1
-    fi
-        
-    host=$SOA_ADMIN
-    DURATION_WLS=$(( $DURATION * $DURATION_BASE / $INTERVAL_WLS ))
-
-    commandToExecute="bash -c '
-
-    . umc/bin/umc.h;
-    mkdir -p /tmp/umc;
-    chmod 777 /tmp/umc;
-    cd /tmp/umc;
-    nohup umc_collectAll.sh $INTERVAL_WLS $DURATION_WLS \"wls --subsystem=general --url=$SOA_ADMIN_URL
-    wls --subsystem=jmsruntime --url=$SOA_ADMIN_URL
-    wls --subsystem=jmsserver --url=$SOA_ADMIN_URL
-    wls --subsystem=datasource --url=$SOA_ADMIN_URL
-    wls --subsystem=channel --url=$SOA_ADMIN_URL
-    soabindings --url=$SOA_ADMIN_URL \" -–nonblocking --testId=$TESTID --logDir=/tmp/umc >/dev/null 2>&1 &
-
-    '"
-
-    getPassword
-
-    if [ $host != $(hostname -s) ]; then
-      cat ~/.umc/pwd | ssh $host sudo -kS su oracle -c  "$commandToExecute"
-    else
-      cat ~/.umc/pwd | sudo -kS su oracle -c "$commandToExecute"
-    fi
-}
- 
- 
-function measureOSB {
-    #
-    # --- OSB
-    #
-    
-    if [ -z "$OSB" ]; then
-        echo "Error: OSB not configured."
-        return 1
-    fi
-    
-    host=$OSB_ADMIN
-    DURATION_WLS=$(( $DURATION * $DURATION_BASE / $INTERVAL_WLS ))
-
-    commandToExecute="bash -c '
-
-    . umc/bin/umc.h;
-    mkdir -p /tmp/umc;
-    chmod 777 /tmp/umc;
-    cd /tmp/umc;
-    nohup umc_collectAll.sh $INTERVAL_WLS $DURATION_WLS \"wls --subsystem=general --url=$OSB_ADMIN_URL
-    wls --subsystem=jmsruntime --url=$OSB_ADMIN_URL
-    wls --subsystem=jmsserver --url=$OSB_ADMIN_URL
-    wls --subsystem=datasource --url=$OSB_ADMIN_URL 1
-    wls --subsystem=channel --url=$OSB_ADMIN_URL1
-    businessservice --url=$OSB_ADMIN_URL --metrics_type=SERVICE
-    businessservice --url=$OSB_ADMIN_URL --metrics_type=URI
-    businessservice --url=$OSB_ADMIN_URL --metrics_type=OPERATION \" -–nonblocking --testId=$TESTID --logDir=/tmp/umc >/dev/null 2>&1 &
-
-    '"
-
-    getPassword
-        
-    if [ $host != $(hostname -s) ]; then
-      cat ~/.umc/pwd | ssh $host sudo -kS su oracle -c  "$commandToExecute"
-    else
-      cat ~/.umc/pwd | sudo -kS su oracle -c "$commandToExecute"
-    fi
-}
- 
- 
-function stopMeasurements {
-    #
-    # --- Stop
-    #
-
-    if [ -z "$HOSTS" ]; then
-        echo "Error: HOSTS are not configured."
-        return 1
-    fi
-        
-    for host in $HOSTS; do
-
-    commandToExecute="bash -c '
-
-    . umc/bin/umc.h;
-    umc_stopAll.sh;
-
-    '"
-
-    getPassword
-        
-    if [ $host != $(hostname -s) ]; then
-      cat ~/.umc/pwd | ssh $host sudo -kS su oracle -c  "$commandToExecute"
-    else
-      cat ~/.umc/pwd | sudo -kS su oracle -c "$commandToExecute"
-    fi
-
-    done
-}
- 
- 
-function getDataFiles {
-    #
-    # --- Change permission
-    #
-    
-    if [ -z "$HOSTS" ]; then
-        echo "Error: HOSTS are not configured."
-        return 1
-    fi
-        
-    for host in $HOSTS; do
-
-    commandToExecute="bash -c '
-
-    . umc/bin/umc.h;
-    cd /tmp;
-    chmod -R 777 umc;
-    cd umc
-    ls -Rlh
-
-    '"
-
-    getPassword
-        
-    if [ $host != $(hostname -s) ]; then
-      cat ~/.umc/pwd | ssh $host sudo -kS su oracle -c  "$commandToExecute"
-    else
-      cat ~/.umc/pwd | sudo -kS su oracle -c "$commandToExecute"
-    fi
-
-    done
-
-
-    #
-    # --- tar and copy
-    #
-    DATE=$(date +"%d-%m-%y")
-    mkdir /tmp/umc_archive
-
-    for host in $HOSTS; do
-
-    commandToExecute="bash -c \"
-
-    rm umc*.tar.gz
-    tar czf umc\_$TESTID_$DATE\_\$(hostname -s).tar.gz /tmp/umc/$TESTID
-
-    \""
-
-    if [ $host != $(hostname -s) ]; then
-      ssh $host "$commandToExecute"
-      scp $host:umc\_$TESTID_$DATE\_$host.tar.gz /tmp/umc_archive
-    else
-      cat ~/.umc/pwd | sudo -kS su $(whoami) -c "$commandToExecute"
-      cp umc\_$TESTID_$DATE\_$host.tar.gz /tmp/umc_archive
-    fi
-
-    done
-    chmod -R 777 /tmp/umc_archive
 }
 
 

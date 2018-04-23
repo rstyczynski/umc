@@ -2,24 +2,39 @@
 ## Start params and sequence
 ##
 
-TESTID=A
+TESTID=TESTxA
 DURATION=1
 DURATION_BASE=3600
 INTERVAL_OS=5
 INTERVAL_WLS=30
- 
-cfgCluster
+
+
+## 
+## Configure env.
+## 
+umc cluster PPE9
+
+##
+## Check ssh connectivity
+##
+ssh-check-key.sh "$HOSTS"
+
+##
+## Prepare config
+##
 copyCfg
+prepareUMC
+
+##
+##
+##
 measureLinux
 measureSOA
 measureOSB
- 
- 
+
 ##
 ## Stop params and sequence
 ##
 
 stopMeasurements
 getDataFiles
-
-
