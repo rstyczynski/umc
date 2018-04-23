@@ -200,6 +200,8 @@ function removeUmc {
 
     mkdir DELETE.ME
     mv umc DELETE.ME/umc.$RANDOM.$PID
+    rm -rf /tmp/umc
+
      "
 
     if [ $host != $(hostname -s) ]; then
@@ -216,6 +218,7 @@ function removeUmc {
     commandToExecute="bash -c '
 
     rm ~/etc
+    rm -rf /tmp/umc
 
     '"
     
@@ -251,6 +254,9 @@ function prepareUmc {
     commandToExecute="
     chmod -R a+xr umc
     ls -lh
+
+    mkdir -p /tmp/umc;
+    chmod 777 /tmp/umc;
     "
 
     if [ $host != $(hostname -s) ]; then
@@ -281,9 +287,6 @@ function measureLinux {
     commandToExecute="bash -c '
 
     . umc/bin/umc.h;
-    mkdir -p /tmp/umc;
-    chmod 777 /tmp/umc;
-    cd /tmp/umc;
     nohup umc_collectAll.sh $INTERVAL_OS $DURATION_OS \"vmstat
     free
     top
@@ -321,9 +324,6 @@ function measureSOA {
     commandToExecute="bash -c '
 
     . umc/bin/umc.h;
-    mkdir -p /tmp/umc;
-    chmod 777 /tmp/umc;
-    cd /tmp/umc;
     nohup umc_collectAll.sh $INTERVAL_WLS $DURATION_WLS \"wls --subsystem=general --url=$SOA_ADMIN_URL
     wls --subsystem=jmsruntime --url=$SOA_ADMIN_URL
     wls --subsystem=jmsserver --url=$SOA_ADMIN_URL
@@ -359,9 +359,6 @@ function measureOSB {
     commandToExecute="bash -c '
 
     . umc/bin/umc.h;
-    mkdir -p /tmp/umc;
-    chmod 777 /tmp/umc;
-    cd /tmp/umc;
     nohup umc_collectAll.sh $INTERVAL_WLS $DURATION_WLS \"wls --subsystem=general --url=$OSB_ADMIN_URL
     wls --subsystem=jmsruntime --url=$OSB_ADMIN_URL
     wls --subsystem=jmsserver --url=$OSB_ADMIN_URL
@@ -408,6 +405,12 @@ function stopMeasurements {
       cat ~/.umc/pwd | ssh $host sudo -kS su oracle -c  "$commandToExecute"
     else
       cat ~/.umc/pwd | sudo -kS su oracle -c "$commandToExecute"
+    fi
+
+    if [ $host != $(hostname -s) ]; then
+      ssh $host $commandToExecute"
+    else
+      eval "$commandToExecute"
     fi
 
     done
