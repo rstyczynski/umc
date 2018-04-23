@@ -13,6 +13,9 @@ PATH=$PATH:/sbin:$toolsBin
 #---------------------------------------------------------------------------------------
 #--- call cfg scripts
 #---------------------------------------------------------------------------------------
+# mandatory paramters
+export CSVdelimiter=','
+
 # configure user params
 if [ -f ~/etc/umc.cfg ]; then
     . ~/etc/umc.cfg
@@ -217,7 +220,11 @@ function getDirectories {
                                 echo -n "$umcRoot/tools"
                                 echo $directoryRoot/$directoryLinux/$directoryJava/$directoryWLS/$directorySOA
                             done
-                        else
+                            for directoryOSB in $(getLayerDirectories osb); do
+                                echo -n "$umcRoot/tools"
+                                echo $directoryRoot/$directoryLinux/$directoryJava/$directoryWLS/$directoryOSB
+                            done
+			else
                             echo -n "$umcRoot/tools"
                             echo $directoryRoot/$directoryLinux/$directoryJava/$directoryWLS
                         fi
