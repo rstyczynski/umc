@@ -8,8 +8,10 @@ if [ "$umcRoot" ]; then
     echo Active processes:
     ps aux | grep -v 'grep' |  grep "$filterBy"
     for pid in $pids; do
-       $umcRoot/bin/killtree.sh $pid
-       echo "Stopped umc process $pid and all child processes."
+       #$umcRoot/bin/killtree.sh $pid
+       #echo "Stopped umc process $pid and all child processes."
+       kill $pid
+       echo "Stopped umc process $pid."
     done
     pids=$(ps aux | grep -v 'grep' |  grep "$filterBy" | tr -s ' ' | cut -d' ' -f2)
   done
