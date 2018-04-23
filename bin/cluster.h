@@ -140,12 +140,31 @@ function copyCfg {
     fi
 
 
+    #
+    # prepare etc 
+    #
     for host in $SOA_ADMIN $OSB_ADMIN; do
+
+    commandToExecute="
+    chmod -R a+xr etc
+     "
+
+    if [ $host != $(hostname -s) ]; then
+      ssh $host "$commandToExecute"
+    else
+       eval $commandToExecute
+    fi
+
+    done
+
+    #
     # add etc to oracle
+    #    
+    for host in $SOA_ADMIN $OSB_ADMIN; do
 
     commandToExecute="bash -c '
 
-    ln -c $PWD/etc ~/etc
+    ln -s $PWD/etc ~/etc
 
     '"
     
@@ -182,7 +201,6 @@ function prepareUmc {
     for host in $HOSTS; do
 
     commandToExecute="
-    chmod -R a+xr etc
     chmod -R a+xr umc
     ls -lh
     "
