@@ -114,7 +114,8 @@ function copyCfg {
     
     error=NO
     echo -n "Copy SOA cfg..."
-    echo "$SOA_CFG" | ssh $SOA_ADMIN "cat >umc/etc/umc.cfg"
+    ssh $SOA_ADMIN "if [ ! -d etc ]; then mkdir etc; fi"
+    echo "$SOA_CFG" | ssh $SOA_ADMIN "cat >etc/umc.cfg"
     if [ ?$ -eq 0 ]; then
         echo "Done."
     else
@@ -123,7 +124,8 @@ function copyCfg {
     fi
     
     echo -n "Copy OSB cfg..."
-    echo "$OSB_CFG" | ssh $OSB_ADMIN "cat >umc/etc/umc.cfg"
+    ssh $OSB_ADMIN "if [ ! -d etc ]; then mkdir etc; fi"
+    echo "$OSB_CFG" | ssh $OSB_ADMIN "cat >etc/umc.cfg"
     if [ ?$ -eq 0 ]; then
         echo "Done."
     else
