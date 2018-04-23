@@ -12,12 +12,14 @@ user=$(whoami)
 serversError=''
 for server in $servers; do
   echo -n $server...
-  ssh -q -oBatchMode=yes -p $port $user@$server "echo OK" 2 >/dev/null
+  ssh -q -oBatchMode=yes -p $port $user@$server "echo OK" 2>/dev/null
   if [ $? -ne 0 ]; then
     echo "Error"
     serversError="$serversError $server"
   fi
 done
+
+echo
 
 if [ -z "$serversError" ]; then
     echo All good.
@@ -25,6 +27,6 @@ else
     echo "Servers with no key authentication:"
     echo $serversError
     echo
-    echo "Distribute keys using command:""
-    echo ssh-check-key.sh -p $port "$serversError"   
+    echo "Distribute keys using command:"
+    echo ssh-copy-key.sh -p $port "$serversError"   
 fi
