@@ -111,7 +111,9 @@ function copyCfg {
     #
     # --- Copy configuration to Middleware Admin hosts
     #
-    
+   
+    getPassword
+
     error=NO
     echo -n "Copy SOA cfg..."
     ssh $SOA_ADMIN "if [ ! -d etc ]; then mkdir etc; fi"
@@ -168,8 +170,6 @@ function copyCfg {
 
     '"
     
-    getPassword
-
     if [ $host != $(hostname -s) ]; then
       cat ~/.umc/pwd | ssh $host sudo -kS su oracle -c  "$commandToExecute"
     else
@@ -247,12 +247,10 @@ function measureLinux {
 
     '"
     
-    getPassword
-
     if [ $host != $(hostname -s) ]; then
-      cat ~/.umc/pwd | ssh $host sudo -kS su oracle -c  "$commandToExecute"
+      ssh $host "$commandToExecute"
     else
-      cat ~/.umc/pwd | sudo -kS su oracle -c "$commandToExecute"
+      eval "$commandToExecute"
     fi
 
     done
