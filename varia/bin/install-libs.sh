@@ -1,0 +1,239 @@
+#!/bin/bash
+# script to install third-party tools for umc
+
+# the tools will be installed to the current directory from which this script was started
+LIBS_HOME="$(pwd)/libs"
+
+# the installation
+INSTALL_HOME="/home/vagrant/umc/varia"
+INSTALL_LOG="$LIBS_HOME/install-$(date "+%Y%m%d-%H%M%S").log"
+ENV_FILE="$LIBS_HOME/umc-libs-env.sh"
+
+show_help () {
+	echo "UMC libraries installation script"
+	echo "Usage: install-tools [--yes] [--python] [--jdk] [--sqlcl] [--sql-collector]"
+	echo ""
+	echo "When none of the libraries are specified, all libraries will be installed."
+	echo "Option --yes will suppress all questions."
+	echo ""
+}
+
+# INSTALL PYTHON
+install_python () {
+	# binary file for jdk and tool directory name
+	BINFILE="Python-2.7.11.tgz"
+	TOOLDN="Python-2.7.11"
+
+	echo "* Installing python: $BINFILE" 
+
+	if [ ! -d $LIBS_HOME/python ]; then
+		# get python 2.7.11 installation binaries
+		# check if it exsits in varia and download when it does not
+		if [ ! -f $INSTALL_HOME/$BINFILE ]; then
+		        cd $INSTALL_HOME
+		        wget --progress=bar:force $(cat $INSTALL_HOME/$BINFILE.download)
+		fi
+
+		# unpack python 2.7.11
+		mkdir -p $LIBS_HOME/python
+        cd $LIBS_HOME/python
+		echo "  - unpacking..." 
+		tar zxfv $INSTALL_HOME/$BINFILE >>$INSTALL_LOG 2>&1
+        find $LIBS_HOME/python -type d | xargs chmod 0755
+        cd $LIBS_HOME/python/$TOOLDN
+
+		# build python binaries
+		echo "  - configuring..." 
+		./configure --prefix=$LIBS_HOME/python >>$INSTALL_LOG 2>&1
+
+		echo "  - building..." 
+		make >>$INSTALL_LOG 2>&1
+		make install >>$INSTALL_LOG 2>&1
+
+		if [ $? != 0 ]; then
+			echo ""
+			echo >&2 "An error occured while installing Pyton."
+			echo >&2 "Check $INSTALL_LOG for details."
+		fi
+
+		# umc scripts use python2 in shebang
+		# hence create a symbolic link for python2 to point to python 2.7.11
+		cd $LIBS_HOME/python/$TOOLDN/ && ln -s python python2
+
+		# environment variables
+		echo "# python" >>$ENV_FILE
+		echo "export PATH=$LIBS_HOME/python/Python-2.7.11/:\$PATH" >>$ENV_FILE
+		echo "export PYTHONPATH=$LIBS_HOME/python/Python-2.7.11" >>$ENV_FILE
+		echo "" >>$ENV_FILE
+
+	else
+		echo >&2 "  - Python has already been installed in $LIBS_HOME/python, skipping."
+	fi
+}
+
+# INSTALL JDK
+install_jdk () {
+	# binary file for jdk and tool directory name
+	BINFILE="jdk-8u162-linux-x64.tar.gz"
+	TOOLDN="jdk1.8.0_162"	
+
+	echo "* Installing jdk: $BINFILE" 
+
+	if [ ! -d $LIBS_HOME/$TOOLDN ]; then
+		# check that sqlcl installation binaries are in varia
+		if [ ! -f $INSTALL_HOME/$BINFILE ]; then
+		    echo ""
+		    echo >&2 "SQLcl installation binaries at $INSTALL_HOME/$BINFILE are not available." 
+		    echo >&2 "Please download the binary first by following a link in $INSTALL_HOME/$BINFILE.download"
+		    exit 1
+		fi
+
+		# install sqlcl locally
+		echo "  - unpacking..." 
+		cd $LIBS_HOME && tar xvzf $INSTALL_HOME/$BINFILE >>$INSTALL_LOG 2>&1
+
+		# replace random with urandom
+		sed -i.bckp s#securerandom.source=file:/dev/random#securerandom.source=file:/dev/urandom#g $LIBS_HOME/$TOOLDN/jre/lib/security/java.security
+		echo "  - /dev/random replaced by /dev/urandom in $LIBS_HOME/$TOOLDN/jre/lib/security/java.security" 
+
+		# environment variables
+		echo "# Java" >>$ENV_FILE
+		echo "export PATH=$LIBS_HOME/jdk1.8.0_162/bin/:\$PATH" >>$ENV_FILE
+		echo "export JAVA_HOME=$LIBS_HOME/jdk1.8.0_162" >>$ENV_FILE
+		echo "" >>$ENV_FILE
+	else		
+		echo >&2 "  - JDK has already been installed in $LIBS_HOME/$TOOLDN, skipping."		
+	fi
+}
+
+# INSTALL SQLcl (SQL command line)
+install_sqlcl () {
+	# binary file for sqlcl
+	BINFILE="sqlcl-17.4.0.354.2224-no-jre.zip"
+	TOOLDN="sqlcl"
+
+	echo "* Installing sqlcl: $BINFILE" 
+
+	if [ ! -d $LIBS_HOME/$TOOLDN ]; then
+		# check that sqlcl installation binaries are in varia
+		if [ ! -f $INSTALL_HOME/$BINFILE ]; then
+			echo ""
+			echo >&2 "SQLcl installation binaries at $INSTALL_HOME/$BINFILE are not available." 
+		    echo >&2 "Please download the binary first by following a link in $INSTALL_HOME/$BINFILE.download"
+			exit 1
+		fi
+
+		# install sqlcl locally
+		echo "  - unpacking..." 
+		cd $LIBS_HOME && unzip $INSTALL_HOME/$BINFILE >>$INSTALL_LOG 2>&1
+
+		echo "# sqlcl" >>$ENV_FILE
+		echo "export PATH=$LIBS_HOME/sqlcl/bin/:\$PATH" >>$ENV_FILE
+		echo "" >>$ENV_FILE
+	else
+		echo >&2 "  - SQLcl has already been installed in $LIBS_HOME/$TOOLDN, skipping."				
+	fi
+
+}
+
+# INSTALL SQL COLLECTOR
+install_sqlcollector () {
+	# binary file for sql collector
+	BINFILE="sql-collector"
+	TOOLDN="sql-collector"
+
+	echo "* Installing SQL collector: $BINFILE" 
+
+	if [ ! -d $LIBS_HOME/$TOOLDN ]; then
+
+		# sql-collector should be in umc/varia/sql-collector/bin
+		if [ ! -f $INSTALL_HOME/$BINFILE/bin/sql-collector ]; then
+		        echo ""
+		        echo >&2 "Cannot find sql-collector script in $INSTALL_HOME/$BINFILE."
+		        echo >&2 "Have you properly cloned umc repo with sub-modules?"
+		fi
+
+		echo "  - copying..." 
+		cp -R $INSTALL_HOME/$BINFILE $LIBS_HOME/$TOOLDN
+
+		echo "# SQL collector" >>$ENV_FILE
+		echo "export SQLCOLLECTOR_HOME=\"$LIBS_HOME/sql-collector\"" >>$ENV_FILE
+		echo "export PATH=\$SQLCOLLECTOR_HOME/bin/:\$PATH" >>$ENV_FILE
+		echo "" >>$ENV_FILE
+
+	else
+		echo >&2 "  - SQL collector has already been installed in $LIBS_HOME/$TOOLDN, skipping."						
+	fi
+}
+
+# parse arguments
+INSTALLIBS=""
+for i in "$@"; do
+	case $i in
+	    --yes)
+	    ALLYES="YES"
+	    shift
+	    ;;
+	    --python)
+	    INSTALLIBS="$INSTALLIBS python"
+	    shift 
+	    ;;
+	    --jdk)
+	    INSTALLIBS="$INSTALLIBS jdk"
+	    shift 
+	    ;;
+	    --sqlcl)
+	    INSTALLIBS="$INSTALLIBS sqlcl"
+	    shift 
+	    ;;
+	    --sql-collector)
+	    INSTALLIBS="$INSTALLIBS sqlcollector"
+	    shift 
+	    ;;
+	    *)
+	          show_help
+	          exit
+	    ;;
+	esac
+done
+
+# install all if none is specified
+if [ "$INSTALLIBS" == "" ]; then INSTALLIBS="ALL"; fi
+
+mkdir -p $LIBS_HOME
+echo "UMC libraries installation script"
+echo "Libraries will be installed in "$LIBS_HOME""
+echo "Installation log will be in "$INSTALL_LOG""
+
+while [ true ] && [ "$ALLYES" != "YES" ]; do
+	echo ""
+	read -p "Do you wish to continue?" yn
+    case $yn in
+        [Yy]* ) break;;    	
+        [Nn]* ) exit;;
+        * ) echo "Please answer yes or no.";;
+    esac
+done
+
+echo ""
+echo "* Installing libraries to $LIBS_HOME..."
+
+if [[ $INSTALLIBS =~ (.*"python".*|ALL) ]] ; 		then install_python; fi
+if [[ $INSTALLIBS =~ (.*"jdk".*|ALL) ]] ; 			then install_jdk; fi
+if [[ $INSTALLIBS =~ (.*"sqlcl".*|ALL) ]] ; 		then install_sqlcl; fi
+if [[ $INSTALLIBS =~ (.*"sqlcollector".*|ALL) ]] ; 	then install_sqlcollector; fi
+
+chmod +x $ENV_FILE
+
+echo "* Done"
+echo ""
+
+
+
+
+
+
+
+
+
+
