@@ -192,7 +192,7 @@ function removeUmc {
     #
     # prepare etc 
     #
-    for host in $SOA_ADMIN $OSB_ADMIN; do
+    for host in $HOSTS; do
 
     commandToExecute="
     rm etc/umc.cfg
@@ -213,7 +213,7 @@ function removeUmc {
     #
     # add etc to oracle
     #    
-    for host in $SOA_ADMIN $OSB_ADMIN; do
+    for host in $HOSTS; do
 
     commandToExecute="bash -c '
 
@@ -256,7 +256,7 @@ function prepareUmc {
     ls -lh
 
     mkdir -p /tmp/umc;
-    chmod 777 /tmp/umc;
+    chmod -R 777 /tmp/umc;
     "
 
     if [ $host != $(hostname -s) ]; then

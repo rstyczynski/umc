@@ -7,13 +7,15 @@ Created on Sun Apr 15 16:11:25 2018
 """
 
 from matplotlib.ticker import FuncFormatter
+from pandas import Series
+from matplotlib import dates
+
 import matplotlib.pyplot as plt
 import pandas
 import numpy
 import datetime as dt
 import os
 import fnmatch
-from matplotlib import dates
 import matplotlib.dates as mdates
 import yaml
 import getopt
@@ -86,6 +88,8 @@ htmlStop = """</body></html>"""
 
 htmlImg = """<img src="%s" width=500 height=400>"""
 
+htmlVerbatim = """<verbatim>%s</verbatim>"""
+
 htmlParagraphStart = """<p>"""
 htmlParagraphStop = """</p>"""
 
@@ -109,6 +113,8 @@ srcDir = '.'
 probeDir='.'
 dstDir = '.'
 
+plotOnlyChanges = False
+
 #
 # USAGE
 #
@@ -124,15 +130,16 @@ usage: umcPlot.sh """)
     output.write("""
     
     Mandatory:
-    --server.........plot data for given server. Filters log filenames.
-    --probe..........plot data for given probe. Filters log filenames.
+    --server...........plot data for given server. Filters log filenames.
+    --probe............plot data for given probe. Filters log filenames.
 
     Optional:
-    --pkColumns......specify columns to be used to identify unique data streams. default: none
-    --from...........select rows starting at from. Format: yyyy-mm-dd hh:mm:ss. default: 1
-    --to.............select rows ending at to. Format: yyyy-mm-dd hh:mm:ss. default: 9999
-    --srcDir.........directory to get log files from. default: .
-    --dstDir.........directory to write png files. default: .
+    --pkColumns........specify columns to be used to identify unique data streams. default: none
+    --from.............select rows starting at from. Format: yyyy-mm-dd hh:mm:ss. default: 1
+    --to...............select rows ending at to. Format: yyyy-mm-dd hh:mm:ss. default: 9999
+    --srcDir...........directory to get log files from. default: .
+    --dstDir...........directory to write png files. default: .
+    --plotOnlyChanges..plots only dataseries with changes. default: false
     
     Special:
     --probeDir.......points to directory with probe.info file. Required to determine columns names to be plotted. default: srcDir
@@ -143,12 +150,25 @@ usage: umcPlot.sh """)
     version 0.1
     rstyczynski@gmail.com, https://github.com/rstyczynski/umc""")
    
+#
+# HELPER FUNCTIONS
+#
+def changesPerSecond(dataset, column):
+    if not 'timestamp_dt' in dataset:
+        dataset['timestamp_dt'] = dataset['timestamp'].diff()
 
+    columnDelta=column + '_dv'
+    dataset[columnDelta] = dataset[column].diff()
+    
+    columnDelta=column + '_dvdt'
+    dataset[columnDelta] = dataset[column + '_dv'] /   dataset['timestamp_dt']
+
+        
 #
 # PARAMETER PARSING
 #
 try:
-    opts, args = getopt.getopt( sys.argv[1:], 's:p', ['server=','probe=', 'pkColumns=', 'srcDir=', 'dstDir=', 'probeDir=', 'from=', 'to='])
+    opts, args = getopt.getopt( sys.argv[1:], 's:p', ['server=','probe=', 'pkColumns=', 'srcDir=', 'dstDir=', 'probeDir=', 'from=', 'to=', 'plotOnlyChanges'])
 except getopt.GetoptError, err:
     print str(err)
     usage()
@@ -175,6 +195,8 @@ for opt, arg in opts:
         probeDir = arg
     elif opt in ('--dstDir'):
         dstDir = arg
+    elif opt in ('--plotOnlyChanges'):
+        plotOnlyChanges = True
     else:
         usage()
         sys.exit(2) 
@@ -212,16 +234,20 @@ for dirRoot,dirList,fileList in os.walk(srcDir):
             continue
     except:
         pass
-        #print sys.exc_info()[0]
+        print sys.exc_info()[0]
         print 'Ignoring directory w/o date.'
+        print rowsFrom.date()
+        print rowsTo.date()
+        print dirName
         continue
     
     #print 'Dir list:', dirList
-    #print 'File list:', fileList
+    print 'File list:', fileList
     if fileList:
         for file in fileList:
-            fileMatch = '*' + computerName + '_' + probeName + '*.log'
-            #print fileMatch
+            #fileMatch = '*' + computerName + '_' + probeName + '.log'
+            fileMatch = '*' + '_' + probeName + '*.log'
+            print fileMatch
             if fnmatch.fnmatch(file, fileMatch):
                 fullName = os.path.join(dirRoot,file)
                 print fullName, os.path.getsize(fullName)
@@ -242,7 +268,9 @@ for dirRoot,dirList,fileList in os.walk(srcDir):
                 
                 if os.path.getsize(fullName) > 0:
                     if firstFile:
-                        df = pandas.read_csv(fullName, error_bad_lines=False)
+                        df = pandas.read_csv(fullName, error_bad_lines=True, skipfooter=1)
+                        #print df
+                        
                         firstFileColumns = str(df.columns)
                         #try:
                         #df['date_time']  = [dt.datetime.strptime(d,'%Y-%m-%d %H:%M:%S') for d in df['datetime']]
@@ -250,14 +278,16 @@ for dirRoot,dirList,fileList in os.walk(srcDir):
                             try:
                                 df['date_time']  = dt.datetime.strptime(dataLine,'%Y-%m-%d %H:%M:%S')
                             except:
-                                print 'Warning: malformed data line:' + dataLine
+                                print 'Warning: malformed data line:'
+                                print dataLine
                                 pass
                         #except:
                         #    pass
                         firstFile = False
                         #print df.head
                     else:
-                        df2 = pandas.read_csv(fullName, error_bad_lines=False)
+                        #skipfooter is to remove lat line as potnetially bad
+                        df2 = pandas.read_csv(fullName, error_bad_lines=True, skipfooter=1)
                         if str(df2.columns) != firstFileColumns:
                             errorMsg = 'different columns! Ignoring file:' + fullName
                             #raise Exception(errorMsg)
@@ -273,7 +303,8 @@ for dirRoot,dirList,fileList in os.walk(srcDir):
                                 try:
                                     df2['date_time']  = dt.datetime.strptime(dataLine,'%Y-%m-%d %H:%M:%S')
                                 except:
-                                    print 'Warning: malformed data line:' + dataLine
+                                    print 'Warning: malformed data line:'
+                                    print dataLine
                                     pass
                             #except:
                             #    pass
@@ -437,56 +468,132 @@ for subsystem in finalDoc:
                 fig, ax = plt.subplots(1)
                 fig.autofmt_xdate()
                 ax.fmt_xdata = mdates.DateFormatter('%Y-%m-%d %H:%M:%S')
-                print probe, subsystem, seriesPK
+                #direvartive
+                figD, axD = plt.subplots(1)
+                figD.autofmt_xdate()
+                axD.fmt_xdata = mdates.DateFormatter('%Y-%m-%d %H:%M:%S')
                 
+                print probe, subsystem, seriesPK
                 title = probe + ':' + subsystem + ':' + seriesPK
                 #htmlStr = htmlStr + (htmlHeaderStart + title + htmlHeaderStop)
                 #ax.set_title(title)
                 
-                #               
+                #            
+                emptyPlot=True
                 for column in columns:
                     print column 
                     #print plotdf[column]
                     
-                    #plotdf.to_csv('/tmp/1c.csv')
-                    #try:
-                    ax.plot(x, plotdf[column])
-                    #except:
-                    #    pass
-                #
-                ax.legend()   
-                #
-                print system, probe, subsystem, seriesPK
-                pngFileName = '' + system + '_' + probe + '_' + subsystem + '_' + seriesPK + '.png'
-                pngFileName = pngFileName.replace('/','')
-                fig.set_tight_layout(True)
-                fig.savefig(dstDir + '/' + pngFileName)   # save the figure to file
-                plt.close(fig)
-                
-                htmlStr = htmlStr + (htmlImg % (pngFileName))
+                    dataChanges= False
+                    try:
+                        if df[column].std() > 0:
+                            dataChanges= True
+                    except:
+                        pass    
+                    
+                    if dataChanges: #is data changing obver time?
+                        emptyPlot=False
+                        try:
+                            ax.plot(x, plotdf[column])
+                            
+                            changesPerSecond(plotdf, column)
+                            axD.plot(x, plotdf[column + '_dvdt'])
+                        except:
+                            print plotdf[column]
+                            plotdf.to_csv('/tmp/1c.csv')
+                            pass
+                if (not emptyPlot) or (not plotOnlyChanges):
+                    #
+                    ax.legend()   
+                    #
+                    print system, probe, subsystem, seriesPK
+                    pngFileName = '' + system + '_' + probe + '_' + subsystem + '_' + seriesPK + '.png'
+                    pngFileName = pngFileName.replace('/','')
+                    fig.set_tight_layout(True)
+                    try:
+                        fig.savefig(dstDir + '/images/' + pngFileName)   # save the figure to file
+                    except:
+                        #TODO
+                        pass
+
+                    plt.close(fig)
+                    #
+                    htmlStr = htmlStr + (htmlImg % ('images/' + pngFileName))
+                    # direvative
+                    axD.legend()   
+                    #
+                    pngFileName = '' + system + '_' + probe + '_' + subsystem + '_' + seriesPK + '_changes.png'
+                    pngFileName = pngFileName.replace('/','')
+                    figD.set_tight_layout(True)
+                    try:
+                        figD.savefig(dstDir + '/images/' + pngFileName)   # save the figure to file
+                    except:
+                        #TODO
+                        pass
+                    plt.close(figD)
+                    #
+                    htmlStr = htmlStr + (htmlImg % ('images/' + pngFileName))
+                    
+                    
     else:
-        x = [dt.datetime.strptime(d,'%Y-%m-%d %H:%M:%S') for d in df['datetime']]
+        #TODO - add protectino against truncated line
+        x = [dt.datetime.strptime(dt.datetime.strftime(d,'%Y-%m-%d %H:%M:%S') ,'%Y-%m-%d %H:%M:%S') for d in df['date_time']]
+        #for dataLine in df['datetime']:
+        #    try:
+        #       x = dt.datetime.strptime(dataLine,'%Y-%m-%d %H:%M:%S')
+        #    except:
+        #        print 'Warning: malformed data line:'
+        #        print dataLine
+        #        pass
         #x = df['date_time']
         #print df
         #do plot
         fig, ax = plt.subplots(1)
         fig.autofmt_xdate()
         ax.fmt_xdata = mdates.DateFormatter('%Y-%m-%d %H:%M:%S')
-        
+        #direvartive
+        figD, axD = plt.subplots(1)
+        figD.autofmt_xdate()
+        axD.fmt_xdata = mdates.DateFormatter('%Y-%m-%d %H:%M:%S')
+                
         title = probe + ':' + subsystem
         #ax.set_title(title)
-        #               
+        #  
+        emptyPlot=True                     
         for column in columns:
             print column,
-            ax.plot(x, df[column])
+            
+            dataChanges= False
+            try:
+                if df[column].std() > 0:
+                    dataChanges= True
+            except:
+                pass
+            
+            if dataChanges: #is data changing obver time?
+                emptyPlot=False
+                ax.plot(x, df[column])
+                # direvative
+                changesPerSecond(df, column)
+                axD.plot(x, df[column + '_dvdt'])
         #
-        ax.legend()   
-        pngFileName = '' + system + '_' + probe + '_' + subsystem + '.png'
-        pngFileName = pngFileName.replace('/','')
-        fig.set_tight_layout(True)
-        fig.savefig(dstDir + '/' + pngFileName)   # save the figure to file
-        plt.close(fig)   
-        htmlStr = htmlStr + (htmlImg % (pngFileName))
+        if (not emptyPlot) or (not plotOnlyChanges):
+            #
+            ax.legend()   
+            pngFileName = '' + system + '_' + probe + '_' + subsystem + '.png'
+            pngFileName = pngFileName.replace('/','')
+            fig.set_tight_layout(True)
+            fig.savefig(dstDir +  '/images/' + pngFileName)   # save the figure to file
+            plt.close(fig)   
+            htmlStr = htmlStr + (htmlImg % ( 'images/' + pngFileName))
+            # direvative
+            axD.legend()   
+            pngFileName = '' + system + '_' + probe + '_' + subsystem + '_changes.png'
+            pngFileName = pngFileName.replace('/','')
+            figD.set_tight_layout(True)
+            figD.savefig(dstDir +  '/images/' + pngFileName)   # save the figure to file
+            plt.close(figD)   
+            htmlStr = htmlStr + (htmlImg % ( 'images/' + pngFileName))
 
 #
 # stop html
