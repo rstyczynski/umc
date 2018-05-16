@@ -11,7 +11,7 @@ ENV_FILE="$LIBS_HOME/umc-libs-env.sh"
 
 show_help () {
 	echo "UMC libraries installation script"
-	echo "Usage: install-tools [--yes] [--python] [--jdk] [--sqlcl] [--sql-collector]"
+	echo "Usage: install-tools [--yes] [--python] [--jdk] [--sqlcl] [--sql-collector] [--influxdb]"
 	echo ""
 	echo "When none of the libraries are specified, all libraries will be installed."
 	echo "Option --yes will suppress all questions."
@@ -166,6 +166,63 @@ install_sqlcollector () {
 	fi
 }
 
+# INSTALL INFLUXDB
+install_influxdb () {
+	# binary file for influxdb
+	BINFILE="influxdb-1.5.2_linux_amd64.tar.gz"
+	TOOLDN="influxdb-1.5.2-1"
+
+	echo "* Installing influxdb: $BINFILE"
+
+	if [ ! -d $LIBS_HOME/$TOOLDN ]; then
+		# get influxdb installation binaries
+		# check if it exsits in varia and download when it does not
+		if [ ! -f $INSTALL_HOME/$BINFILE ]; then
+			    echo "Influxdb installation binaries at $INSTALL_HOME/$BINFILE are not available."
+			    echo "Trying to download..."
+
+		        cd $INSTALL_HOME
+		        wget --progress=bar:force --no-check-certificate $(cat $INSTALL_HOME/$BINFILE.download)
+
+		        # check it was downloaded ok
+		        if [ $? -ne 0 ]; then
+			    	echo ""
+			    	echo >&2 "The binary cannot be downloaded as per the link in $INSTALL_HOME/$BINFILE.download." 
+			    	echo >&2 "Please check you network connection, check the link in the download file or download the file manually."
+			    	exit 1
+			    fi
+
+			    echo "Influxdb binaries downloaded to $INSTALL_HOME/$BINFILE"
+		fi
+
+		# copy to libs directory
+		echo "  - unpacking..." 
+		cd $LIBS_HOME && tar xvzf $INSTALL_HOME/$BINFILE >>$INSTALL_LOG 2>&1
+
+		# change the location of db 
+		sed -i.bckp s#/var/lib/influxdb#$LIBS_HOME/$TOOLDN/var/influxdb#g $LIBS_HOME/$TOOLDN/etc/influxdb/influxdb.conf
+		sed -i.bckp s/#.reporting-disabled.=.false/reporting-disabled=true/g $LIBS_HOME/$TOOLDN/etc/influxdb/influxdb.conf
+		echo "  - changed required configuration in $LIBS_HOME/$TOOLDN/etc/influxdb/influxdb.conf"
+
+		# create influxd start up script
+		echo "$LIBS_HOME/$TOOLDN/usr/bin/influxd >$LIBS_HOME/$TOOLDN/var/log/influxdb/influxd.log 2>&1 &" >$LIBS_HOME/$TOOLDN/usr/bin/run-influxd.sh
+		echo "echo \"influxdb started, log is in $LIBS_HOME/$TOOLDN/var/log/influxdb/influxd.log\"" >>$LIBS_HOME/$TOOLDN/usr/bin/run-influxd.sh
+		echo "echo \"\"" >>$LIBS_HOME/$TOOLDN/usr/bin/run-influxd.sh
+
+		chmod +x $LIBS_HOME/$TOOLDN/usr/bin/run-influxd.sh
+		echo "  - influxdb setup completed, you can run it with $LIBS_HOME/$TOOLDN/usr/bin/run-influxd.sh"
+
+
+		# environment variables
+		echo "# influxdb" >>$ENV_FILE
+		echo "export INFLUXDB_CONFIG_PATH=\"$LIBS_HOME/$TOOLDN/etc/influxdb/influxdb.conf\"" >>$ENV_FILE
+		echo "export PATH=$LIBS_HOME/$TOOLDN/usr/bin:\$PATH" >>$ENV_FILE
+		echo "" >>$ENV_FILE
+	else
+		echo >&2 "  - Influxdb has already been installed in $LIBS_HOME/$TOOLDN, skipping."						
+	fi
+}
+
 # parse arguments
 INSTALLIBS=""
 for i in "$@"; do
@@ -188,6 +245,10 @@ for i in "$@"; do
 	    ;;
 	    --sql-collector)
 	    INSTALLIBS="$INSTALLIBS sqlcollector"
+	    shift 
+	    ;;
+	    --influxdb)
+	    INSTALLIBS="$INSTALLIBS influxdb"
 	    shift 
 	    ;;
 	    *)
@@ -222,18 +283,10 @@ if [[ $INSTALLIBS =~ (.*"python".*|ALL) ]] ; 		then install_python; fi
 if [[ $INSTALLIBS =~ (.*"jdk".*|ALL) ]] ; 			then install_jdk; fi
 if [[ $INSTALLIBS =~ (.*"sqlcl".*|ALL) ]] ; 		then install_sqlcl; fi
 if [[ $INSTALLIBS =~ (.*"sqlcollector".*|ALL) ]] ; 	then install_sqlcollector; fi
+if [[ $INSTALLIBS =~ (.*"influxdb".*|ALL) ]] ; 		then install_influxdb; fi
 
 chmod +x $ENV_FILE
 
 echo "* Done"
 echo ""
-
-
-
-
-
-
-
-
-
 

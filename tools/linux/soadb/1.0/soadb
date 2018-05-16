@@ -1,4 +1,5 @@
 #!/bin/bash
+# Tomas Vitvar, tomas@vitvar.com
 
 getSensorData_bin=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
@@ -27,7 +28,8 @@ metric=$1 && shift
 # check that the metric file exists and print help if it does not
 if [ ! -f "$getSensorData_bin/$metric.sql" ]; then
     echo "Invalid metric definition. There is no file with name $getSensorData_bin/$metric.sql."
-    echo "Available values for a metric are:"
+    echo "Usage: umc soadb collect <delay> <count> <metric> [--connect <constr>] [<sql-collector arguments>]"
+    echo "Available values for <metric> are:"
     ls | grep ".sql$" | \
     while read line; do
         printf "  ${line%.*}%-$((20-$(expr length $line)))s  $(cat $line | head -n 1 | grep "\-\-")\n"
