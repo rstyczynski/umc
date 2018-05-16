@@ -5,22 +5,22 @@
 LIBS_HOME="$(pwd)/libs"
 
 # the installation
-INSTALL_HOME="/home/vagrant/umc/varia"
+INSTALL_HOME="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
 INSTALL_LOG="$LIBS_HOME/install-$(date "+%Y%m%d-%H%M%S").log"
 ENV_FILE="$LIBS_HOME/umc-libs-env.sh"
 
 show_help () {
 	echo "UMC libraries installation script"
-	echo "Usage: install-tools [--yes] [--python] [--jdk] [--sqlcl] [--sql-collector] [--influxdb]"
+	echo "Usage: $(basename "$0") [--yes] [--python] [--jdk] [--sqlcl] [--sql-collector] [--influxdb]"
 	echo ""
 	echo "When none of the libraries are specified, all libraries will be installed."
-	echo "Option --yes will suppress all questions."
+	echo "Option --yes will answer all questions as \"yes\"."
 	echo ""
 }
 
 # INSTALL PYTHON
 install_python () {
-	# binary file for jdk and tool directory name
+	# binary file for python and tool directory name
 	BINFILE="Python-2.7.11.tgz"
 	TOOLDN="Python-2.7.11"
 
@@ -263,8 +263,9 @@ if [ "$INSTALLIBS" == "" ]; then INSTALLIBS="ALL"; fi
 
 mkdir -p $LIBS_HOME
 echo "UMC libraries installation script"
-echo "Libraries will be installed in "$LIBS_HOME""
-echo "Installation log will be in "$INSTALL_LOG""
+echo "- Directory with installation binaries is in $INSTALL_HOME"
+echo "- Libraries will be installed in "$LIBS_HOME""
+echo "- Installation log will be in "$INSTALL_LOG""
 
 while [ true ] && [ "$ALLYES" != "YES" ]; do
 	echo ""
