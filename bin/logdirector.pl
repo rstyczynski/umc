@@ -5,6 +5,8 @@ use Pod::Usage;
 use File::Copy qw(move);
 use FileHandle;
 use strict;
+use threads;
+use threads::shared;
 
 my $dstDir=".";			 #log destination directory
 my $dstEffectiveDir="";  #date asubdirectory
@@ -21,6 +23,7 @@ my $logNameExt;			 #log name with extension. build by the script
 my $fileHeader;          #header to be added at top of each file
 my $autoDetectHeader=0;      #take file header from first line after start in the log stream
 my $headerAlreadyDetected=0; #take header just once
+my $checkHeaderDups=0;	 #check duplicate headers 
 
 my $rotateBy="bytes";	 #type of rotation. by bytes or lines. default it bytes
 my $sizePerLogParam;	 #to capture cmd line parameter
@@ -28,6 +31,7 @@ my $sizePerLog;			 #maximum size of log file. meaning depends on rotate by. may 
 my $rotateOnStart=0;	 #rotate on start. option specified by cmd line. Default yes - do on start rotation.
 my $logFlush=0;			 #auto flush the log - disable perl side buffering
 my $verbose=0;			 #verbose mode - print verbose information about processing
+my $timeRotationInThread=0; #  true for time rotation to happen in a separated thread
 my $man=0;		  	     #man flag
 my $help=0;			     #help flag
 
@@ -45,13 +49,16 @@ my $timeLimir=0;
 my $startTimeAdjustment = 0;
 my $timePerLog=0;
 my $logRotationTimeLimit=0;
-my $currentTime=0;
-my $currentTimeSlot=0;
-my $lastTimeSlot=time+1;	#value bigger than time block rotation duriong first loop
-my $lastTime=0;
+
+# time rotation in thread
+my $logfilerotationlock :shared; # lock to protect file rotation
+my $reopenFile :shared = 0; #true if the log file needs to be reopened in the main thread as it was roatated in the thread
+my $linesUntilRotation :shared = 0; # number of lines writen to th current file before it was rotated in the thread
+my $rotateOnThreadEnd = 0; # true to rotate the file on thread end/exit of the log director
 
 #other
 my $exit = 0;			#flag to exit main loop, set by INT signal handler
+my $firstLineHeader = ""; #a header read from the file when it is opened; this is used when detectHeaderDups is enabled
 
 #read cmd line options
 my $optError=0;
@@ -59,7 +66,7 @@ GetOptions ('dir=s'   	    => \$dstDir,      	# string
             'addDateSubDir' => \$dstDateSubDirFlag, # flag
             'name=s'	    => \$logName,     	# string
             'alwaysRotate'  => \$useTimestampedLog, #flag
-            'prefixDate',   	  => \$datePrefix,      	# flag
+            'prefixDate',   => \$datePrefix,      	# flag
             'separatorDate=s', => \$logDateSeparator,      	# string
 		    'identifier=s'	=> \$logIdentifier, # string
 	       	'extension=s'	=> \$logExt,    	# string
@@ -72,6 +79,9 @@ GetOptions ('dir=s'   	    => \$dstDir,      	# string
             'flush'		    => \$logFlush,      # flag
  	       	'start'		    => \$rotateOnStart, # flag
             'verbose'	    => \$verbose,      	# flag
+            'timeRotationInThread' => \$timeRotationInThread,  # flag
+            'rotateOnThreadEnd' => \$rotateOnThreadEnd, # flag
+            'checkHeaderDups' => \$checkHeaderDups,  # flag
 		    'help|?'	    => \$help, 		    # flag
 		    'man'		    => \$man)		    # flag
 or $optError=1;
@@ -126,6 +136,10 @@ if ( "$rotateByTime . $rotateBy" eq "" ){
 	die "logdirector.pl: Error: no rotation method provided. Provide by content or time. Both may be used together."
 }
 
+if ($timeRotationInThread && $rotateByTime eq "") {
+	die "logdirector.pl: Error: rotation in thread requires rotateByTime."
+}
+
 if ( $timePerLog > 0 ){
 	$logRotationTimeLimit = $timePerLog;
 } else {
@@ -148,25 +162,58 @@ if ($rotateOnStart){
 }
 
 #$exit may be set only by INT signal
-my $exit = 0;
+#this variable is used in the rotation thread too
+my $exit :shared = 0;
+
+# start the time rotation thread if enabled
+my $thr;
+if ($timeRotationInThread) {
+	 $thr = threads->create(\&timeRotationThread);
+	if ($verbose) { print "Time rotation thread started.\n" }
+}
 
 while ( ! $exit ) {
 
 	#open log file handler
-	openLogFile();
+	openLogFile();	
     
 	#read and process stdin
 	if ($verbose) {print "Entering stdin read loop\n";}
 	while (<>) {
 		$rotate = 0;
 
-		#print line taken from stdin
-		print outfile $_;
+		# check if the file needs to be reopened if it was rotated in the thread
+		if ($timeRotationInThread) {
+			lock($logfilerotationlock);
+
+			if ($reopenFile) {
+				close(outfile);
+				openLogFile();	
+				
+				$reopenFile = 0;
+				$linesUntilRotation = 0;
+
+				if ($verbose) { print "File reopened $dstEffectiveDir/$logNameExt\n"; }		
+			}
+
+			# number of lines writen to this file
+			$linesUntilRotation++;
+		}
 
         if ( $autoDetectHeader && not($headerAlreadyDetected)) {
             $fileHeader = $_;
             $headerAlreadyDetected=1;
         }
+
+		#print line taken from stdin		
+		#if checking header duplicates is enabled and the line is header while the header is already in the file, then ignore this
+		#this only checks duplicates against the first line in the log which is supposed to be the header, it will not check for
+		#duplcates in case the header will arrive more than once from stdin
+		if ($checkHeaderDups && $autoDetectHeader && $headerAlreadyDetected && $firstLineHeader eq $_) {
+			if ($verbose) { print "Duplicated header detected, not writing it out: $_"; }
+		} else {
+			print outfile $_;
+		}
 
 		#increment log size
 		if ($rotateBy eq "lines"){
@@ -182,35 +229,33 @@ while ( ! $exit ) {
 			}
 		}
 
-		#decide if time based rotation is required
-		$currentTime = time - $startTimeAdjustment;
-
-		#detect current time slot
-		$currentTimeSlot = $currentTime - $currentTime % $logRotationTimeLimit;	
-
-		if ($verbose) { print "Rotate by: $logRotationTimeLimit, current time: $currentTime, current time slot: $currentTimeSlot\n";}	
-		if ( $currentTimeSlot > $lastTimeSlot ){
-			if ( $rotateByTime ne "") {
-				$rotate = 1;
-			}
+		# evaluate time rotation if not done in thread
+		if (!$timeRotationInThread) {
+			$rotate = evalTimeRoatation();
 		}
 
-		$lastTime = $currentTime;
-		$lastTimeSlot = $currentTimeSlot;
-
-		if ($rotate ){
+		if ($rotate) {
 			rotateLogFile();
 		}
 	}
+	if ($verbose) {print "Stdin read loop ended.\n";}
 
 	#check if exit was due to signal
 	my $errno = $! + 0;
 	if ( $errno == 0 ) {
 		$exit = 1;
 	} 
-	
+
 	#close log file after close of input stream
 	close(outfile);
+
+	#wait for rotation thread to finish
+	if ($timeRotationInThread) {
+		if ($verbose) { print "Waiting for rotation thread to finish.\n" }
+		$exit = 1;
+		$thr->join();
+		if ($verbose) { print "Time rotation thread was finished.\n" }
+	}
 
 	#exiting due to $exit=1
 }
@@ -219,6 +264,58 @@ while ( ! $exit ) {
 ###
 ### END of main logic here.
 ###
+
+# time based rotation
+# time rotation thread
+sub timeRotationThread {
+	my $r = 0;
+	while ( ! $exit ) {   
+	    sleep(1);      
+
+		$r = evalTimeRoatation();
+		if ($r || ($exit && $rotateOnThreadEnd)) {
+			 # check the file is not empty before rotation
+			 if ($linesUntilRotation > 0) {
+				lock($logfilerotationlock);
+
+				rotateLogFile();
+				close(outfile);
+
+				if ($verbose) { print "File rotated in thread.\n"; }
+
+				# reopen the file in the main thread
+				$reopenFile = 1;
+			} else {
+				if ($verbose) { print "File was not rotated in thread as there were no lines writen to the current file.\n"; }
+			}
+
+		}
+	}
+}
+
+# time based rotation evaluation function - used in thread and non-thread modes
+my $lastTimeSlot=time+1;	#value bigger than time block rotation duriong first loop
+
+sub evalTimeRoatation {
+	my $r = 0;
+
+	#decide if time based rotation is required
+	my $currentTime = time - $startTimeAdjustment;
+
+	#detect current time slot
+	my $currentTimeSlot = $currentTime - $currentTime % $logRotationTimeLimit;	
+
+	if ( $currentTimeSlot > $lastTimeSlot ){
+		if ( $rotateByTime ne "") {
+			if ($verbose) { print "Rotate by: $logRotationTimeLimit, current time: $currentTime, current time slot: $currentTimeSlot\n";}	
+			$r = 1;
+		}
+	}
+
+	$lastTimeSlot = $currentTimeSlot;
+
+	return $r;
+}
 
 ##### functions
 sub signal_handler_ROTATE {
@@ -231,20 +328,25 @@ sub signal_handler_EXIT {
 }
 
 sub rotateLogFile {
-	close(outfile);
-    
-	if ( $useTimestampedLog ) {
-        openLogFile();
-	} else {
-        moveLogFile();
-        openLogFile();
-    }
+	{
+		lock($logfilerotationlock);
 
+		close(outfile);
+
+		if ( $useTimestampedLog ) {
+	        openLogFile();
+		} else {
+	        moveLogFile();
+	        openLogFile();
+	    }
+
+	    $linesUntilRotation = 0;
+	}
 }
 
 sub moveLogFile {
         $rotatedLogNameExt=generateRotatedLogName();
-        if ($verbose) {print "Rotated log name:$rotatedLogNameExt\n";}
+        if ($verbose) {print "Rotated log name: $rotatedLogNameExt\n";}
         
         if ($dstDateSubDirFlag) {
             my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
@@ -285,10 +387,29 @@ sub openLogFile {
     if ( $useTimestampedLog ) {
         $logNameExt=generateRotatedLogName();
     }
+	
+	# check header duplicates - read the first line from the file
+	$firstLineHeader = "";
+	if ($checkHeaderDups && -e "$dstEffectiveDir/$logNameExt") {
+		open(inf, "<", "$dstEffectiveDir/$logNameExt");
+		$firstLineHeader = <inf>;
+		close(inf);
+
+		if ($verbose) { 
+			if ($firstLineHeader ne "") {
+				print "The file containts header: $firstLineHeader";
+			} else {
+				print "There is no header in the file.\n";					
+			}
+		}
+	}
+
+	# open the file for writing
 	open(outfile, ">>", "$dstEffectiveDir/$logNameExt") || die "logdirector.pl: Cannot open output file: $!";
-	if ($verbose) {print "Opened log file $dstEffectiveDir/$logNameExt\n";}
+	if ($verbose) {print "Opened log file $dstEffectiveDir/$logNameExt\n"; }
     
-    if ( $fileHeader ) {
+    # add file header only if enabled and the header is not already in the file (if header duplicate checking is enabled)
+    if ( $fileHeader && $firstLineHeader eq "") {
         if ( $autoDetectHeader ) {
             #autodetected header is already with new line character
             print outfile $fileHeader;
@@ -372,12 +493,19 @@ logdirector.pl - stdout log director and rotation script.
  
  -header        add this header on top of each file. Useful for CSV files with hreader,
  -detectHeader  auto detect header from first line of log stream after start. Useful for CSV files with hreader,
+ -checkHeaderDups 
+                checks for header duplicates. Useful when writing to non-empty CSV files with header,
  
  -rotateBySize 	rotation done by line or byte count. Default is bytes,
  -limit 	number of lines or bytes in single log file. Default values are 100 k lines and 50 mega bytes. Value provided as integer,
  -rotateByTime	rotation done by clock of process run time. Default is clock,
  -timeLimit	time limit in seconds. Default is 86400 (1 day),
  -startup 	rotate on startup. By default doesn't rotate on startup,
+
+ -timeRotationInThread 
+                enable time rotation in thread. Useful when time rotation needs to be independent of data coming from stdin,
+ -rotateOnThreadEnd 
+                when rotating in thread, then this flag will rotate the file on the thread end, 
  
  -identifier 	log process identifier to be used by administrator/scripts to locate log director running in background,
  -flush 	do not buffer output. flush each line. Default is to use buffering,
@@ -544,6 +672,25 @@ seq 1 100  | perl logdirector.pl -n rotate-seq -rotateBySize lines -l 10
        1 rotate-seq.log
      100 total
 
+=item B<Detect header duplicates>
+
+When the log director starts writing data to an existing non-empty CSV log file, there could be a header present on the first line of the log. 
+With option detectHeaderDups it is possible to check that the first line header is not repeated in subsequent writes in the log file. 
+
+=item B<Time based rotation a thread>
+
+If you need to run the time rotation while you need to be independent of incoming data from stdin, you can use an option to rotate 
+files in an internal rotation thread. This is useful when you need to generate log files in batches that could be taken up by another script
+in an asynchronous manner, for example, when you want to decouple log data collection and a script pushing data to a remote endpoint. 
+In such a case, the script pushing data to the remote endpoint won't block collection process.
+
+The below is the example:
+
+umc free collect 30 4 | perl logdirector.pl -name free -rotateByTime run -timeLimit 10 -flush -timeRotationInThread -rotateOnThreadEnd
+
+This will rotate the file every 10 seconds but only when there is data in the file. The parameter rotateOnThreadEnd will rotate the file 
+when the rotation thread ends, i.e. when the log director ends. 
+
 =back
 
 =head1 PERFORMANCE
@@ -557,6 +704,14 @@ Ryszard Styczynski
 <http://snailsinnoblesoftware.blogspot.com>
 
 February 2015 - November 2017, version 0.3
+
+=head1 CONTRIBUTIONS
+
+Tomas Vitvar 
+<tomas@vitvar.com> 
+<http://vitvar.com>
+
+	05-2018: Time based rotation in thread
 
 =cut
 
