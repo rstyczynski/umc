@@ -268,7 +268,7 @@ for dirRoot,dirList,fileList in os.walk(srcDir):
                 
                 if os.path.getsize(fullName) > 0:
                     if firstFile:
-                        df = pandas.read_csv(fullName, error_bad_lines=True, skipfooter=1)
+                        df = pandas.read_csv(fullName, error_bad_lines=True, skipfooter=0)
                         #print df
                         
                         firstFileColumns = str(df.columns)
@@ -287,7 +287,7 @@ for dirRoot,dirList,fileList in os.walk(srcDir):
                         #print df.head
                     else:
                         #skipfooter is to remove lat line as potnetially bad
-                        df2 = pandas.read_csv(fullName, error_bad_lines=True, skipfooter=1)
+                        df2 = pandas.read_csv(fullName, error_bad_lines=True, skipfooter=0)
                         if str(df2.columns) != firstFileColumns:
                             errorMsg = 'different columns! Ignoring file:' + fullName
                             #raise Exception(errorMsg)
@@ -537,7 +537,24 @@ for subsystem in finalDoc:
                     
     else:
         #TODO - add protectino against truncated line
-        x = [dt.datetime.strptime(dt.datetime.strftime(d,'%Y-%m-%d %H:%M:%S') ,'%Y-%m-%d %H:%M:%S') for d in df['date_time']]
+        #x = [dt.datetime.strptime(dt.datetime.strftime(d,'%Y-%m-%d %H:%M:%S') ,'%Y-%m-%d %H:%M:%S') for d in df['date_time']]
+        try:
+            x = [dt.datetime.strptime(d, '%Y-%m-%d %H:%M:%S') for d in df['datetime']]
+        except:
+            x = []
+            timeStr = ''
+            lastTime=''
+            for index, row in df.iterrows():
+                try:
+                    timeStr = row.datetime
+                    timeMark = dt.datetime.strptime(str(timeStr),'%Y-%m-%d %H:%M:%S')
+                    x.append(timeMark)
+                    lastTime=timeMark
+                except:
+                    print row
+                    print row.datetime
+                    x.append(lastTime)
+                    pass
         #for dataLine in df['datetime']:
         #    try:
         #       x = dt.datetime.strptime(dataLine,'%Y-%m-%d %H:%M:%S')
