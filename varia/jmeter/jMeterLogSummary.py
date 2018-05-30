@@ -59,8 +59,8 @@ datetime = False
 allResults = False
 allResultsFileExt = 'max'
 
-rowsFrom = dt.MINYEAR
-rowsTo = dt.MAXYEAR
+rowsFrom = ''
+rowsTo = ''
 
 #
 # USAGE
@@ -153,30 +153,30 @@ if not os.path.exists(imagesDir):
 # read jMeter log
 # 
 alldf = pd.read_csv(fullName, error_bad_lines=True, skipfooter=0, low_memory=False)
-alldf['timeStamp'] = pd.to_datetime(alldf['timeStamp'], unit='ms')
+#convert timestamp to date format
+if not datetime:
+    alldf['timeStamp'] = pd.to_datetime(alldf['timeStamp'], unit='ms')
+#set index in time column
 alldf.index = alldf['timeStamp']
-#as part of code is str, pandas gets crazy. to simplify will make it string.
+#as part of error code respones is str, pandas gets crazy. to simplify will make it string.
 alldf['responseCode'] = alldf['responseCode'].astype(str)
 
 
 #filter rows by date rowsFrom, rowsTo. Final 3of3 step on row.
-if ((rowsFrom > dt.MINYEAR) or (rowsTo < dt.MAXYEAR)):
-    alldf = alldf.loc[ (str(rowsFrom) <= alldf['date_time']) & (alldf['date_time']<= str(rowsTo)) ]
+if ((rowsFrom != '' ) or (rowsTo != '' )):
+    alldf = alldf.loc[ (str(rowsFrom) <= alldf['timeStamp']) & (alldf['timeStamp']<= str(rowsTo)) ]
 
 
 #select only results with max threads
-if allResults:
+if allResults:  
     majordf = alldf
 else:
-    maxThreads=max(alldf.allThreads)    
-    majordf = alldf[alldf['allThreads']==maxThreads]    
+    maxThreads = alldf['allThreads'].max()   
+    majordf = alldf[alldf['allThreads'] == maxThreads]    
 
 # row count
 dataCnt = majordf.count()
     
-#convert timestamp to date format
-if not datetime:
-    x = pd.to_datetime(majordf['timeStamp'],unit='ms')
 
 #
 # Open HTML file for writing
@@ -246,7 +246,7 @@ fig, ax = plt.subplots(1, figsize=(10,4))
 ax.title.set_text('Thread count')
 
 column='allThreads'
-ax.plot(x, majordf[column])
+ax.plot(majordf[column])
 ax.legend(loc='upper left', fontsize=8) 
 
 pngFileName = 'jmeter_series_' + allResultsFileExt + '_' + column + '.png'
@@ -292,13 +292,13 @@ for code in majordf['responseCode'].unique():
     #
     #very slow!
     #alldf['lat:'+ code] = alldf.apply(lambda r: r['Latency'] if r['responseCode'] == code else np.NaN, axis=1)
-    alldf['lat:'+ code] = alldf['Latency'] * ( alldf['responseCode'] == code )
+    majordf['lat:'+ code] = majordf['Latency'] * ( majordf['responseCode'] == code )
     ax.plot(majordf['lat:' + code])
     #ax.set_ylim([0,quantiles[0.9]*2])
 
 ax.legend(loc='upper left', fontsize=8) 
-    
-pngFileName = 'jmeter_series_code1' + allResultsFileExt + '_' + column + '_' + str(code) + '.png'
+
+pngFileName = 'jmeter_series_code1' + allResultsFileExt + '_' + column +  '.png'
 fullFileName = imagesDir + '/' + pngFileName
 fig.savefig(fullFileName)
 htmlStr = htmlStr + (htmlImg % ('images/' + pngFileName))
@@ -319,8 +319,8 @@ majordf[column+'_mean'] = majordf[column].rolling(dataCnt/20).mean()
 majordf[column+'_min'] = majordf[column].rolling(dataCnt/10).min()
 majordf[column+'_max'] = majordf[column].rolling(dataCnt/10).max()
 
-ax.plot(x, majordf[column+'_mean'], label = 'mean')
-ax.plot(x, majordf[column+'_min'], label = 'min')
+ax.plot(majordf[column+'_mean'], label = 'mean')
+ax.plot(majordf[column+'_min'], label = 'min')
 #ax.plot(x, majordf[column+'_max'])
 ax.legend(loc='upper left', fontsize=8) 
 
@@ -362,7 +362,7 @@ for code in majordf['responseCode'].unique():
     #
     # very slow!
     #alldf['el:'+ code] = alldf.apply(lambda row: row['elapsed'] if r['responseCode'] == code else np.NaN, axis=1)
-    alldf['el:'+ code] = alldf['elapsed'] * ( alldf['responseCode'] == code )
+    majordf['el:'+ code] = majordf['elapsed'] * ( majordf['responseCode'] == code )
     ax.plot(majordf['el:' + code])
     #ax.set_ylim([0,quantiles[0.9]*2])
 
