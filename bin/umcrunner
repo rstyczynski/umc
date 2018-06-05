@@ -1,0 +1,215 @@
+#!/bin/bash
+# umclogrunner, tomas@vitvar.com, May 2018
+# 
+# This script runs the umc tool in the background and logs its output to log files by using logdirector. 
+# The configuration of the logdirector will ensure that there are batches of files created for
+# a separated script to consume the batches asynchronously. Such script may further push the data in batches 
+# to a remote destionation such as a DB.
+
+# load libs environment variables
+source ~/libs/umc-libs-env.sh >/dev/null
+
+# umc settings
+source ~/umc/bin/umc.h  >/dev/null
+
+# script directory
+scriptDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+
+function print_usage () {
+    echo "umcrunner runs an instance of umc tool and logs its output to files according to time rotation definition."
+    echo ""
+    echo "Usage:"
+    echo "  * running an instance of an umc tool and store logs in $UMC_LOG_DIR/<id>:"
+    echo "  umcrunner --run <id> <rotate-time> <tool> <delay> <count> [<umc-params>]"
+    echo ""
+    echo "  where:"
+    echo "  id           A unique id of umc tool instance"
+    echo "  rotate-time  The time to rotate the umc output log"
+    echo "  tool         umc tool id"
+    echo "  delay        Delay in seconds between umc tool runs"
+    echo "  count        Number of umc tool runs"
+    echo "  umc-params   Additional umc tool paramers"
+    echo ""
+    echo "  * other usages:"
+    echo "  umcrunner --stats | --stopall | --stop <id> | --gpid <id>"
+    echo ""
+    echo "  where:"
+    echo "  --stats     displayes all running umc instances"
+    echo "  --stopall   stops all running umc instances"
+    echo "  --stop <id> stops the instance"
+    echo "  --gpid <id> prints group process id"
+    echo ""
+    echo "  umcrunner --stats displays following detailed information about running umc instances:"
+    echo ""
+    echo "  GPID        group process ID"
+    echo "  UMC_ID      unique umc instance ID"
+    echo "  ROTAT_T     roation time in seconds used as a value for logdirector.pl -timeLimit"
+    echo "  UMC         umc tool (sensor) id"
+    echo "  DELAY       umc delay value"
+    echo "  COUNT       umc count value"
+    echo "  PARAMS      additional parameters of umc tool (umc tool specific)"
+    echo "  STARTED     time the umc instance was started"
+    echo "  RUN_T       umc instance running time"
+    echo "  CPU_T       cpu time consumed by the umc instance since its start up"
+    echo "  BACKLOG     number of files in a backlog (in a directory $UMC_LOG_DIR/<UMC_ID>)"
+}
+
+function umc_run() {
+    umc_id="$1" && shift
+    tool="$1" && shift
+    delay="$1" && shift
+    count="$1" && shift
+    rotateTime="$1" && shift
+    umc_params="$*" 
+
+    mkdir -p $UMC_LOG_DIR/$umc_id
+    
+    # run umc with logdirector
+    # this needs an explicit stdin redirection (tail -f /dev/null) as otherwise the background java process was trying 
+    # to read from stdin (that somehow got srewed up when in background) and was causing high cpu. 
+    tail -f /dev/null | umc $tool collect $delay $count $umc_params 2>>$UMC_LOG_DIR/$umc_id/$umc_id.error.out | \
+        logdirector.pl -name $umc_id -dir $UMC_LOG_DIR/$umc_id \
+            -detectHeader \
+            -checkHeaderDups \
+            -rotateByTime run \
+            -timeLimit $rotateTime \
+            -flush \
+            -timeRotationInThread \
+            -rotateOnThreadEnd &
+}
+
+function umc_gpid() {
+     umc_id="$1" && shift
+     echo $(ps axf -o  "%p %r %y %x %a" | grep -v grep | egrep "logdirector\.pl.*$umc_id" | awk '{print $2}')
+}
+
+# returns a list of all umc runner IDs on this host
+function umc_allids() {
+    ps ax | grep logdirector.pl | egrep -o "\-name [a-zA-Z0-9\.\-]+" | awk '{print $2}'
+}
+
+# if umc log directory is not set, then set it to a default logs directory under umc root
+if [ "$UMC_LOG_DIR" = "" ]; then
+    UMC_LOG_DIR="$umcRoot/logs"
+fi
+
+cmd=$1 && shift
+
+# run the new instance of the tool
+if [ "$cmd" = "--run" ]; then
+
+    # command parameters
+    umc_id=$1 && shift
+    rotateTime="$1" && shift
+    tool="$1" && shift
+    delay="$1" && shift
+    count="$1" && shift
+    umc_params="$*" 
+
+    # check that the umc tool exists as a sensor
+    if [ "$(umc sensors | grep -o $tool)" = "" ]; then
+        echo "umc tool $tool does not exist! Run umc sensors to check the tool is available."
+        exit 1
+    fi
+
+    # check if umc with the same id is already running
+    gpid=$(umc_gpid "$umc_id")
+    if [ "$gpid" != "" ]; then
+        #echo >&2 "umc with id $umc_id is already running (gpid=$gpid)!"
+        exit 0
+    fi
+
+    # run the umc
+    umc_run $umc_id $tool $delay $count $rotateTime $umc_params
+
+    exit 0
+fi
+
+# stop the instance of the tool
+if [ "$cmd" = "--stop" ]; then
+    # command parameters
+    umc_id=$1 && shift
+
+    gpid=$(umc_gpid "$umc_id")
+    if [ "$gpid" = "" ]; then
+        echo >&2 "umc with id $umc_id is not running!"
+        exit 1
+    fi
+    kill -- -$gpid
+    
+    exit 0
+fi
+
+# get the instance information
+if [ "$cmd" = "--gpid" ]; then
+    # command parameters
+    umc_id=$1 && shift    
+
+    gpid=$(umc_gpid "$umc_id")
+    if [ "$gpid" != "" ]; then
+        echo $gpid   
+        exit 0
+    else
+        exit 1
+    fi
+fi
+
+function printstats() {
+    echo -n $* | awk '{printf "%-7s%-20s%-8s%-15s%-7s%-7s%-17s%-22s%-7s%-10s%-10s\n",$1,$2,$3,$4,$5,$6,substr($7, 1, 15),$8,$9,$10,$11,$12,$13}'
+}
+
+if [ "$cmd" = "--stats" ]; then
+    # command parameters
+    args=$1 && shift
+
+    # print header
+    if [ "$args" != "--noheader" ]; then 
+        printstats "GPID UMC_ID ROTA_T UMC DELAY COUNT PARAMS STARTED RUN_T CPU_T BACKLOG" 
+    fi
+
+    # get all instances of umc tools running on this hosts
+    ps axf -eo pid,pgid,cmd | grep "umcrunner \-\-run" | grep -v "grep" | \
+    while read line; do
+        # pid and gpid
+        pid=$(echo $line | awk '{print $1}')
+        gpid=$(echo $line | awk '{print $2}')
+        
+        params=$(echo $line | egrep -o "\-\-run.+")
+        
+        # umc runner arguments
+        umc_id=$(echo $params | awk '{print $2}')
+        time_int=$(echo $params | awk '{print $3}')
+        umc_tool=$(echo $params | awk '{print $4}')
+        umc_delay=$(echo $params | awk '{print $5}')
+        umc_count=$(echo $params | awk '{print $6}')
+        umc_params=$(echo $params | awk '{$1=$2=$3=$4=$5=$6=""; print $0}' | awk '{$1=$1;print}')
+        if [ "$umc_params" = "" ]; then umc_params="n/a"; fi
+
+        running_time=$(ps -p $pid -o etime= | tr -d ' ')
+        start_time=$(ps -p $pid -o lstart | grep -v "STARTED" | awk '{
+            cmd="date -d\""$1 FS $2 FS $3 FS $4 FS $5"\" +\047%Y-%m-%d_%H:%M:%S\047";
+            cmd | getline d; close(cmd); $1=$2=$3=$4=$5=""; printf "%s\n",d$0 }')
+        cputime=$(ps axf -o pgid,cputime | awk -v gpid=$gpid '{if ($1==gpid) print $2}' | gawk '{ match($1,"([0-9]+):([0-9]+):([0-9]+)", m); 
+            cputime+=m[3]+m[2]*60+m[1]*60*60} END {printf "%02d:%02d:%02d\n",int(cputime/3600),int(cputime%3600/60),cputime%60}')
+        backlog_files=$(ls $UMC_LOG_DIR/$umc_id/"$umc_id"_* 2>/dev/null| wc -l)
+
+        printstats "$gpid" "$umc_id" "$time_int" "$umc_tool" "$umc_delay" "$umc_count" "$umc_params" "$start_time" "$running_time" "$cputime" "$backlog_files"
+    done
+
+    exit 0
+
+fi
+
+if [ "$cmd" = "--stopall" ]; then
+    umcrunner --stats --noheader | awk '{ print $2 }' | \
+    while read line; do
+        echo "stopping $line..."
+        umcrunner --stop $line
+    done
+
+    exit 0 
+fi
+
+
+print_usage
