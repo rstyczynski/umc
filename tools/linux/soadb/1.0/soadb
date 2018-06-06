@@ -15,6 +15,33 @@ function getArgument {
     echo ""
 }
 
+# determine the db connection string
+# try to get it from connstrs definition 
+function getconnstr() {
+    metricsql=$1
+    
+    if [ -f "$getSensorData_bin/connstrs" ]; then
+         curcns=""
+         cat $getSensorData_bin/connstrs | egrep -v "^$" | egrep -v "^#" | \
+         while read line; do
+             if [[ $line =~ ^cns\:.+$ ]] ; then
+                 curcns=$(echo $line | gawk '{ match($0,"^cns:[ ]*(.+)", m); print m[1] }')
+             fi
+
+             if [[ $line =~ ^sql\:.+$ ]] ; then
+                 IFS=',' read -ra sqls <<< "$(echo $line | gawk '{ match($0,"^sql:(.+)", m); print m[1] }')"
+                 for s in "${sqls[@]}"; do
+                     if [ "$(echo $s | awk '{$1=$1; print $1}')" = "$metricsql" ]; then
+                         echo $curcns
+                         exit 0
+                     fi
+                 done
+             fi
+         done
+    fi 
+}
+
+
 # the first parameter is timestamp directive
 # since we do not use it, we skip it (the value is None)
 shift
@@ -27,9 +54,9 @@ metric=$1 && shift
 
 # check that the metric file exists and print help if it does not
 if [ ! -f "$getSensorData_bin/$metric.sql" ]; then
-    echo "Invalid metric definition. There is no file with name $getSensorData_bin/$metric.sql."
-    echo "Usage: umc soadb collect <delay> <count> <metric> [--connect <constr>] [<sql-collector arguments>]"
-    echo "Available values for <metric> are:"
+    echo >&2 "Invalid metric definition. There is no file with name $getSensorData_bin/$metric.sql."
+    echo >&2 "Usage: umc soadb collect <delay> <count> <metric> [--connect <constr>] [<sql-collector arguments>]"
+    echo >&2 "Available values for <metric> are:"
     ls | grep ".sql$" | \
     while read line; do
         printf "  ${line%.*}%-$((20-$(expr length $line)))s  $(cat $line | head -n 1 | grep "\-\-")\n"
@@ -39,7 +66,12 @@ fi
 
 # db connection string, use the default if none is specified as argument
 if [ "$(getArgument "--connect")" == "" ]; then 
-    connstr="--connect $DB_CONNSTR"; 
+    cs=$(getconnstr $metric.sql)
+    if [ "$cs" == "" ]; then
+        connstr="--connect $DB_CONNSTR";
+    else
+        connstr="--connect $cs";
+    fi 
 else 
     connstr=""; 
 fi
