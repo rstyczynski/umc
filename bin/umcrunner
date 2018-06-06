@@ -182,7 +182,7 @@ if [ "$cmd" = "--stats" ]; then
     fi
 
     # get all instances of umc runner running on this hosts
-    ps axf -eo pid,pgid,cmd | grep "umcrunner \-\-run" | grep -v "grep" | \
+    ps axf -eo pid,pgid,cmd | egrep "umcrunner \-\-run .+" | grep -v "grep" | \
     while read line; do
         # pid and gpid
         pid=$(echo $line | awk '{print $1}')
