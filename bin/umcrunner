@@ -17,6 +17,7 @@ scriptDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # exit this script from within a function
 trap "exit 1" TERM
+TOP_PID=$$
 
 function print_usage () {
     echo "Runs and queries umc instances running on a single host."
@@ -118,6 +119,9 @@ cmd=$1 && shift
 # *** run a new umc instance
 if [ "$cmd" = "--run" ]; then
 
+
+    ps axf -o  "%p %r %y %x %a" | grep -v "grep" | egrep -v "$TOP_PID.+umcrunner" | egrep "umcrunner \-\-run $umc_id "
+
     # command parameters
     umc_id=$1 && shift
     rotateTime="$1" && shift
@@ -135,8 +139,15 @@ if [ "$cmd" = "--run" ]; then
     # check if umc with the same id is already running
     gpid=$(umc_gpid "$umc_id")
     if [ "$gpid" != "" ]; then
-        echo >&2 "umc with id $umc_id is already running (gpid=$gpid)!"
+        #echo >&2 "umc with id $umc_id is already running (gpid=$gpid)!"
         exit 0
+    fi
+
+    # additional security to check the umc instance cannot be running more than once
+    cnt=$(ps ax | egrep "umcrunner \-\-run $umc_id " | wc -l)
+    if [ $cnt -gt 2 ]; then
+        echo >&2 "internal error: umc instance $umc_id is already running!"
+        exit 1        
     fi
 
     # run the umc
@@ -214,10 +225,10 @@ fi
 
 # *** stop all umc instances on this host
 if [ "$cmd" = "--stopall" ]; then
-    umcrunner --stats --noheader | awk '{ print $2 }' | \
+    umcrunner --stats --noheader | awk '{ print $1 }' | \
     while read line; do
-        echo "stopping $line..."
-        umcrunner --stop $line
+        echo "stopping process group $line"
+        kill -- -$line
     done
 
     exit 0
