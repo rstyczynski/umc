@@ -21,4 +21,3 @@
 
 cns: sys/oracle@10.0.2.2:1521:xe as sysdba
 sql: aiaflows.sql, aiabrmprov.sql
-
