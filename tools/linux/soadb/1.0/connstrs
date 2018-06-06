@@ -12,16 +12,13 @@
 # There can be multiple sql and cns definitions in a single file
 #
 # example:
-# sql: aiaflows.sql, aiabrmprov.sql
 # cns: sys/oracle@10.0.2.2:1521:xe as sysdba
+# sql: aiaflows.sql, aiabrmprov.sql
 # 
-# sql: aiaresequencer.sql
 # cns: oracle/oracle@10.0.2.10:1521:xe
+# sql: aiaresequencer.sql
 # 
 
 cns: sys/oracle@10.0.2.2:1521:xe as sysdba
 sql: aiaflows.sql, aiabrmprov.sql
-
-
-
 
