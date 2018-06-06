@@ -32,10 +32,11 @@ function print_usage () {
     echo "  umc-params   Additional umc tool paramers"
     echo ""
     echo "  * other usages:"
-    echo "  umcrunner --stats | --stopall | --stop <id> | --gpid <id>"
+    echo "  umcrunner --stats [--noheader] | --stopall | --stop <id> | --gpid <id>"
     echo ""
     echo "  where:"
     echo "  --stats     displayes all running umc instances"
+    echo "  --noheader  suppress the header in stats"
     echo "  --stopall   stops all running umc instances"
     echo "  --stop <id> stops the instance"
     echo "  --gpid <id> prints group process id"
@@ -89,14 +90,21 @@ function umc_allids() {
     ps ax | grep logdirector.pl | egrep -o "\-name [a-zA-Z0-9\.\-]+" | awk '{print $2}'
 }
 
+# prints aligned umc stats row 
+function printstats() {
+    echo -n $* | awk '{printf "%-7s%-20s%-8s%-15s%-7s%-7s%-17s%-22s%-7s%-10s%-10s\n",
+        $1,$2,$3,$4,$5,$6,substr($7, 1, 15),$8,$9,$10,$11,$12,$13}'
+}
+
 # if umc log directory is not set, then set it to a default logs directory under umc root
 if [ "$UMC_LOG_DIR" = "" ]; then
     UMC_LOG_DIR="$umcRoot/logs"
 fi
 
+# the first argument is the command to run
 cmd=$1 && shift
 
-# run the new instance of the tool
+# *** run the new instance of the tool
 if [ "$cmd" = "--run" ]; then
 
     # command parameters
@@ -126,7 +134,7 @@ if [ "$cmd" = "--run" ]; then
     exit 0
 fi
 
-# stop the instance of the tool
+# *** stop the instance of the tool
 if [ "$cmd" = "--stop" ]; then
     # command parameters
     umc_id=$1 && shift
@@ -155,10 +163,6 @@ if [ "$cmd" = "--gpid" ]; then
     fi
 fi
 
-function printstats() {
-    echo -n $* | awk '{printf "%-7s%-20s%-8s%-15s%-7s%-7s%-17s%-22s%-7s%-10s%-10s\n",$1,$2,$3,$4,$5,$6,substr($7, 1, 15),$8,$9,$10,$11,$12,$13}'
-}
-
 if [ "$cmd" = "--stats" ]; then
     # command parameters
     args=$1 && shift
@@ -168,7 +172,7 @@ if [ "$cmd" = "--stats" ]; then
         printstats "GPID UMC_ID ROTA_T UMC DELAY COUNT PARAMS STARTED RUN_T CPU_T BACKLOG" 
     fi
 
-    # get all instances of umc tools running on this hosts
+    # get all instances of umc runner running on this hosts
     ps axf -eo pid,pgid,cmd | grep "umcrunner \-\-run" | grep -v "grep" | \
     while read line; do
         # pid and gpid
@@ -177,24 +181,33 @@ if [ "$cmd" = "--stats" ]; then
         
         params=$(echo $line | egrep -o "\-\-run.+")
         
-        # umc runner arguments
+        # umc instance arguments
         umc_id=$(echo $params | awk '{print $2}')
         time_int=$(echo $params | awk '{print $3}')
         umc_tool=$(echo $params | awk '{print $4}')
         umc_delay=$(echo $params | awk '{print $5}')
         umc_count=$(echo $params | awk '{print $6}')
         umc_params=$(echo $params | awk '{$1=$2=$3=$4=$5=$6=""; print $0}' | awk '{$1=$1;print}')
+        
+        # umc params might not be always set
         if [ "$umc_params" = "" ]; then umc_params="n/a"; fi
 
+        # running time and start time of this umc instance
         running_time=$(ps -p $pid -o etime= | tr -d ' ')
         start_time=$(ps -p $pid -o lstart | grep -v "STARTED" | awk '{
             cmd="date -d\""$1 FS $2 FS $3 FS $4 FS $5"\" +\047%Y-%m-%d_%H:%M:%S\047";
             cmd | getline d; close(cmd); $1=$2=$3=$4=$5=""; printf "%s\n",d$0 }')
+
+        # this will sum up all cpu times of all processes in the gpid
         cputime=$(ps axf -o pgid,cputime | awk -v gpid=$gpid '{if ($1==gpid) print $2}' | gawk '{ match($1,"([0-9]+):([0-9]+):([0-9]+)", m); 
             cputime+=m[3]+m[2]*60+m[1]*60*60} END {printf "%02d:%02d:%02d\n",int(cputime/3600),int(cputime%3600/60),cputime%60}')
+        
+        # count all files in the backlog - i.e. files that still need to be pushed to the remote destination
         backlog_files=$(ls $UMC_LOG_DIR/$umc_id/"$umc_id"_* 2>/dev/null| wc -l)
 
-        printstats "$gpid" "$umc_id" "$time_int" "$umc_tool" "$umc_delay" "$umc_count" "$umc_params" "$start_time" "$running_time" "$cputime" "$backlog_files"
+        # print all stats
+        printstats "$gpid" "$umc_id" "$time_int" "$umc_tool" "$umc_delay" "$umc_count" "$umc_params" "$start_time" \
+            "$running_time" "$cputime" "$backlog_files"
     done
 
     exit 0
