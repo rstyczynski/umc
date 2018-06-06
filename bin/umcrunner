@@ -1,9 +1,9 @@
 #!/bin/bash
 # umclogrunner, tomas@vitvar.com, May 2018
-# 
-# This script runs the umc tool in the background and logs its output to log files by using logdirector. 
+#
+# This script runs the umc tool in the background and logs its output to log files by using logdirector.
 # The configuration of the logdirector will ensure that there are batches of files created for
-# a separated script to consume the batches asynchronously. Such script may further push the data in batches 
+# a separated script to consume the batches asynchronously. Such script may further push the data in batches
 # to a remote destionation such as a DB.
 
 # load libs environment variables
@@ -17,7 +17,6 @@ scriptDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # exit this script from within a function
 trap "exit 1" TERM
-export TOP_PID=$$
 
 function print_usage () {
     echo "Runs and queries umc instances running on a single host."
@@ -41,7 +40,7 @@ function print_usage () {
     echo "  --help           this help"
     echo "  --stats          displays all running umc instances (see further below what it shows)"
     echo "  --noheader       suppress the header in stats"
-    echo "  --runall <file>  runs all umc instances from a definition file <file>"    
+    echo "  --runall <file>  runs all umc instances from a definition file <file>"
     echo "  --stopall        stops all running umc instances"
     echo "  --stop <id>      stops an umc instance"
     echo "  --ls <id>        runs 'ls -all' in the umc instance directory"
@@ -68,13 +67,13 @@ function umc_run() {
     delay="$1" && shift
     count="$1" && shift
     rotateTime="$1" && shift
-    umc_params="$*" 
+    umc_params="$*"
 
     mkdir -p $UMC_LOG_DIR/$umc_id
-    
+
     # run umc with logdirector
-    # this needs an explicit stdin redirection (tail -f /dev/null) as otherwise the background java process was trying 
-    # to read from stdin (that somehow got srewed up when in background) and was causing high cpu. 
+    # this needs an explicit stdin redirection (tail -f /dev/null) as otherwise the background java process was trying
+    # to read from stdin (that somehow got srewed up when in background) and was causing high cpu.
     tail -f /dev/null | umc $tool collect $delay $count $umc_params 2>>$UMC_LOG_DIR/$umc_id/$umc_id.error.out | \
         logdirector.pl -name $umc_id -dir $UMC_LOG_DIR/$umc_id \
             -detectHeader \
@@ -102,7 +101,7 @@ function umc_gpid_check () {
     fi
 }
 
-# prints aligned umc stats row 
+# prints aligned umc stats row
 function printstats() {
     echo -n $* | awk '{printf "%-7s%-20s%-8s%-15s%-7s%-7s%-17s%-22s%-7s%-10s%-10s\n",
         $1,$2,$3,$4,$5,$6,substr($7, 1, 15),$8,$9,$10,$11,$12,$13}'
@@ -116,7 +115,7 @@ fi
 # the first argument is the command to run
 cmd=$1 && shift
 
-# *** run a new umc instance 
+# *** run a new umc instance
 if [ "$cmd" = "--run" ]; then
 
     # command parameters
@@ -125,7 +124,7 @@ if [ "$cmd" = "--run" ]; then
     tool="$1" && shift
     delay="$1" && shift
     count="$1" && shift
-    umc_params="$*" 
+    umc_params="$*"
 
     # check that the umc tool exists as a sensor
     if [ "$(umc sensors | grep -o $tool)" = "" ]; then
@@ -146,7 +145,7 @@ if [ "$cmd" = "--run" ]; then
     exit 0
 fi
 
-# *** stop a currently running umc instance 
+# *** stop a currently running umc instance
 if [ "$cmd" = "--stop" ]; then
     # command parameters
     umc_id=$1 && shift
@@ -157,7 +156,7 @@ if [ "$cmd" = "--stop" ]; then
         exit 1
     fi
     kill -- -$gpid
-    
+
     exit 0
 fi
 
@@ -167,8 +166,8 @@ if [ "$cmd" = "--stats" ]; then
     args=$1 && shift
 
     # print header
-    if [ "$args" != "--noheader" ]; then 
-        printstats "GPID UMC_ID ROTA_T UMC DELAY COUNT PARAMS STARTED RUN_T CPU_T BACKLOG" 
+    if [ "$args" != "--noheader" ]; then
+        printstats "GPID UMC_ID ROTA_T UMC DELAY COUNT PARAMS STARTED RUN_T CPU_T BACKLOG"
     fi
 
     # get all instances of umc runner running on this hosts
@@ -177,9 +176,9 @@ if [ "$cmd" = "--stats" ]; then
         # pid and gpid
         pid=$(echo $line | awk '{print $1}')
         gpid=$(echo $line | awk '{print $2}')
-        
+
         params=$(echo $line | egrep -o "\-\-run.+")
-        
+
         # umc instance arguments
         umc_id=$(echo $params | awk '{print $2}')
         time_int=$(echo $params | awk '{print $3}')
@@ -187,7 +186,7 @@ if [ "$cmd" = "--stats" ]; then
         umc_delay=$(echo $params | awk '{print $5}')
         umc_count=$(echo $params | awk '{print $6}')
         umc_params=$(echo $params | awk '{$1=$2=$3=$4=$5=$6=""; print $0}' | awk '{$1=$1;print}')
-        
+
         # umc params might not be always set
         if [ "$umc_params" = "" ]; then umc_params="n/a"; fi
 
@@ -198,9 +197,9 @@ if [ "$cmd" = "--stats" ]; then
             cmd | getline d; close(cmd); $1=$2=$3=$4=$5=""; printf "%s\n",d$0 }')
 
         # this will sum up all cpu times of all processes in the gpid
-        cputime=$(ps axf -o pgid,cputime | awk -v gpid=$gpid '{if ($1==gpid) print $2}' | gawk '{ match($1,"([0-9]+):([0-9]+):([0-9]+)", m); 
+        cputime=$(ps axf -o pgid,cputime | awk -v gpid=$gpid '{if ($1==gpid) print $2}' | gawk '{ match($1,"([0-9]+):([0-9]+):([0-9]+)", m);
             cputime+=m[3]+m[2]*60+m[1]*60*60} END {printf "%02d:%02d:%02d\n",int(cputime/3600),int(cputime%3600/60),cputime%60}')
-        
+
         # count all files in the backlog - i.e. files that still need to be pushed to the remote destination
         backlog_files=$(ls $UMC_LOG_DIR/$umc_id/"$umc_id"_* 2>/dev/null| wc -l)
 
@@ -221,17 +220,17 @@ if [ "$cmd" = "--stopall" ]; then
         umcrunner --stop $line
     done
 
-    exit 0 
+    exit 0
 fi
 
 # *** show directory listing of the umc instance
 if [ "$cmd" = "--ls" ]; then
     # command parameters
-    umc_id=$1 && shift   
+    umc_id=$1 && shift
 
     echo "Directory listing of $UMC_LOG_DIR/$umc_id"
     ls -all $UMC_LOG_DIR/$umc_id
-    exit 0 
+    exit 0
 fi
 
 # *** show process hierarchy of a umc instance
@@ -242,32 +241,32 @@ if [ "$cmd" = "--ps" ]; then
 
     ps axf -eo pid,pgid,cputime,cmd | awk -v w=$(tput cols) -v gpid=$gpid '{if ($2==gpid || NR==1) print substr($0, 1, w)}'
 
-    exit 0 
+    exit 0
 fi
 
 # *** run all umc instances from a definition file
 if [ "$cmd" = "--runall" ]; then
     # command parameters
-    conf=$1 && shift    
+    conf=$1 && shift
 
     # if conf cannot be found, try to find it in the umc/bin directroy
-    if [ ! -f $conf ]; then 
+    if [ ! -f $conf ]; then
         oconf=$conf
-        conf=$scriptDir/$conf; 
+        conf=$scriptDir/$conf;
         if [ ! -f $conf ]; then
             echo >&2 "The configuration file $oconf cannot be found!"
             exit 1
-        fi 
+        fi
     fi
 
     # run all instances from this file
     # setsid will ensure each umc instance wull run its own process group
     cat $conf | grep -v "^$" | grep -v "^#" | \
     while read line; do
-        setsid umcrunner --run $line 
+        setsid umcrunner --run $line
     done
 
-    exit 0 
+    exit 0
 fi
 
 # *** show help
@@ -280,9 +279,8 @@ fi
 if [ "$cmd" = "" ]; then
     echo >&2 "Specify a valid umcrunner command!"
 else
-    echo >&2 "$cmd is not recognized as a valid umcrunner command!"    
+    echo >&2 "$cmd is not recognized as a valid umcrunner command!"
 fi
 
 echo >&2 "Run umcrunner --help for more information."
 exit 1
-
