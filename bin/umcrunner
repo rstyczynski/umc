@@ -1,18 +1,17 @@
 #!/bin/bash
-# umclogrunner, tomas@vitvar.com, May 2018
+# umcrunner, tomas@vitvar.com, May-June 2018
 #
-# This script runs the umc tool in the background and logs its output to log files by using logdirector.
-# The configuration of the logdirector will ensure that there are batches of files created for
-# a separated script to consume the batches asynchronously. Such script may further push the data in batches
-# to a remote destionation such as a DB.
+# umcrunner is a tool to start, stop and query umc tools and it uses logdirector to a 
+# write output to log files. There is always a single file where umc tool is 
+# pushing the updates from a sensor. The file is roated on pre-defined time interval 
+# creating batches of log files. The log files can then be pushed to a remote 
+# destination (e.g. a DB) by a third-party script. 
 
-# load libs environment variables
+# load libs environment variables and setup umc
 source ~/libs/umc-libs-env.sh >/dev/null
-
-# umc settings
 source ~/umc/bin/umc.h  >/dev/null
 
-# script directory
+# this script directory
 scriptDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # exit this script from within a function
@@ -20,10 +19,10 @@ trap "exit 1" TERM
 TOP_PID=$$
 
 function print_usage () {
-    echo "Runs and queries umc instances running on a single host."
+    echo "Runs, stops and queries umc instances running on a single host."
     echo ""
     echo "Usage:"
-    echo "  * running an instance of an umc tool and store logs in $UMC_LOG_DIR/<id>:"
+    echo "  * running an instance of a umc tool and store logs in $UMC_LOG_DIR/<id>:"
     echo "  umcrunner --run <id> <rotate-time> <tool> <delay> <count> [<umc-params>]"
     echo ""
     echo "  where:"
@@ -35,7 +34,7 @@ function print_usage () {
     echo "  umc-params       Additional umc tool paramers"
     echo ""
     echo "  * other usages:"
-    echo "  umcrunner --help | --stats [--noheader] | --runall <file> | --stopall | --stop <id> | --list <id>"
+    echo "  umcrunner --help | --stats [--noheader] | --runall <file> | --stopall | --stop <id> | --ls <id>"
     echo ""
     echo "  where:"
     echo "  --help           this help"
@@ -62,6 +61,9 @@ function print_usage () {
     echo "  BACKLOG          number of files in a backlog (in a directory $UMC_LOG_DIR/<UMC_ID>)"
 }
 
+# --- helper functions ---
+
+# runc umc tool
 function umc_run() {
     umc_id="$1" && shift
     tool="$1" && shift
@@ -86,11 +88,13 @@ function umc_run() {
             -rotateOnThreadEnd &
 }
 
+# gets the process group id of the umc instance 
 function umc_gpid() {
      umc_id="$1" && shift
      echo $(ps axf -o  "%p %r %y %x %a" | grep -v "grep" | egrep -v "$TOP_PID.+umcrunner" | egrep "umcrunner \-\-run $umc_id " | awk '{print $2}')
 }
 
+# same as umc_gpid but echoes error and exits the script when no id is found
 function umc_gpid_check () {
     umc_id="$1" && shift
     gpid=$(umc_gpid $umc_id)
@@ -108,6 +112,8 @@ function printstats() {
         $1,$2,$3,$4,$5,$6,substr($7, 1, 15),$8,$9,$10,$11,$12,$13}'
 }
 
+# --- MAIN ---
+
 # if umc log directory is not set, then set it to a default logs directory under umc root
 if [ "$UMC_LOG_DIR" = "" ]; then
     UMC_LOG_DIR="$umcRoot/logs"
@@ -118,7 +124,6 @@ cmd=$1 && shift
 
 # *** run a new umc instance
 if [ "$cmd" = "--run" ]; then
-
 
     ps axf -o  "%p %r %y %x %a" | grep -v "grep" | egrep -v "$TOP_PID.+umcrunner" | egrep "umcrunner \-\-run $umc_id "
 
