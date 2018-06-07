@@ -11,7 +11,7 @@ ENV_FILE="$LIBS_HOME/umc-libs-env.sh"
 
 show_help () {
 	echo "UMC libraries installation script"
-	echo "Usage: $(basename "$0") [--yes] [--python] [--jdk] [--sqlcl] [--sql-collector] [--influxdb]"
+	echo "Usage: $(basename "$0") [--yes] [--python] [--jdk] [--sqlcl] [--sql-collector] [--influxdb] [--influxdb-python]"
 	echo ""
 	echo "When none of the libraries are specified, all libraries will be installed."
 	echo "Option --yes will answer all questions as \"yes\"."
@@ -119,7 +119,7 @@ install_sqlcl () {
 		if [ ! -f $INSTALL_HOME/$BINFILE ]; then
 			echo ""
 			echo >&2 "SQLcl installation binaries at $INSTALL_HOME/$BINFILE are not available." 
-		    echo >&2 "Please download the binary first by following a link in $INSTALL_HOME/$BINFILE.download"
+		  echo >&2 "Please download the binary first by following a link in $INSTALL_HOME/$BINFILE.download"
 			exit 1
 		fi
 
@@ -211,8 +211,7 @@ install_influxdb () {
 
 		chmod +x $LIBS_HOME/$TOOLDN/usr/bin/run-influxd.sh
 		echo "  - influxdb setup completed, you can run it with $LIBS_HOME/$TOOLDN/usr/bin/run-influxd.sh"
-
-
+		
 		# environment variables
 		echo "# influxdb" >>$ENV_FILE
 		echo "export INFLUXDB_CONFIG_PATH=\"$LIBS_HOME/$TOOLDN/etc/influxdb/influxdb.conf\"" >>$ENV_FILE
@@ -221,6 +220,79 @@ install_influxdb () {
 	else
 		echo >&2 "  - Influxdb has already been installed in $LIBS_HOME/$TOOLDN, skipping."						
 	fi
+}
+
+# helper function to install a python library
+install_pythonlib () {
+	module="$1"
+	echo "  - Checking module $module..."
+	python $INSTALL_HOME/../bin/checkModule.py $module
+	if [ $? -ne 0 ]; then
+		echo "  - Module $module is not installed."
+		
+		cd $INSTALL_HOME/python-libs
+		archfile=$(find . | egrep "$module-[0-9\-\.]+\.(zip|tar.gz)$" | head -1)
+		
+		# check that archive exists
+		if [ "$archfile" = "" ]; then
+			echo >&2 "  - Cannot find any archive for module $module. The module will not be installed!"
+			return			
+		fi
+			
+		# unpack archive file
+		echo "  - Unpacking $archfile..."		
+		if [[ $archfile =~ tar\.gz$ ]]; then
+			tar xvzf $archfile >>$INSTALL_LOG 2>&1
+		fi		
+		if [[ $archfile =~ \.zip$ ]]; then
+				unzip $archfile >>$INSTALL_LOG 2>&1
+		fi
+			
+		# go to module installation directory
+		pwd=$(pwd)
+		cd $module-* >>$INSTALL_LOG 2>&1
+
+		# check that archive was possible to unpack
+		if [ $? -ne 0 ]; then
+			echo >&2 "  - Cannot unpack archive $archfile. The module $module will not be installed!"
+			return
+		fi
+		
+		# install locally
+		mdir=$(pwd)
+		echo "  - Installing $module locally..."
+		python setup.py install --user >>$INSTALL_LOG 2>&1
+		
+		# check the result of setup
+		if [ $? -ne 0 ]; then
+			echo >&2 "  - The module $module was not installed successfully!"
+		fi
+		
+		cd $pwd
+		rm -fr $mdir
+	else
+		echo "  - Module $module has already been installed."		
+	fi
+}
+
+# INSTALL INFLUXDB
+install_influxdb_python () {
+	source $ENV_FILE
+	
+	echo "* Installing python libraries for influxdb"
+	
+	# the following order of libraries reflects dependencies among the libraries
+	install_pythonlib "setuptools"
+	install_pythonlib "setuptools_scm"
+	install_pythonlib "chardet"
+	install_pythonlib "pytz"
+	install_pythonlib "idna"
+	install_pythonlib "certifi"
+	install_pythonlib "six"
+	install_pythonlib "urllib3"
+	install_pythonlib "requests"
+	install_pythonlib "python-dateutil"
+	install_pythonlib "influxdb"
 }
 
 # parse arguments
@@ -232,7 +304,7 @@ for i in "$@"; do
 	    shift
 	    ;;
 	    --python)
-	    INSTALLIBS="$INSTALLIBS python"
+	    INSTALLIBS="$INSTALLIBS python_"
 	    shift 
 	    ;;
 	    --jdk)
@@ -248,7 +320,11 @@ for i in "$@"; do
 	    shift 
 	    ;;
 	    --influxdb)
-	    INSTALLIBS="$INSTALLIBS influxdb"
+	    INSTALLIBS="$INSTALLIBS influxdb_"
+	    shift 
+	    ;;
+			--influxdb-python)
+	    INSTALLIBS="$INSTALLIBS influxdb-python"
 	    shift 
 	    ;;
 	    *)
@@ -280,11 +356,12 @@ done
 echo ""
 echo "* Installing libraries to $LIBS_HOME..."
 
-if [[ $INSTALLIBS =~ (.*"python".*|ALL) ]] ; 		then install_python; fi
+if [[ $INSTALLIBS =~ (.*"python_".*|ALL) ]] ; 		then install_python; fi
 if [[ $INSTALLIBS =~ (.*"jdk".*|ALL) ]] ; 			then install_jdk; fi
 if [[ $INSTALLIBS =~ (.*"sqlcl".*|ALL) ]] ; 		then install_sqlcl; fi
 if [[ $INSTALLIBS =~ (.*"sqlcollector".*|ALL) ]] ; 	then install_sqlcollector; fi
-if [[ $INSTALLIBS =~ (.*"influxdb".*|ALL) ]] ; 		then install_influxdb; fi
+if [[ $INSTALLIBS =~ (.*"influxdb_".*|ALL) ]] ; 		then install_influxdb; fi
+if [[ $INSTALLIBS =~ (.*"influxdb-python".*|ALL) ]] ; 		then install_influxdb_python; fi
 
 chmod +x $ENV_FILE
 
