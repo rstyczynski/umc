@@ -1,8 +1,8 @@
 #!/bin/bash
 # umcrunner, tomas@vitvar.com, May-June 2018
 #
-# umcrunner is a tool to start, stop and query umc tools and it uses logdirector to a 
-# write output to log files. There is always a single file where umc tool is 
+# umcrunner can be used to start, stop and query umc tools. When starting an umc tool, 
+# it uses logdirector to write output to log files. There is always a single file where umc tool is 
 # pushing the updates from a sensor. The file is roated on pre-defined time interval 
 # creating batches of log files. The log files can then be pushed to a remote 
 # destination (e.g. a DB) by a third-party script. 
