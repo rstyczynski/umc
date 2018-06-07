@@ -41,7 +41,6 @@ function getconnstr() {
     fi 
 }
 
-
 # the first parameter is timestamp directive
 # since we do not use it, we skip it (the value is None)
 shift
@@ -53,6 +52,7 @@ count=$1 && shift
 metric=$1 && shift
 
 # check that the metric file exists and print help if it does not
+# this needs to go to err as otherwise would appear in csv when output is logged to a file
 if [ ! -f "$getSensorData_bin/$metric.sql" ]; then
     echo >&2 "Invalid metric definition. There is no file with name $getSensorData_bin/$metric.sql."
     echo >&2 "Usage: umc soadb collect <delay> <count> <metric> [--connect <constr>] [<sql-collector arguments>]"
@@ -64,7 +64,7 @@ if [ ! -f "$getSensorData_bin/$metric.sql" ]; then
     exit 1
 fi
 
-# db connection string, use the default if none is specified as argument
+# db connection string, use the default if none cannot be found as per sql metric or is not specified as argument
 if [ "$(getArgument "--connect")" == "" ]; then 
     cs=$(getconnstr $metric.sql)
     if [ "$cs" == "" ]; then
@@ -76,6 +76,7 @@ else
     connstr=""; 
 fi
 
+# run sql collector
 sql-collector $connstr --query $getSensorData_bin/$metric.sql \
     --count $count \
     --interval $delay \
