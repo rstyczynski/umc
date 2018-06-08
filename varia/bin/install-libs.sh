@@ -1,5 +1,6 @@
 #!/bin/bash
-# script to install third-party tools for umc
+# script to install third-party tools and libraries for umc.
+# May-June 2018, tomas@vitvar.com
 
 # the tools will be installed to the current directory from which this script was started
 LIBS_HOME="$(pwd)/libs"
@@ -39,8 +40,8 @@ install_python () {
         cd $LIBS_HOME/python
 		echo "  - unpacking..." 
 		tar zxfv $INSTALL_HOME/$BINFILE >>$INSTALL_LOG 2>&1
-        find $LIBS_HOME/python -type d | xargs chmod 0755
-        cd $LIBS_HOME/python/$TOOLDN
+    find $LIBS_HOME/python -type d | xargs chmod 0755
+    cd $LIBS_HOME/python/$TOOLDN
 
 		# build python binaries
 		echo "  - configuring..." 
@@ -225,28 +226,44 @@ install_influxdb () {
 # helper function to install a python library
 install_pythonlib () {
 	module="$1"
+	version="$2"
 	echo "  - Checking module $module..."
-	python $INSTALL_HOME/../bin/checkModule.py $module
+	python $INSTALL_HOME/../bin/checkModule.py $module-123
 	if [ $? -ne 0 ]; then
 		echo "  - Module $module is not installed."
 		
 		cd $INSTALL_HOME/python-libs
-		archfile=$(find . | egrep "$module-[0-9\-\.]+\.(zip|tar.gz)$" | head -1)
+		archfile=$(find . | egrep "$module-$version\.(zip|tar\.gz)$" | head -1)
 		
 		# check that archive exists
 		if [ "$archfile" = "" ]; then
-			echo >&2 "  - Cannot find any archive for module $module. The module will not be installed!"
-			return			
+			# retrieve url from pypi.org/simple
+			echo "  - Retrieving the module archive URL..."
+			url=$(wget -qO- https://pypi.org/simple/$module/ | egrep -o "\"https://.*$module-$version\.(tar\.gz|zip)[\#\=a-zA-Z0-9\-\_]+\"")
+			
+			if [ "$url" = "" ]; then
+				echo >&2 "  - Cannot get an URL for module $module-$version. The module will not be installed!"
+				echo >&2 "  - Try to download the module manually from https://pypi.org/simple/$module/ and run the installer again."
+				return
+			fi
+			
+			# download the archive
+			echo "  - Downloading the module..."
+			wget --progress=bar:force $(echo $url | cut -d "\"" -f 2) >/dev/null 2>&1 
+			
+			archfile=$(find . | egrep "$module-$version\.(zip|tar\.gz)$" | head -1)
+			if [ "$archfile" = "" ]; then
+				echo >&2 "  - Unable to download archive for module $module-$version. The module will not be installed!"
+				echo >&2 "  - Try to download the module manually from https://pypi.org/simple/$module/ and run the installer again."
+				return
+			fi
+			
 		fi
 			
 		# unpack archive file
 		echo "  - Unpacking $archfile..."		
-		if [[ $archfile =~ tar\.gz$ ]]; then
-			tar xvzf $archfile >>$INSTALL_LOG 2>&1
-		fi		
-		if [[ $archfile =~ \.zip$ ]]; then
-				unzip $archfile >>$INSTALL_LOG 2>&1
-		fi
+		if [[ $archfile =~ tar\.gz$ ]]; then tar xvzf $archfile >>$INSTALL_LOG 2>&1; fi		
+		if [[ $archfile =~ \.zip$ ]]; then unzip $archfile >>$INSTALL_LOG 2>&1; fi
 			
 		# go to module installation directory
 		pwd=$(pwd)
@@ -282,17 +299,17 @@ install_influxdb_python () {
 	echo "* Installing python libraries for influxdb"
 	
 	# the following order of libraries reflects dependencies among the libraries
-	install_pythonlib "setuptools"
-	install_pythonlib "setuptools_scm"
-	install_pythonlib "chardet"
-	install_pythonlib "pytz"
-	install_pythonlib "idna"
-	install_pythonlib "certifi"
-	install_pythonlib "six"
-	install_pythonlib "urllib3"
-	install_pythonlib "requests"
-	install_pythonlib "python-dateutil"
-	install_pythonlib "influxdb"
+	install_pythonlib "setuptools" "39.2.0"
+	install_pythonlib "setuptools_scm" "2.1.0"
+	install_pythonlib "chardet" "3.0.4"
+	install_pythonlib "pytz" "2018.4"
+	install_pythonlib "idna" "2.5"
+	install_pythonlib "certifi" "2018.4.16"
+	install_pythonlib "six" "1.11.0"
+	install_pythonlib "urllib3" "1.22"
+	install_pythonlib "requests" "2.18.4"
+	install_pythonlib "python-dateutil" "2.7.3"
+	install_pythonlib "influxdb" "5.0.0"
 }
 
 # parse arguments
@@ -356,12 +373,12 @@ done
 echo ""
 echo "* Installing libraries to $LIBS_HOME..."
 
-if [[ $INSTALLIBS =~ (.*"python_".*|ALL) ]] ; 		then install_python; fi
-if [[ $INSTALLIBS =~ (.*"jdk".*|ALL) ]] ; 			then install_jdk; fi
-if [[ $INSTALLIBS =~ (.*"sqlcl".*|ALL) ]] ; 		then install_sqlcl; fi
-if [[ $INSTALLIBS =~ (.*"sqlcollector".*|ALL) ]] ; 	then install_sqlcollector; fi
-if [[ $INSTALLIBS =~ (.*"influxdb_".*|ALL) ]] ; 		then install_influxdb; fi
-if [[ $INSTALLIBS =~ (.*"influxdb-python".*|ALL) ]] ; 		then install_influxdb_python; fi
+if [[ $INSTALLIBS =~ (.*"python_".*|ALL) ]] ; 					then install_python; fi
+if [[ $INSTALLIBS =~ (.*"jdk".*|ALL) ]] ; 							then install_jdk; fi
+if [[ $INSTALLIBS =~ (.*"sqlcl".*|ALL) ]] ; 						then install_sqlcl; fi
+if [[ $INSTALLIBS =~ (.*"sqlcollector".*|ALL) ]] ; 			then install_sqlcollector; fi
+if [[ $INSTALLIBS =~ (.*"influxdb_".*|ALL) ]] ; 				then install_influxdb; fi
+if [[ $INSTALLIBS =~ (.*"influxdb-python".*|ALL) ]] ; 	then install_influxdb_python; fi
 
 chmod +x $ENV_FILE
 
