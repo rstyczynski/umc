@@ -108,7 +108,7 @@ function umc_gpid_check () {
 
 # prints aligned umc stats row
 function printstats() {
-    echo -n $* | awk '{printf "%-7s%-20s%-8s%-15s%-7s%-7s%-17s%-22s%-7s%-10s%-10s\n",
+    echo -n $* | awk -F '::' '{printf "%-7s%-20s%-8s%-15s%-7s%-7s%-17s%-22s%-7s%-10s%-10s\n",
         $1,$2,$3,$4,$5,$6,substr($7, 1, 15),$8,$9,$10,$11,$12,$13}'
 }
 
@@ -183,7 +183,7 @@ if [ "$cmd" = "--stats" ]; then
 
     # print header
     if [ "$args" != "--noheader" ]; then
-        printstats "GPID UMC_ID ROTA_T UMC DELAY COUNT PARAMS STARTED RUN_T CPU_T BACKLOG"
+        printstats "GPID::UMC_ID::ROTA_T::UMC::DELAY::COUNT::PARAMS::STARTED::RUN_T::CPU_T::BACKLOG"
     fi
 
     # get all instances of umc runner running on this hosts
@@ -220,8 +220,8 @@ if [ "$cmd" = "--stats" ]; then
         backlog_files=$(ls $UMC_LOG_DIR/$umc_id/"$umc_id"_* 2>/dev/null| wc -l)
 
         # print all stats
-        printstats "$gpid" "$umc_id" "$time_int" "$umc_tool" "$umc_delay" "$umc_count" "$umc_params" "$start_time" \
-            "$running_time" "$cputime" "$backlog_files"
+        printstats "$gpid::$umc_id::$time_int::$umc_tool::$umc_delay::$umc_count::$umc_params
+          ::$start_time::$running_time::$cputime::$backlog_files"
     done
 
     exit 0
