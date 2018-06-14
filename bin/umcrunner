@@ -161,7 +161,7 @@ if [ "$cmd" = "--run" ]; then
     exit 0
 fi
 
-# *** stop a currently running umc instance
+# *** stop currently running umc instance
 if [ "$cmd" = "--stop" ]; then
     # command parameters
     umc_id=$1 && shift
@@ -203,21 +203,28 @@ if [ "$cmd" = "--stats" ]; then
         umc_count=$(echo $params | awk '{print $6}')
         umc_params=$(echo $params | awk '{$1=$2=$3=$4=$5=$6=""; print $0}' | awk '{$1=$1;print}')
 
-        # umc params might not be always set
+        # umc params may not be always set
         if [ "$umc_params" = "" ]; then umc_params="n/a"; fi
 
         # running time and start time of this umc instance
         running_time=$(ps -p $pid -o etime= | tr -d ' ')
         start_time=$(ps -p $pid -o lstart | grep -v "STARTED" | awk '{
-            cmd="date -d\""$1 FS $2 FS $3 FS $4 FS $5"\" +\047%Y-%m-%d_%H:%M:%S\047";
+            cmd="date -d\""$1 FS $2 FS $3 FS $4 FS $5"\" +\047%Y-%m-%d %H:%M:%S\047";
             cmd | getline d; close(cmd); $1=$2=$3=$4=$5=""; printf "%s\n",d$0 }')
 
         # this will sum up all cpu times of all processes in the gpid
         cputime=$(ps axf -o pgid,cputime | awk -v gpid=$gpid '{if ($1==gpid) print $2}' | gawk '{ match($1,"([0-9]+):([0-9]+):([0-9]+)", m);
             cputime+=m[3]+m[2]*60+m[1]*60*60} END {printf "%02d:%02d:%02d\n",int(cputime/3600),int(cputime%3600/60),cputime%60}')
 
-        # count all files in the backlog - i.e. files that still need to be pushed to the remote destination
-        backlog_files=$(ls $UMC_LOG_DIR/$umc_id/"$umc_id"_* 2>/dev/null| wc -l)
+        # count files in the backlog - i.e. files that still need to be pushed to the remote destination
+        # max files in backlog to show, not to wait too much time to count them
+        showMaxFilesCount=100
+        
+        # count number of files        
+        backlog_files=$(ls -U $UMC_LOG_DIR/$umc_id/"$umc_id"_* 2>/dev/null | head -$((showMaxFilesCount+1)) | wc -l)
+        if [ "$backlog_files" -gt $showMaxFilesCount ]; then 
+          backlog_files=">$showMaxFilesCount" 
+        fi
 
         # print all stats
         printstats "$gpid::$umc_id::$time_int::$umc_tool::$umc_delay::$umc_count::$umc_params
