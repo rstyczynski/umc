@@ -15,6 +15,8 @@ import getopt
 import sys
 import os
 import re
+import fileinput
+import subprocess
 
 output = sys.stdout
 
@@ -31,6 +33,8 @@ htmlStop = """</body></html>"""
 
 htmlImg = """<img src="%s" >"""
 
+htmlVerbatimStart = """<verbatim>"""
+htmlVerbatimStop = """</verbatim>"""
 htmlVerbatim = """<verbatim>%s</verbatim>"""
 
 htmlParagraphStart = """<p>"""
@@ -62,6 +66,8 @@ allResultsFileExt = 'max'
 rowsFrom = ''
 rowsTo = ''
 
+renderPlantUML = True
+
 #
 # USAGE
 #
@@ -78,9 +84,9 @@ usage: jMeterLogSummary.py """)
     
     Mandatory:
     --log..............filename with log file.
-    --test.............test name.
     
     Optional:
+    --test.............test name. default: log name
     --dstDir...........directory to write html report. default: .
     --from.............select rows starting at from. Format: yyyy-mm-dd hh:mm:ss. default: 1
     --to...............select rows ending at to. Format: yyyy-mm-dd hh:mm:ss. default: 9999
@@ -116,6 +122,8 @@ for opt, arg in opts:
         rowsTo = dt.datetime.strptime(arg,'%Y-%m-%d %H:%M:%S')
     elif opt in ('--log'):
         fullName = arg
+        if testName == '':
+            testName = os.path.basename(fullName).split('.')[0]
     elif opt in ('--dstDir'):
         dstDir = arg
     elif opt in ('--datetime'):
@@ -187,7 +195,75 @@ if allResults:
     htmlStr = htmlStr + ( htmlHeader % (1, 'info1', 'jMeter execution log analysis for ' + testName + ' (all requests)', 1))
 else:
     htmlStr = htmlStr + ( htmlHeader % (1, 'info1', 'jMeter execution log analysis for ' + testName + ' (max threads)', 1))
+ 
     
+#
+# Convert README to html    
+#
+htmlStr = htmlStr + ( htmlHeader % (2, 'info', 'Test information', 2))
+
+plantUMLsnippet=''
+headerPfx = '##'
+READMEfile = os.path.dirname(os.path.abspath(fullName)) + '/README'
+#try:
+tempFile = open( READMEfile, 'r+' )
+verbatim=False
+for line in fileinput.input( READMEfile ):                        
+    if headerPfx in line :
+        if (renderPlantUML & (plantUMLsnippet != '')):
+            try:
+                umcRoot = os.environ['umcRoot']
+                #
+                import jinja2
+                #
+                templateLoader = jinja2.FileSystemLoader(searchpath= umcRoot + '/varia/jmeter/lib')
+                templateEnv = jinja2.Environment(loader=templateLoader)
+                TEMPLATE_FILE = "plantuml.jinja"
+                template = templateEnv.get_template(TEMPLATE_FILE)
+                #
+                plantUMLText = template.render(FLOW=plantUMLsnippet, TESTID=testName)  
+                #
+                plantUMLfile = 'testLayout.puml'
+                plantUMLout = open(reportDir + '/' + plantUMLfile,'w')
+                plantUMLout.write(plantUMLText)
+                plantUMLout.close()
+                #
+                plantUMLjar = umcRoot + '/varia/jmeter/lib/plantuml.jar'
+                #
+                if subprocess.call(['java', '-jar', plantUMLjar, '-oimages', reportDir + '/' + plantUMLfile]):
+                    raise
+                # add image
+                htmlStr = htmlStr + (htmlImg % ('images/' + 'testLayout.png'))
+            except:
+                print "Error running plantUML. Falling back to text."
+                htmlStr = htmlStr + plantUMLsnippet.replace('\n', htmlBreak) 
+            #    
+            plantUMLsnippet = ''
+        #
+        if verbatim:
+            htmlStr = htmlStr + htmlParagraphStop
+        section=line.replace(headerPfx, '').replace('\n','').replace('\r','').strip()
+        htmlStr = htmlStr + ( htmlHeader % (3, 'none', section, 3))
+        htmlStr = htmlStr + htmlParagraphStart
+        verbatim=True
+    else:
+        if (renderPlantUML & (section == 'Communication layout')):
+            plantUMLsnippet = plantUMLsnippet + line 
+        else:
+            if line.replace('\n','').replace('\r','') == '.':
+                line = '(none)'
+            htmlStr = htmlStr + line + htmlBreak
+
+if verbatim:
+    htmlStr = htmlStr + htmlParagraphStop
+
+tempFile.close() 
+#except:
+#    htmlStr = htmlStr + '(None. README file not found)' + htmlBreak
+#    print 'Warning: README file not found. '
+#    pass
+
+
 #
 # execution time
 #

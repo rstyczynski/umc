@@ -1,0 +1,42 @@
+@startuml
+title "{{ TESTID }}"
+
+{{ FLOW }}
+
+/' layout '/
+box "DH" #LightYellow
+    participant jMeter
+end box
+
+box "DC7" #LightGreen
+	participant Mock
+	participant SOALB1
+	participant SOA1
+	participant SOA2
+	participant OSBLB1
+	participant OSB1
+	participant OSB2
+	participant DB
+end box
+
+box "DC8" #Moccasin
+	participant SOALB2
+	participant SOA3
+	participant SOA4
+	participant OSBLB2
+	participant OSB3
+	participant OSB4
+end box
+
+/' graphical parameters '/
+skinparam handwritten false
+skinparam ParticipantPadding 5
+skinparam BoxPadding 5
+skinparam sequence {
+	ArrowColor Blue
+	LifeLineBorderColor blue
+	LifeLineBackgroundColor #A9DCDF
+	BoxBorderColor #00
+	ParticipantBorderColor Gray
+}
+@enduml
