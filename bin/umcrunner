@@ -124,9 +124,6 @@ cmd=$1 && shift
 
 # *** run a new umc instance
 if [ "$cmd" = "--run" ]; then
-
-    ps axf -o  "%p %r %y %x %a" | grep -v "grep" | egrep -v "$TOP_PID.+umcrunner" | egrep "umcrunner \-\-run $umc_id "
-
     # command parameters
     umc_id=$1 && shift
     rotateTime="$1" && shift
