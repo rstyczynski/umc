@@ -34,7 +34,7 @@ function print_usage () {
     echo "  umc-params       Additional umc tool paramers"
     echo ""
     echo "  * other usages:"
-    echo "  umcrunner --help | --stats [--noheader] | --runall <file> | --stopall | --stop <id> | --ls <id>"
+    echo "  umcrunner --help | --stats [--noheader] | --runall <file> [--verbose] | --stopall | --stop <id> | --ls <id>"
     echo ""
     echo "  where:"
     echo "  --help           this help"
@@ -112,6 +112,26 @@ function printstats() {
         $1,$2,$3,$4,$5,$6,substr($7, 1, 15),$8,$9,$10,$11,$12,$13}'
 }
 
+# checks that the argument $1 is a number and displays an error provided as argument $2
+# if the argument $2 is missing, displays a default message
+function checkNumber() {
+  if ! [[ $1 =~ "^[0-9]+$" ]] ; then
+    if [ "$2" = "" ]; then
+      echo >&2 "Number expected ($1)!"
+    else
+      echo >&2 "$2"
+    fi
+    kill -s TERM $TOP_PID
+  fi
+}
+
+function checkUMCID() {
+  if ! [[ $1 =~ "^[0-9a-zA-Z\\._]+$" ]] ; then
+    echo >&2 "The value '$1' is not a valid UMC identifier!"
+    kill -s TERM $TOP_PID
+  fi  
+}
+
 # --- MAIN ---
 
 # if umc log directory is not set, then set it to a default logs directory under umc root
@@ -131,7 +151,16 @@ if [ "$cmd" = "--run" ]; then
     delay="$1" && shift
     count="$1" && shift
     umc_params="$*"
-
+    
+    # check parameters
+    # check the umc_id is a valid identifier
+    checkUMCID $umc_id
+    
+    # check required numeric parameters are numbers
+    checkNumber $rotateTime "Parameter 'rotateTime' must be a number!"
+    checkNumber $delay "Parameter 'delay' must be a number!"
+    checkNumber $count "Parameter 'count' must be a number!"
+    
     # check that the umc tool exists as a sensor
     if [ "$(umc sensors | grep -o $tool)" = "" ]; then
         echo "umc tool $tool does not exist! Run umc sensors to check the tool is available."
@@ -268,24 +297,102 @@ fi
 if [ "$cmd" = "--runall" ]; then
     # command parameters
     conf=$1 && shift
+    
+    if [[ "$1" != "" && "$1" != "--verbose" ]]; then
+      echo >&2 "Invalid value for verbose parameter. Type --help for more information."
+      exit 1
+    else
+      if [ "$1" = "--verbose" ]; then verbose=true; else verbose=false; fi      
+    fi
+
+    # be verbose
+    $verbose && echo "$(date): --runall $conf"    
 
     # if conf cannot be found, try to find it in the umc/bin directroy
     if [ ! -f $conf ]; then
         oconf=$conf
         conf=$scriptDir/$conf;
         if [ ! -f $conf ]; then
-            echo >&2 "The configuration file $oconf cannot be found!"
+            echo >&2 "$(date): The definition file $oconf cannot be found!"
             exit 1
         fi
     fi
-
-    # run all instances from this file
-    # setsid will ensure each umc instance wull run its own process group
-    cat $conf | grep -v "^$" | grep -v "^#" | \
-    while read line; do
-        setsid umcrunner --run $line
+    
+    # stop any metric that is running on this host but it does not exist in the conf file
+    # this is to ensure that any deleted or commented umc configuration will be stopped 
+    umcrunner --stats --noheader | \
+    while read line; do 
+        umc_id=$(echo $line | awk '{ print $2 }')
+        if [ "$(cat $conf | grep "^umc-$umc_id:" | wc -l)" -eq 0 ]; then
+          $verbose && echo "$(date): $umc_id is running but does not exist in the definition file, stopping..."
+          umcrunner --stop $umc_id
+        fi
     done
+    
+    # start or stop all umc definitions from the conf file by using umcrunner
+    cat $conf | egrep -o "^umc-.+" | \
+    while read key; do
+      # get the umc id from the key
+      umc_id=$(echo $key | gawk '{ match($1,"umc-([a-zA-Z0-9\\._]+):", m); print m[1]}')
 
+      # check this is a valid umc id key
+      if [ "$umc_id" = "" ]; then
+        echo >&2 "$(date): The key $key is not a valid key for UMC identifier!"
+        exit 1
+      fi
+      
+      # strip the colon at the end of the key
+      key=$(echo $key | cut -d ":" -f 1)
+      
+      # check if this metric is for this host
+      hosts=$($scriptDir/getCfg.py $conf $key::umcrunner::hosts ::)
+      
+      # be verbose
+      $verbose && echo "$(date): processing $umc_id, key=$key"
+      
+      # start or stop umc as per the definition
+      # it should be running only if it is enabled and this host is listed among hosts otherwise it should be stopped
+      if [[ "$hosts" != "" && "$($scriptDir/getCfg.py $conf $key::enabled ::)" == "True" && \
+         (( "$hosts" == "_ALL_" || $hosts =~ (^|,)"[ ]*$HOSTNAME[ ]*"(,|$) )) ]]; then
+        # get umc params
+        params=$($scriptDir/getCfg.py $conf $key::umcrunner::params ::)
+        
+        # check if the params has changed when compared to the currently running umc instnace
+        if [ "$(umc_gpid $umc_id)" != "" ]; then
+          # get current parameters of running umc
+          curparams=$(ps ax | grep -v "grep" | grep "umcrunner --run $umc_id" | gawk '{ match($0,".*--run (.+)", m); print m[1]}')
+          
+          # stop the umc instance if params has changed
+          if [ "$curparams" != "$umc_id $params" ]; then
+            $verbose && echo "$(date): $umc_id is running and its parameters changed in the definition file, stopping..."
+            umcrunner --stop $umc_id
+            sleep 0.5
+          fi
+        fi
+        
+        if [ "$(umc_gpid $umc_id)" = "" ]; then        
+          # be verbose
+          $verbose && echo "$(date): starting $umc_id..."
+
+          # start the umc instnace; expand all variables in params should there be any
+          setsid umcrunner --run $umc_id $(eval echo "$params")
+        fi
+        
+        # check for errors
+        if [ "$?" -ne 0 ]; then
+          echo >&2 "$(date): There was a problem with umc configuration $key in $conf!"
+        fi
+             
+      else
+        # should not be running on this host; stop it if it is running
+        if [ "$(umc_gpid $umc_id)" != "" ]; then
+          $verbose && echo "$(date): $umc_id should not be running on this host, stopping..."
+          umcrunner --stop $umc_id
+        fi
+      fi
+      
+    done
+    
     exit 0
 fi
 
