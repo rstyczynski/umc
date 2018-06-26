@@ -6,13 +6,17 @@ import yaml
 
 yamlFile=sys.argv[1]
 getData=sys.argv[2]
-
+try:
+    delim=sys.argv[3]
+except:
+    delim='.'
+    
 try:
     yamlDoc = open(yamlFile, 'r')
     doc = yaml.load(yamlDoc)
 
     finalDoc=doc
-    for cfgElement in getData.split('.'):
+    for cfgElement in getData.split(delim):
 	try:
 		finalDoc = finalDoc[cfgElement]
 	except:
