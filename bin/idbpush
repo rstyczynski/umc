@@ -41,6 +41,7 @@ max_batchsize  = 0
 def info_msg(msg):
     if args.verbose:
         print("[" + str(datetime.datetime.now()) + "]: " + msg)
+        sys.stdout.flush()
 
 def err_msg(msg):
     sys.stderr.write("[" + str(datetime.datetime.now()) + "]: " + msg + "\n")    
@@ -99,7 +100,7 @@ def get_lock():
 
 # signal termination handler for graceful shutdown
 def signal_quit(signal, frame):
-    err_msg("shuting down...")
+    err_msg("Shutting down...")
     exit.set()
 
 # *** unix time
@@ -115,7 +116,7 @@ def get_db_client():
     db_pass        = conf_value(conf, "common.idbpush.db.pass", None)
     db_name        = conf_value(conf, "common.idbpush.db.dbname", None)
         
-    # check they have been defined
+    # check the db was defined
     if db_url == None or db_name == None:
         raise ValueError("Invalid DB connection details.")
     
@@ -124,7 +125,7 @@ def get_db_client():
     if not(m):
         raise ValueError('The DB url %s is invalid.'%db_url);
             
-    # creat the client object
+    # create the client object
     client=InfluxDBClient(m.group(1), m.group(2), db_user, db_pass, db_name)
     info_msg("DB connection details are: host=%s,port=%s,user=%s,pass=xxxxx,dbname=%s"
         %(m.group(1),m.group(2),db_user,db_name))
@@ -182,7 +183,7 @@ def eval_filter(filter, tags, fields):
                 exec(k + "=" + str(v))
         return eval(filter)
     except Exception as e:
-        err_msg("Error when evaluatin the filter '%s': %s!" % (filter, e)) 
+        err_msg("Error when evaluating the filter '%s': %s!" % (filter, e)) 
         return False      
 
 # *** reads and checks umc definition for a specific umc id
@@ -294,7 +295,6 @@ def db_write(client, datapoints, datafiles):
             # success
             for file in datafiles:
                 os.remove(file)
-                pass
             break # break the retry loop
     # // end retry loop
     
@@ -308,6 +308,8 @@ if __name__ == "__main__":
     parser.add_argument('--logs', required=False, help='location of umc logs directory',metavar='<dir>')
     parser.add_argument('--verbose', required=False, help='be verbose',action='store_true')
     args=parser.parse_args()
+    
+    info_msg("idbpush started.")
 
     # get the lock and exit when already running
     if not(get_lock()):
@@ -325,9 +327,13 @@ if __name__ == "__main__":
     info_msg("The logs directory is in %s"%args.logs)
     
     # read configuration file
-    confDoc = open(args.runall, 'r')
-    conf=yaml.load(confDoc)
-    conf_mtime=os.stat(args.runall).st_mtime    
+    try:
+        confDoc = open(args.runall, 'r')
+        conf=yaml.load(confDoc)
+        conf_mtime=os.stat(args.runall).st_mtime    
+    except Exception as e:
+        err_msg("Error when reading the configuration file %s: %s"%(args.runall,e))
+        sys.exit(1)
     
     # configuration params
     delay_writes   = conf_value(conf, "common.idbpush.delay-between-writes", DEFAULT_DELAYBETWEENWRITES)
@@ -393,7 +399,7 @@ if __name__ == "__main__":
                     else:
                         # failed to write to db after many attempts
                         err_msg("Force exit due to errors!")                    
-                        exit(1)
+                        sys.exit(1)
                             
             # // end log files iteration
             
@@ -409,9 +415,9 @@ if __name__ == "__main__":
                 else:
                     # failed to write to db after many attempts
                     err_msg("Force exit due to errors!")                    
-                    exit(1)
+                    sys.exit(1)
                     
-            # check for changes of configuration file and realod here
+            # check for changes of configuration file
             if os.stat(args.runall).st_mtime != conf_mtime:
                 info_msg("Configuration file %s has changed, you need to restart manually for changes to take effect!"%args.runall)
                 conf_mtime=os.stat(args.runall).st_mtime
@@ -427,7 +433,9 @@ if __name__ == "__main__":
             
         # // end main loop
         
+        info_msg("idbpush gracefully ended.")
+        
     except Exception as e:
-        print(e)
+        err_msg("Fatal error: "%e)
         
 
