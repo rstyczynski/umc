@@ -31,7 +31,7 @@ function print_usage () {
     echo "  tool             umc tool id"
     echo "  delay            Delay in seconds between umc tool runs"
     echo "  count            Number of umc tool runs"
-    echo "  umc-params       Additional umc tool paramers"
+    echo "  umc-params       Additional umc tool parameters"
     echo ""
     echo "  * other usages:"
     echo "  umcrunner --help | --stats [--noheader] | --runall <file> [--verbose] | --stopall | --stop <id> | --ls <id>"
