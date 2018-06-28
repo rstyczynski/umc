@@ -1,0 +1,11 @@
+#!/bin/bash
+# umcrunnerd start up script 
+
+# the script directory
+CUR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# log directory
+LOG_DIR=$CUR_DIR/../logs/umcrunner
+mkdir -p $LOG_DIR
+
+$CUR_DIR/umcrunnerd --runall metrics.conf >>$LOG_DIR/umcrunner-$HOSTNAME.log 2>&1 &

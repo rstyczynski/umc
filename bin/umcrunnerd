@@ -1,0 +1,25 @@
+#!/bin/bash
+# umcrunner daemon script running umcrunner --runall 
+
+# the script directory
+CUR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# lockfile
+lockfile=$CUR_DIR/.umcrunnerd-$HOSTNAME.lck
+
+# on this machine run only once at a time
+if [ -e $lockfile ]; then
+   echo >&2 "Already running!"
+   exit 1
+fi
+
+trap "rm -f $lockfile; exit" INT TERM EXIT
+touch $lockfile
+
+while true; do
+  $CUR_DIR/umcrunner $*
+  sleep 15
+done
+
+rm $lockfile
+trap - INT TERM EXIT
