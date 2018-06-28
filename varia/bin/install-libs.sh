@@ -200,18 +200,32 @@ install_influxdb () {
 		echo "  - unpacking..." 
 		cd $LIBS_HOME && tar xvzf $INSTALL_HOME/$BINFILE >>$INSTALL_LOG 2>&1
 
-		# change the location of db 
+		# change the configuration 
 		sed -i.bckp s#/var/lib/influxdb#$LIBS_HOME/$TOOLDN/var/influxdb#g $LIBS_HOME/$TOOLDN/etc/influxdb/influxdb.conf
 		sed -i.bckp s/#.reporting-disabled.=.false/reporting-disabled=true/g $LIBS_HOME/$TOOLDN/etc/influxdb/influxdb.conf
+		rm $LIBS_HOME/$TOOLDN/etc/influxdb/influxdb.conf.bckp
 		echo "  - changed required configuration in $LIBS_HOME/$TOOLDN/etc/influxdb/influxdb.conf"
 
 		# create influxd start up script
-		echo "$LIBS_HOME/$TOOLDN/usr/bin/influxd >$LIBS_HOME/$TOOLDN/var/log/influxdb/influxd.log 2>&1 &" >$LIBS_HOME/$TOOLDN/usr/bin/run-influxd.sh
-		echo "echo \"influxdb started, log is in $LIBS_HOME/$TOOLDN/var/log/influxdb/influxd.log\"" >>$LIBS_HOME/$TOOLDN/usr/bin/run-influxd.sh
-		echo "echo \"\"" >>$LIBS_HOME/$TOOLDN/usr/bin/run-influxd.sh
+		echo "if [ \"\$(ps ax | grep influxdb | grep -v grep | awk '{ print \$1 }')\" != \"\" ]; then" >$LIBS_HOME/$TOOLDN/usr/bin/start-influxd.sh
+		echo "   echo \"influxdb is already running!\"" >>$LIBS_HOME/$TOOLDN/usr/bin/start-influxd.sh
+		echo "   exit 1" >>$LIBS_HOME/$TOOLDN/usr/bin/start-influxd.sh
+		echo "fi" >>$LIBS_HOME/$TOOLDN/usr/bin/start-influxd.sh
+		echo "" >>$LIBS_HOME/$TOOLDN/usr/bin/start-influxd.sh
+		echo "$LIBS_HOME/$TOOLDN/usr/bin/influxd >$LIBS_HOME/$TOOLDN/var/log/influxdb/influxd.log 2>&1 &" >>$LIBS_HOME/$TOOLDN/usr/bin/start-influxd.sh
+		echo "echo \"influxdb started, log is in $LIBS_HOME/$TOOLDN/var/log/influxdb/influxd.log\"" >>$LIBS_HOME/$TOOLDN/usr/bin/start-influxd.sh
+
+		# create influxd stop script
+		echo "if [ \"\$(ps ax | grep influxdb | grep -v grep | awk '{ print \$1 }')\" = \"\" ]; then" >$LIBS_HOME/$TOOLDN/usr/bin/stop-influxd.sh
+		echo "   echo \"influxdb is not running!\"" >>$LIBS_HOME/$TOOLDN/usr/bin/stop-influxd.sh
+		echo "   exit 1" >>$LIBS_HOME/$TOOLDN/usr/bin/stop-influxd.sh
+		echo "fi" >>$LIBS_HOME/$TOOLDN/usr/bin/stop-influxd.sh
+		echo "" >>$LIBS_HOME/$TOOLDN/usr/bin/stop-influxd.sh
+		echo "kill \$(ps ax | grep influxdb | grep -v grep | awk '{ print \$1 }')" >>$LIBS_HOME/$TOOLDN/usr/bin/stop-influxd.sh
 
 		chmod +x $LIBS_HOME/$TOOLDN/usr/bin/run-influxd.sh
-		echo "  - influxdb setup completed, you can run it with $LIBS_HOME/$TOOLDN/usr/bin/run-influxd.sh"
+		chmod +x $LIBS_HOME/$TOOLDN/usr/bin/stop-influxd.sh
+		echo "  - influxdb setup completed, you can run it with run-influxd.sh and stop it with stop-influxd.sh"
 		
 		# environment variables
 		echo "# influxdb" >>$ENV_FILE
