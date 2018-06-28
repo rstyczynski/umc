@@ -264,12 +264,20 @@ def get_umc_def(umc_id):
     metric=conf_value(umcconf, "idbpush.name", None)
         
     # tags and fields cols of this umc definition
-    tcols = [x.strip().lower() for x in conf_value(umcconf, "idbpush.tags").split(',') if x != '']
-    fcols = [x.strip().lower() for x in conf_value(umcconf, "idbpush.fields").split(',') if x != '']
+    tcols = [x.strip().lower() for x in conf_value(umcconf, "idbpush.tags").split(',') if x != '' ]
+    fcols = [x.strip().lower() for x in conf_value(umcconf, "idbpush.fields").split(',') if x != '' ]
     
     # combine with common tags and fields cols
-    tcols.extend(x for x in [y.strip().lower() for y in conf_value(conf, "common.idbpush.tags").split(',')] if x != '' and x not in tcols)
-    fcols.extend(x for x in [y.strip().lower() for y in conf_value(conf, "common.idbpush.fields").split(',')] if x != '' and x not in fcols)
+    tcols.extend(x for x in 
+        [y.strip().lower() for y in conf_value(conf, "common.idbpush.tags").split(',') ] 
+        if x != '' and x not in tcols and '!'+x not in tcols )
+    fcols.extend(x for x in 
+        [y.strip().lower() for y in conf_value(conf, "common.idbpush.fields").split(',') ] 
+        if x != '' and x not in fcols and '!'+x not in tcols )
+    
+    # remove all commented out fields and tags
+    tcols = [x for x in tcols if not(x.startswith('!')) ]
+    fcols = [x for x in fcols if not(x.startswith('!')) ]
     
     # read and check time field and its format
     timeformat=conf_value(umcconf, "idbpush.timeformat", conf_value(conf, "common.idbpush.timeformat", DEFAULT_TIMEFORMAT))
