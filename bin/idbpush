@@ -309,8 +309,6 @@ if __name__ == "__main__":
     parser.add_argument('--verbose', required=False, help='be verbose',action='store_true')
     args=parser.parse_args()
     
-    info_msg("idbpush started.")
-
     # get the lock and exit when already running
     if not(get_lock()):
         sys.exit(1)
@@ -318,6 +316,8 @@ if __name__ == "__main__":
     # register signals to quit the process
     for sig in ('TERM', 'HUP', 'INT'):
         signal.signal(getattr(signal, 'SIG'+sig), signal_quit);
+
+    info_msg("idbpush started.")
 
     # location of logs
     if args.logs == None:
