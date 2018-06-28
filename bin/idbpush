@@ -26,12 +26,15 @@ DEFAULT_BATCHSIZE=50
 DEFAULT_DELAYBETWEENWRITES=200
 DEFAULT_RETRYCOUNT=5
 DEFAULT_RETRYINTERVAL=10000
+DEFAULT_REMOVEFILESNODATA=True
 
 # *** global variables
 conf=None               # configuration file
 lastdbcall = 0          # last time the db was accessed
 exit = Event()          # exit event to correctly terminate the process
 args=None               # input arguments
+lasterror=None          # last error text
+lasterrorcount=0        # last error count
 
 # parameters to be read from the configuration file
 delay_writes   = 0
@@ -40,14 +43,70 @@ retry_count    = 0
 retry_interval = 0
 max_batchsize  = 0
 
+# messages colors
+class bcolors:
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    
+# messages types
+MSG_INFO  = 0
+MSG_ERROR = 1
+MSG_WARN  = 2
+    
 # *** print info message
-def info_msg(msg):
-    if args.verbose:
-        print("[" + str(datetime.datetime.now()) + "]: " + msg)
-        sys.stdout.flush()
+def message(type, msg):
+    global lasterror; global lasterrorcount
+    
+    # count number of errors and exit if the error message is the same as the previous one
+    if type == MSG_ERROR and lasterror == msg:
+        lasterrorcount=lasterrorcount+1
+        return
 
+    # gdefault is stdout
+    out = sys.stdout
+    
+    # error stream
+    if type == MSG_ERROR:
+        out = sys.stderr
+        
+    # colors
+    out_color = ''; end_color_out = ''
+    error_color=bcolors.FAIL; end_color_error = bcolors.ENDC
+    if type == MSG_ERROR and sys.stderr.isatty():
+        out_color = bcolors.FAIL; end_color_out = bcolors.ENDC
+    if type == MSG_WARN and sys.stdout.isatty():
+        out_color = bcolors.WARNING; end_color_out = bcolors.ENDC
+
+    # only write info and want messages in verbose mode or when error message
+    if (args.verbose and (type == MSG_INFO or type == MSG_WARN)) or type == MSG_ERROR:
+        # the message has changed but tell how many previous error messages there were if not only one
+        if lasterrorcount > 0:
+            if not(sys.stderr.isatty()):
+                error_color=''; end_color_error=''
+                
+            sys.stderr.write("[" + str(datetime.datetime.now()) + "]:" + error_color + 
+                " The previous error occurred %d times!"%lasterrorcount + end_color_error + "\n")
+            lasterrorcount=0
+        
+        # write the message to respective stream
+        out.write("[" + str(datetime.datetime.now()) + "]:" + out_color + " " + msg + end_color_out + "\n")  
+        
+        # if the message type is error, remember the message and reset the counter
+        if type == MSG_ERROR:
+            lasterror=msg
+            lasterrorcount=0
+        else:
+            lasterror=None
+
+def info_msg(msg):
+    message(MSG_INFO, msg)
+    
 def err_msg(msg):
-    sys.stderr.write("[" + str(datetime.datetime.now()) + "]: " + msg + "\n")    
+    message(MSG_ERROR, msg)    
+
+def warn_msg(msg):
+    message(MSG_WARN, msg)    
 
 # *** get the value of a property defined in path and returns an empty string if it does not exist
 def conf_value(cfg, path, default='',delim='.'):
@@ -121,7 +180,7 @@ def get_db_client():
         
     # check the db was defined
     if db_url == None or db_name == None:
-        raise ValueError("Invalid DB connection details.")
+        raise ValueError("Invalid DB connection details (db_url or db_name is missing).")
     
     # parse url to get host and port
     m = re.search("http://([a-zA-Z0-9\.]+):([0-9]+)/?", db_url)    
@@ -176,7 +235,7 @@ def float_ex(val):
         return None 
 
 # *** evaluates filter on the row's tags and fields values        
-def eval_filter(filter, tags, fields):
+def eval_filter(umc_id, filter, tags, fields):
     try:
         for k,v in tags.items():
             if v is not None:
@@ -186,7 +245,7 @@ def eval_filter(filter, tags, fields):
                 exec(k + "=" + str(v))
         return eval(filter)
     except Exception as e:
-        err_msg("Error when evaluating the filter '%s': %s!" % (filter, e)) 
+        err_msg("Error when evaluating the filter '%s' for %s: %s!" % (filter, umc_id, e)) 
         return False      
 
 # *** reads and checks umc definition for a specific umc id
@@ -221,15 +280,15 @@ def get_umc_def(umc_id):
         err_msg("The time format '%s' is invalid for umc '%s': %s!" % (timeformat,umc_id,e)) 
         return None
             
-    timefield=conf_value(umcconf, "idbpush.timefield", conf_value(conf, "common.idbpush.timefield", DEFAULT_TIMEFIELD)).lower()
+    timefield=conf_value(umcconf, "idbpush.timefield", conf_value(conf, "common.idbpush.timefield", DEFAULT_TIMEFIELD)).lower()    
     filter=conf_value(umcconf, "idbpush.filter", None)
     
-    return Map(umcconf=umcconf,metric=metric,enabled=enabled,tcols=tcols,fcols=fcols,
+    return Map(umcid=umc_id,umcconf=umcconf,metric=metric,enabled=enabled,tcols=tcols,fcols=fcols,
         timeformat=timeformat,timefield=timefield,filter=filter,datapoints=[],datafiles=[])
 
 # *** read data points from the csv log file
 def read_datapoints(logfilename, umcdef):    
-    datapoints = []
+    datapoints = []; notags=False; nofields=False; 
     if umcdef.enabled: 
         # read datapoints
         with open(logfilename, 'r') as csvfile:
@@ -250,20 +309,26 @@ def read_datapoints(logfilename, umcdef):
                         timestamp = unix_time_millis(datetime.datetime.strptime(row[umcdef.timefield],umcdef.timeformat)) * 1000000
                 except Exception as e:
                     # output error and skip this row
-                    err_msg("Cannot read or convert time to timestamp: %s"%str(e))
+                    err_msg("Cannot read or convert time to timestamp for %s: %s"%(umcdef.umcid,str(e)))
                     continue     
                 
                 # create tags and fields
                 tags   = { k.lower():str(v)      for k, v in row.items() if k in umcdef.tcols }
-                fields = { k.lower():float_ex(v) for k, v in row.items() if k in umcdef.fcols }
+                fields = { k.lower():float_ex(v) for k, v in row.items() if k in umcdef.fcols }                
+                notags = (len(tags) == 0)
                 
                 # skip row and the filter is defined and holds on this row
-                if umcdef.filter is not None and not(eval_filter(umcdef.filter, tags, fields)):
+                if umcdef.filter is not None and not(eval_filter(umcdef.umcid, umcdef.filter, tags, fields)):
                     continue
                 
                 if len(fields) > 0:            
                     datapoints.append({ "measurement" : umcdef.metric, "time" : timestamp, "fields" : fields, "tags": tags })
+                    
             # // end reading rows
+            
+    # check for no tags
+    if notags and len(datapoints) > 0:
+        warn_msg("The definition of %s contains no tags presented in the log file %s!"%(umcdef.umcid,os.path.basename(logfilename)))
                 
     return datapoints
 
@@ -288,6 +353,8 @@ def db_write(client, datapoints, datafiles):
             if retryCount < retry_count:
                 err_msg("Will retry in %d seconds..."%(retry_interval))                            
                 exit.wait(retry_interval)
+                if exit.is_set():
+                    return False
                 retryCount=retryCount+1
                 retry = True
             else:
@@ -304,7 +371,7 @@ def db_write(client, datapoints, datafiles):
     return True            
     
 # *** MAIN
-if __name__ == "__main__":
+if __name__ == "__main__":    
     # arguments
     parser = argparse.ArgumentParser(description='InfluxDB push tool for umc')
     parser.add_argument('--runall', required=True, help='push a backlog of umc metrics defined in <file>',metavar='<file>')
@@ -333,7 +400,7 @@ if __name__ == "__main__":
     try:
         nfl=os.path.dirname(os.path.realpath(__file__)) + "/" + args.runall
         if not(os.path.exists(args.runall)) and os.path.exists(nfl):
-            info_msg("The file %s does not exist in the current directory, will try the idbpush home directory."%(args.runall))
+            warn_msg("The file %s does not exist in the current directory, will try the idbpush home directory."%(args.runall))
             args.runall = nfl
         
         confDoc = open(args.runall, 'r')
@@ -391,7 +458,7 @@ if __name__ == "__main__":
                 
                 # read datapoints from the log file and store them in the umcdef dict
                 umcdefs[umc_id].datapoints += read_datapoints(logfile, umcdefs[umc_id])
-                umcdefs[umc_id].datafiles.append(logfile)            
+                umcdefs[umc_id].datafiles.append(logfile)
                 info_msg("Data points read for umc %s. There is currently %d records in %d files in the write buffer."%(umc_id, 
                     len(umcdefs[umc_id].datapoints), len(umcdefs[umc_id].datafiles)))        
                 
@@ -406,14 +473,23 @@ if __name__ == "__main__":
                         umcdefs[umc_id].datafiles = []
                     else:
                         # failed to write to db after many attempts
-                        err_msg("Force exit due to errors!")                    
+                        err_msg("Force exit due to connection errors!")                    
                         sys.exit(1)
-                            
+                        
             # // end log files iteration
             
             # flush the remaining write buffer
             for umc_id in umcdefs: 
-                if len(umcdefs[umc_id].datapoints) != 0:
+                # check to remove files providing no data
+                if len(umcdefs[umc_id].datapoints) == 0 and len(umcdefs[umc_id].datafiles) > 0:
+                    warn_msg("All %d files in the backlog provide no data for %s!"%(len(umcdefs[umc_id].datafiles),umc_id))
+                    if conf_value(conf, "common.idbpush.remove-backlog-files-no-data", False) == True:
+                        warn_msg("%d files providing no data for %s will be removed!"%(len(umcdefs[umc_id].datafiles),umc_id))
+                        for file in umcdefs[umc_id].datafiles:
+                            os.remove(file)
+                    umcdefs[umc_id].datafiles = []             
+                elif len(umcdefs[umc_id].datapoints) > 0: 
+                    # write remaining backlog from this iteration
                     if db_write(client, umcdefs[umc_id].datapoints, umcdefs[umc_id].datafiles):
                         info_msg("Remaining write buffer flushed for umc %s (%d records from %d files wirtten to the DB)."%(umc_id, 
                             len(umcdefs[umc_id].datapoints), len(umcdefs[umc_id].datafiles)))        
@@ -423,12 +499,12 @@ if __name__ == "__main__":
                         umcdefs[umc_id].datafiles = []                
                     else:
                         # failed to write to db after many attempts
-                        err_msg("Force exit due to errors!")                    
+                        err_msg("Force exit due to connection errors!")                    
                         sys.exit(1)
                     
             # check for changes of configuration file
             if os.stat(args.runall).st_mtime != conf_mtime:
-                info_msg("Configuration file %s has changed, you need to restart manually for changes to take effect!"%args.runall)
+                warn_msg("Configuration file %s has changed, you need to restart manually for changes to take effect!"%args.runall)
                 conf_mtime=os.stat(args.runall).st_mtime
             
             # display info message
@@ -445,6 +521,6 @@ if __name__ == "__main__":
         info_msg("idbpush gracefully ended.")
         
     except Exception as e:
-        err_msg("Fatal error: "%e)
+        err_msg("Failed due to error: %s"%e)
         
 
