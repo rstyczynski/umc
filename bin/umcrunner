@@ -22,7 +22,7 @@ function print_usage () {
     echo "Runs, stops and queries umc instances running on a single host."
     echo ""
     echo "Usage:"
-    echo "  * running an instance of a umc tool and store logs in $UMC_LOG_DIR/<id>:"
+    echo "  * running an instance of a umc tool and store logs in $UMC_LOG_DIR/<hostname>/<id>:"
     echo "  umcrunner --run <id> <rotate-time> <tool> <delay> <count> [<umc-params>]"
     echo ""
     echo "  where:"
@@ -40,7 +40,7 @@ function print_usage () {
     echo "  --help           this help"
     echo "  --stats          displays all running umc instances (see further below what it shows)"
     echo "  --noheader       suppress the header in stats"
-    echo "  --runall <file>  runs all umc instances from a definition file <file>"
+    echo "  --runall <file>  runs all umc instances from metrics configuration <file>"
     echo "  --stopall        stops all running umc instances"
     echo "  --stop <id>      stops an umc instance"
     echo "  --ls <id>        runs 'ls -all' in the umc instance directory"
@@ -51,14 +51,14 @@ function print_usage () {
     echo "  GPID             group process ID"
     echo "  UMC_ID           unique umc instance ID"
     echo "  ROTAT_T          roation time in seconds used as a value for logdirector.pl -timeLimit"
-    echo "  UMC              umc tool (sensor) id"
-    echo "  DELAY            umc tool delay value"
-    echo "  COUNT            umc tool count value"
-    echo "  PARAMS           additional parameters of umc tool (umc tool specific)"
-    echo "  STARTED          time the umc instance was started"
+    echo "  UMC              the umc (sensor) id"
+    echo "  DELAY            the time umc waits between runs"
+    echo "  COUNT            total number of umc runs"
+    echo "  PARAMS           additional umc parameters (umc sensor specific)"
+    echo "  STARTED          time when the umc instance was started"
     echo "  RUN_T            umc instance running time"
-    echo "  CPU_T            cpu time consumed by the umc instance since its start up"
-    echo "  BACKLOG          number of files in a backlog (in a directory $UMC_LOG_DIR/<UMC_ID>)"
+    echo "  CPU_T            cpu time consumed by the umc instance since its start"
+    echo "  BACKLOG          number of files in a backlog (in $UMC_LOG_DIR/<hostname>/<umc-id>)"
 }
 
 # --- helper functions ---
@@ -72,13 +72,13 @@ function umc_run() {
     rotateTime="$1" && shift
     umc_params="$*"
 
-    mkdir -p $UMC_LOG_DIR/$umc_id
+    mkdir -p $UMC_LOG_DIR/$HOSTNAME/$umc_id
 
     # run umc with logdirector
     # this needs an explicit stdin redirection (tail -f /dev/null) as otherwise the background java process was trying
     # to read from stdin (that somehow got srewed up when in background) and was causing high cpu.
-    tail -f /dev/null | umc $tool collect $delay $count $umc_params 2>>$UMC_LOG_DIR/$umc_id/$umc_id.error.out | \
-        logdirector.pl -name $umc_id -dir $UMC_LOG_DIR/$umc_id \
+    tail -f /dev/null | umc $tool collect $delay $count $umc_params 2>>$UMC_LOG_DIR/$HOSTNAME/$umc_id/$umc_id.error.out | \
+        logdirector.pl -name $umc_id -dir $UMC_LOG_DIR/$HOSTNAME/$umc_id \
             -detectHeader \
             -checkHeaderDups \
             -rotateByTime run \
@@ -133,6 +133,12 @@ function checkUMCID() {
 }
 
 # --- MAIN ---
+
+# check HOSTNAME env variable is set
+if [ "$HOSTNAME" = "" ]; then
+  echo >&2 "Fatal error: HOSTNAME variable is not set. Exiting."
+  exit 1
+fi
 
 # if umc log directory is not set, then set it to a default logs directory under umc root
 if [ "$UMC_LOG_DIR" = "" ]; then
@@ -247,7 +253,7 @@ if [ "$cmd" = "--stats" ]; then
         showMaxFilesCount=100
         
         # count number of files        
-        backlog_files=$(ls -U $UMC_LOG_DIR/$umc_id/"$umc_id"_* 2>/dev/null | head -$((showMaxFilesCount+1)) | wc -l)
+        backlog_files=$(ls -U $UMC_LOG_DIR/$HOSTNAME/$umc_id/"$umc_id"_* 2>/dev/null | head -$((showMaxFilesCount+1)) | wc -l)
         if [ "$backlog_files" -gt $showMaxFilesCount ]; then 
           backlog_files=">$showMaxFilesCount" 
         fi
@@ -277,8 +283,8 @@ if [ "$cmd" = "--ls" ]; then
     # command parameters
     umc_id=$1 && shift
 
-    echo "Directory listing of $UMC_LOG_DIR/$umc_id"
-    ls -all $UMC_LOG_DIR/$umc_id
+    echo "Directory listing of $UMC_LOG_DIR/$HOSTNAME/$umc_id"
+    ls -all $UMC_LOG_DIR/$HOSTNAME/$umc_id
     exit 0
 fi
 
@@ -295,6 +301,13 @@ fi
 
 # *** run all umc instances from a definition file
 if [ "$cmd" = "--runall" ]; then
+    # exit if the same is running already
+    cnt=$(ps axf -o pgid,pid,command | grep "umcrunner --runall" | grep -v "grep" | awk '{ print $1 }' | uniq | wc -l)
+    if [ $cnt -gt 1 ]; then
+      echo >&2 "The same umcrunner command is already running, exiting..."
+      exit 1
+    fi
+
     # command parameters
     conf=$1 && shift
     
