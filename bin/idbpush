@@ -328,6 +328,11 @@ if __name__ == "__main__":
     
     # read configuration file
     try:
+        nfl=os.path.dirname(os.path.realpath(__file__)) + "/" + args.runall
+        if not(os.path.exists(args.runall)) and os.path.exists(nfl):
+            info_msg("The file %s does not exist in the current directory, will try the idbpush home directory."%(args.runall))
+            args.runall = nfl
+        
         confDoc = open(args.runall, 'r')
         conf=yaml.load(confDoc)
         conf_mtime=os.stat(args.runall).st_mtime    
@@ -404,18 +409,19 @@ if __name__ == "__main__":
             # // end log files iteration
             
             # flush the remaining write buffer
-            for umc_id in umcdefs:
-                if db_write(client, umcdefs[umc_id].datapoints, umcdefs[umc_id].datafiles):
-                    info_msg("Remaining write buffer flushed for umc %s (%d records from %d files wirtten to the DB)."%(umc_id, 
-                        len(umcdefs[umc_id].datapoints), len(umcdefs[umc_id].datafiles)))        
-                    countRecords=countRecords+len(umcdefs[umc_id].datapoints)
-                    countFiles=countFiles+len(umcdefs[umc_id].datafiles)
-                    umcdefs[umc_id].datapoints = []
-                    umcdefs[umc_id].datafiles = []                
-                else:
-                    # failed to write to db after many attempts
-                    err_msg("Force exit due to errors!")                    
-                    sys.exit(1)
+            for umc_id in umcdefs: 
+                if len(umcdefs[umc_id].datapoints) != 0:
+                    if db_write(client, umcdefs[umc_id].datapoints, umcdefs[umc_id].datafiles):
+                        info_msg("Remaining write buffer flushed for umc %s (%d records from %d files wirtten to the DB)."%(umc_id, 
+                            len(umcdefs[umc_id].datapoints), len(umcdefs[umc_id].datafiles)))        
+                        countRecords=countRecords+len(umcdefs[umc_id].datapoints)
+                        countFiles=countFiles+len(umcdefs[umc_id].datafiles)
+                        umcdefs[umc_id].datapoints = []
+                        umcdefs[umc_id].datafiles = []                
+                    else:
+                        # failed to write to db after many attempts
+                        err_msg("Force exit due to errors!")                    
+                        sys.exit(1)
                     
             # check for changes of configuration file
             if os.stat(args.runall).st_mtime != conf_mtime:
