@@ -1,0 +1,11 @@
+#!/bin/bash
+# idbpush daemon script 
+
+# the script directory
+CUR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# log directory
+LOG_DIR=$CUR_DIR/../logs/idbpush
+mkdir -p $LOG_DIR
+
+$CUR_DIR/idbpush --runall metrics.conf >>$LOG_DIR/idbpush.log 2>&1 &
