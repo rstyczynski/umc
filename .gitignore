@@ -10,3 +10,4 @@ sqlcl-17.4.0.354.2224-no-jre.zip
 *.sublime-workspace
 \!trash
 .DS_Store
+*.lck
