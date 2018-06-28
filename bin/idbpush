@@ -67,7 +67,7 @@ def message(type, msg):
     out = sys.stdout
     
     # error stream
-    if type == MSG_ERROR:
+    if type == MSG_ERROR or type == MSG_WARN:
         out = sys.stderr
         
     # colors
@@ -75,11 +75,11 @@ def message(type, msg):
     error_color=bcolors.FAIL; end_color_error = bcolors.ENDC
     if type == MSG_ERROR and sys.stderr.isatty():
         out_color = bcolors.FAIL; end_color_out = bcolors.ENDC
-    if type == MSG_WARN and sys.stdout.isatty():
+    if type == MSG_WARN and sys.stderr.isatty():
         out_color = bcolors.WARNING; end_color_out = bcolors.ENDC
 
     # only write info and want messages in verbose mode or when error message
-    if (args.verbose and (type == MSG_INFO or type == MSG_WARN)) or type == MSG_ERROR:
+    if (args.verbose and type == MSG_INFO) or type == MSG_ERROR or type == MSG_WARN:
         # the message has changed but tell how many previous error messages there were if not only one
         if lasterrorcount > 0:
             if not(sys.stderr.isatty()):
@@ -87,10 +87,12 @@ def message(type, msg):
                 
             sys.stderr.write("[" + str(datetime.datetime.now()) + "]:" + error_color + 
                 " The previous error occurred %d times!"%lasterrorcount + end_color_error + "\n")
+            sys.stderr.flush()
             lasterrorcount=0
         
         # write the message to respective stream
         out.write("[" + str(datetime.datetime.now()) + "]:" + out_color + " " + msg + end_color_out + "\n")  
+        out.flush()
         
         # if the message type is error, remember the message and reset the counter
         if type == MSG_ERROR:
@@ -217,7 +219,7 @@ def get_umcid_from_logfile(logfile):
 # *** retrieves the list of all log files to be pushed to the influxdb sorted by modified time
 def refresh_logs():
     pattern = re.compile(".+_[0-9]+.*\.log$")
-    search_re=".*(" + "|".join(get_umc_ids()) + ")$";
+    search_re=".*/(" + "|".join(get_umc_ids()) + ")$";
     
     allfiles=[]
     for dirname, dirnames, filenames in os.walk(args.logs):
@@ -358,7 +360,7 @@ def db_write(client, datapoints, datafiles):
             lastdbcall = int(round(time.time() * 1000))
         except Exception as e:
             err_msg("Error occurred when inserting data: %s"%(e))                                                    
-            if retryCount < retry_count:
+            if retry_count == -1 or retryCount < retry_count:
                 err_msg("Will retry in %d seconds..."%(retry_interval))                            
                 exit.wait(retry_interval)
                 if exit.is_set():
