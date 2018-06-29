@@ -11,6 +11,9 @@ Vagrant.configure("2") do |config|
 
   # this will map the umc root to the vagrant's home umc directory
   config.vm.synced_folder "../../", "/home/vagrant/umc"
+  
+  # disable guest additions upgrade 
+  config.vbguest.auto_update = false
 
   # network
   config.vm.network :private_network, ip: "192.168.10.101"
