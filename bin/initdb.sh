@@ -4,7 +4,7 @@ DBNAME="rodmon"
 USER="rodmon"
 PASS="rodmon"
 
-run-influxd.sh 2>&1 >/dev/null
+start-influxd.sh 2>&1 >/dev/null
 
 # create user and the password
 # this will only work when the influxdb was created and requires no authentication
@@ -20,4 +20,4 @@ cd $pwd
 
 # restart the db
 stop-influxd.sh 2>&1 >/dev/null
-run-influxd.sh 2>&1 >/dev/null
+start-influxd.sh 2>&1 >/dev/null

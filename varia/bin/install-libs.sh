@@ -223,7 +223,7 @@ install_influxdb () {
 		echo "" >>$LIBS_HOME/$TOOLDN/usr/bin/stop-influxd.sh
 		echo "kill \$(ps ax | grep influxdb | grep -v grep | awk '{ print \$1 }')" >>$LIBS_HOME/$TOOLDN/usr/bin/stop-influxd.sh
 
-		chmod +x $LIBS_HOME/$TOOLDN/usr/bin/run-influxd.sh
+		chmod +x $LIBS_HOME/$TOOLDN/usr/bin/start-influxd.sh
 		chmod +x $LIBS_HOME/$TOOLDN/usr/bin/stop-influxd.sh
 		echo "  - influxdb setup completed, you can run it with run-influxd.sh and stop it with stop-influxd.sh"
 		
