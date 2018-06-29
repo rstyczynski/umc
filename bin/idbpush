@@ -55,7 +55,7 @@ MSG_ERROR = 1
 MSG_WARN  = 2
     
 # *** print info message
-def message(type, msg):
+def message(type, msg, forcePrint=False):
     global lasterror; global lasterrorcount
     
     # count number of errors and exit if the error message is the same as the previous one
@@ -63,7 +63,7 @@ def message(type, msg):
         lasterrorcount=lasterrorcount+1
         return
 
-    # gdefault is stdout
+    # default is stdout
     out = sys.stdout
     
     # error stream
@@ -78,8 +78,8 @@ def message(type, msg):
     if type == MSG_WARN and sys.stderr.isatty():
         out_color = bcolors.WARNING; end_color_out = bcolors.ENDC
 
-    # only write info and want messages in verbose mode or when error message
-    if (args.verbose and type == MSG_INFO) or type == MSG_ERROR or type == MSG_WARN:
+    # only write info messages in verbose mode
+    if ((args.verbose or forcePrint) and type == MSG_INFO) or type == MSG_ERROR or type == MSG_WARN:
         # the message has changed but tell how many previous error messages there were if not only one
         if lasterrorcount > 0:
             if not(sys.stderr.isatty()):
@@ -101,7 +101,10 @@ def message(type, msg):
         else:
             lasterror=None
 
-def info_msg(msg):
+def info1_msg(msg):
+    message(MSG_INFO, msg, True)
+
+def info2_msg(msg):
     message(MSG_INFO, msg)
     
 def err_msg(msg):
@@ -110,7 +113,8 @@ def err_msg(msg):
 def warn_msg(msg):
     message(MSG_WARN, msg)    
 
-# *** get the value of a property defined in path and returns an empty string if it does not exist
+# *** get the value of a property from yaml file defined by path and returns 
+# an empty string if it does not exist
 def conf_value(cfg, path, default='',delim='.'):
     finalDoc = cfg
     if finalDoc is not None:
@@ -164,7 +168,7 @@ def get_lock():
 
 # signal termination handler for graceful shutdown
 def signal_quit(signal, frame):
-    err_msg("Shutting down...")
+    warn_msg("Shutting down...")
     exit.set()
 
 # *** unix time
@@ -191,7 +195,7 @@ def get_db_client():
             
     # create the client object
     client=InfluxDBClient(m.group(1), m.group(2), db_user, db_pass, db_name)
-    info_msg("DB connection details are: host=%s,port=%s,user=%s,pass=xxxxx,dbname=%s"
+    info1_msg("DB connection details are: host=%s,port=%s,user=%s,pass=xxxxx,dbname=%s"
         %(m.group(1),m.group(2),db_user,db_name))
     
     return client
@@ -327,7 +331,7 @@ def read_datapoints(logfilename, umcdef):
                 fields = { k.lower():float_ex(v) for k, v in row.items() if k in umcdef.fcols }                
                 notags = (len(tags) == 0)
                 
-                # skip row and the filter is defined and holds on this row
+                # skip row if the filter is defined and holds on this row
                 if umcdef.filter is not None and not(eval_filter(umcdef.umcid, umcdef.filter, tags, fields)):
                     continue
                 
@@ -358,6 +362,8 @@ def db_write(client, datapoints, datafiles):
             # write the points and update the last db call time
             response = client.write_points(datapoints)
             lastdbcall = int(round(time.time() * 1000))
+            if retryCount > 0:
+                info1_msg("Connection to the DB was successful after %d retries."%retryCount);
         except Exception as e:
             err_msg("Error occurred when inserting data: %s"%(e))                                                    
             if retry_count == -1 or retryCount < retry_count:
@@ -397,14 +403,14 @@ if __name__ == "__main__":
     for sig in ('TERM', 'HUP', 'INT'):
         signal.signal(getattr(signal, 'SIG'+sig), signal_quit);
 
-    info_msg("idbpush started.")
+    info1_msg("idbpush started.")
 
     # location of logs
     if args.logs == None:
         args.logs=os.environ.get('UMC_LOG_DIR',os.path.dirname(os.path.realpath(__file__)) + "/../logs") 
 
-    info_msg("Using configuration file %s"%args.runall)
-    info_msg("The logs directory is in %s"%args.logs)
+    info2_msg("Using configuration file %s"%args.runall)
+    info2_msg("The logs directory is in %s"%args.logs)
     
     # read configuration file
     try:
@@ -439,7 +445,7 @@ if __name__ == "__main__":
             countRecords=0
             countFiles=0
             start_time = time.time()    
-            info_msg("There is %d files in the backlog."%(len(alllogs)))
+            info2_msg("There is %d files in the backlog."%(len(alllogs)))
 
             while len(alllogs) > 0:
                 logfile=alllogs.pop()
@@ -463,19 +469,19 @@ if __name__ == "__main__":
                         err_msg("The definition for umc id %s cannot be retrieved for file %s?" % (umc_id,logfile))
                         continue
                     else:
-                        info_msg("Definition retrieved for umc %s"%(umc_id))
+                        info1_msg("Definition retrieved for umc %s"%(umc_id))
                         umcdefs[umc_id] = umcdef
                 
                 # read datapoints from the log file and store them in the umcdef dict
                 umcdefs[umc_id].datapoints += read_datapoints(logfile, umcdefs[umc_id])
                 umcdefs[umc_id].datafiles.append(logfile)
-                info_msg("Data points read for umc %s. There is currently %d records in %d files in the write buffer."%(umc_id, 
+                info2_msg("Data points read for umc %s. There is currently %d records in %d files in the write buffer."%(umc_id, 
                     len(umcdefs[umc_id].datapoints), len(umcdefs[umc_id].datafiles)))        
                 
                 # write points in batches 
                 if len(umcdefs[umc_id].datapoints) != 0 and len(umcdefs[umc_id].datapoints)/max_batchsize >= 1:
                     if db_write(client, umcdefs[umc_id].datapoints, umcdefs[umc_id].datafiles):
-                        info_msg("Write buffer flushed for umc %s (%d records from %d files wirtten to the DB)."%(umc_id, 
+                        info2_msg("Write buffer flushed for umc %s (%d records from %d files wirtten to the DB)."%(umc_id, 
                             len(umcdefs[umc_id].datapoints), len(umcdefs[umc_id].datafiles)))        
                         countRecords=countRecords+len(umcdefs[umc_id].datapoints)
                         countFiles=countFiles+len(umcdefs[umc_id].datafiles)
@@ -501,7 +507,7 @@ if __name__ == "__main__":
                 elif len(umcdefs[umc_id].datapoints) > 0: 
                     # write remaining backlog from this iteration
                     if db_write(client, umcdefs[umc_id].datapoints, umcdefs[umc_id].datafiles):
-                        info_msg("Remaining write buffer flushed for umc %s (%d records from %d files wirtten to the DB)."%(umc_id, 
+                        info2_msg("Remaining write buffer flushed for umc %s (%d records from %d files wirtten to the DB)."%(umc_id, 
                             len(umcdefs[umc_id].datapoints), len(umcdefs[umc_id].datafiles)))        
                         countRecords=countRecords+len(umcdefs[umc_id].datapoints)
                         countFiles=countFiles+len(umcdefs[umc_id].datafiles)
@@ -519,16 +525,16 @@ if __name__ == "__main__":
             
             # display info message
             if countRecords > 0:
-                info_msg("Backlog cleared in %.2f seconds (%d files, %d records)"%
+                info1_msg("Backlog cleared in %.2f seconds (%d files, %d records)"%
                     (time.time()-start_time,countFiles,countRecords))
                     
             # wait between runs
-            info_msg("Waiting %s seconds to start the next iteration."%(delay_runs))
+            info2_msg("Waiting %s seconds to start the next iteration."%(delay_runs))
             exit.wait(delay_runs)
             
         # // end main loop
         
-        info_msg("idbpush gracefully ended.")
+        info2_msg("idbpush gracefully ended.")
         
     except Exception as e:
         err_msg("Failed due to error: %s"%e)
