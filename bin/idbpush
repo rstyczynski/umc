@@ -420,8 +420,8 @@ if __name__ == "__main__":
             warn_msg("The file %s does not exist in the current directory, will try the idbpush home directory."%(args.runall))
             args.runall = nfl
         
-        confDoc = open(args.runall, 'r')
-        conf=yaml.load(confDoc)
+        with open(args.runall, 'r') as confDoc:
+            conf=yaml.load(confDoc)
         conf_mtime=os.stat(args.runall).st_mtime    
     except Exception as e:
         err_msg("Error when reading the configuration file %s: %s"%(args.runall,e))
@@ -521,7 +521,19 @@ if __name__ == "__main__":
                     
             # check for changes of configuration file
             if os.stat(args.runall).st_mtime != conf_mtime:
-                warn_msg("Configuration file %s has changed, you need to restart manually for changes to take effect!"%args.runall)
+                if conf_value(conf, "common.idbpush.configuration-auto-reload", False) == True:
+                    info1_msg("Configuration file %s has changed, will try to reload it."%args.runall)
+                    try:
+                        with open(args.runall, 'r') as confDoc2:
+                            conf2=yaml.load(confDoc2)
+                        umcdefs = {}                    
+                        conf=conf2
+                        info1_msg("The configuration was reloaed.")
+                    except Exception as e:
+                        info1_msg("Error occurred when realoding the configuration file:\n%s."%e)
+                        info1_msg("Will use the previous configuration.")
+                else:
+                    warn_msg("Configuration file %s has changed but you need to restart idbpush manually for changes to take effect!"%args.runall)
                 conf_mtime=os.stat(args.runall).st_mtime
             
             # display info message
