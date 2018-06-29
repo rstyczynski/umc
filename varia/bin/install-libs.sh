@@ -225,7 +225,7 @@ install_influxdb () {
 
 		chmod +x $LIBS_HOME/$TOOLDN/usr/bin/start-influxd.sh
 		chmod +x $LIBS_HOME/$TOOLDN/usr/bin/stop-influxd.sh
-		echo "  - influxdb setup completed, you can run it with run-influxd.sh and stop it with stop-influxd.sh"
+		echo "  - influxdb setup completed, you can run it with start-influxd.sh and stop it with stop-influxd.sh"
 		
 		# environment variables
 		echo "# influxdb" >>$ENV_FILE
