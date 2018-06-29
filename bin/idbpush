@@ -339,6 +339,7 @@ def read_datapoints(logfilename, umcdef):
                     datapoints.append({ "measurement" : umcdef.metric, "time" : timestamp, "fields" : fields, "tags": tags })
                     
             # // end reading rows
+        # // end open file
             
     # check for no tags
     if notags and len(datapoints) > 0:
