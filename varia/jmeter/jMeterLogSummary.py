@@ -7,6 +7,7 @@ Created on Wed May 23 17:41:06 2018
 """
 
 import pandas as pd
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import datetime as dt
@@ -20,6 +21,8 @@ import subprocess
 
 output = sys.stdout
 
+mpl.rcParams['agg.path.chunksize'] = 10000
+
 #
 # HTML tags
 #
@@ -31,7 +34,7 @@ htmlStart = """<html>
 
 htmlStop = """</body></html>"""
 
-htmlImg = """<img src="%s" >"""
+htmlImg = """<img src="%s" width="900">"""
 
 htmlVerbatimStart = """<verbatim>"""
 htmlVerbatimStop = """</verbatim>"""
@@ -66,6 +69,8 @@ allResultsFileExt = 'max'
 rowsFrom = ''
 rowsTo = ''
 
+imgZoom = 1
+
 renderPlantUML = True
 
 #
@@ -87,10 +92,12 @@ usage: jMeterLogSummary.py """)
     
     Optional:
     --test.............test name. default: log name
+    --allResults.......compute all results. defualt: only max threads
     --dstDir...........directory to write html report. default: .
     --from.............select rows starting at from. Format: yyyy-mm-dd hh:mm:ss. default: 1
     --to...............select rows ending at to. Format: yyyy-mm-dd hh:mm:ss. default: 9999
     --datetime.........timestamp in datetime format. default: False /unix epoch/
+    --imgZoom..........image zoom factor. default=1
     """)
     
     output.write("""
@@ -104,12 +111,12 @@ usage: jMeterLogSummary.py """)
 # PARAMETER PARSING
 #
 try:
-    opts, args = getopt.getopt( sys.argv[1:], 't', ['test=', 'log=', 'dstDir=', 'probeDir=', 'from=', 'to=', 'datetime', 'allResults'])
+    opts, args = getopt.getopt( sys.argv[1:], 't', ['test=', 'log=', 'dstDir=', 'probeDir=', 'from=', 'to=', 'imgZoom=','datetime', 'allResults'])
 except getopt.GetoptError, err:
     print str(err)
     usage()
     sys.exit(2)
-	
+    
 for opt, arg in opts:
     if opt in ('--help'):
         usage()
@@ -131,6 +138,8 @@ for opt, arg in opts:
     elif opt in ('--allResults'):
         allResults = True
         allResultsFileExt = 'all'
+    elif opt in ('--imgZoom'):
+        imgZoom = int(arg)
     else:
         usage()
         sys.exit(2) 
@@ -166,14 +175,20 @@ if not datetime:
     alldf['timeStamp'] = pd.to_datetime(alldf['timeStamp'], unit='ms')
 #set index in time column
 alldf.index = alldf['timeStamp']
+#alldf = alldf.set_index(alldf['timeStamp'])
+
 #as part of error code respones is str, pandas gets crazy. to simplify will make it string.
 alldf['responseCode'] = alldf['responseCode'].astype(str)
 
 
 #filter rows by date rowsFrom, rowsTo. Final 3of3 step on row.
 if ((rowsFrom != '' ) or (rowsTo != '' )):
-    alldf = alldf.loc[ (str(rowsFrom) <= alldf['timeStamp']) & (alldf['timeStamp']<= str(rowsTo)) ]
-
+    begin = pd.Timestamp(rowsFrom)
+    end = pd.Timestamp(rowsTo)
+    #alldf = alldf.loc[ (rowsFrom <= alldf['timeStamp']) & (alldf['timeStamp']<= rowsTo) ]
+    #alldf = alldf.loc[ rowsFrom : rowsTo ]
+    alldf = alldf[(alldf.index.get_level_values(0) >= begin) & (alldf.index.get_level_values(0)  <= end)]
+    #alldf.truncate(before=begin, after=end)
 
 #select only results with max threads
 if allResults:  
@@ -285,7 +300,7 @@ htmlStr = htmlStr + htmlTableStop
 #
 htmlStr = htmlStr + ( htmlHeader % (2, 'info2', 'Latency quantiles', 2))
 
-quantiles = majordf['Latency'].quantile([.1, .2, .3, .4, .5, .6, .7, .8, .9, 1])
+quantiles = majordf['Latency'].quantile([.1, .2, .25, .3, .4, .5, .6, .7, .75, .8, .9, .95, 1])
     
 htmlStr = htmlStr + htmlTableStart
 lines = str(quantiles).split('\n')
@@ -318,11 +333,11 @@ htmlStr = htmlStr + htmlBreak
 #
 htmlStr = htmlStr + ( htmlHeader % (2, 'threads', 'Thread count', 2))
 
-fig, ax = plt.subplots(1, figsize=(10,4))
+fig, ax = plt.subplots(1, figsize=(10 * imgZoom, 4 * imgZoom))
 ax.title.set_text('Thread count')
 
 column='allThreads'
-ax.plot(majordf[column])
+ax.plot(majordf[column], linewidth=1)
 ax.legend(loc='upper left', fontsize=8) 
 
 pngFileName = 'jmeter_series_' + allResultsFileExt + '_' + column + '.png'
@@ -337,7 +352,7 @@ htmlStr = htmlStr + htmlBreak
 #
 htmlStr = htmlStr + ( htmlHeader % (2, 'response', 'Response time', 2))
 
-fig, ax = plt.subplots(1, figsize=(10,4))
+fig, ax = plt.subplots(1, figsize=(10 * imgZoom, 4 * imgZoom))
 fig.autofmt_xdate()
 ax.fmt_xdata = mdates.DateFormatter('%Y-%m-%d %H:%M:%S')
 #ax.set_ylim([0,quantiles[0.9]*2])
@@ -345,7 +360,7 @@ ax.title.set_text('Latency')
 
 column='Latency'
 
-ax.plot(majordf[column])
+ax.plot(majordf[column], linewidth=0.1)
 
 ax.legend(loc='upper left', fontsize=8) 
 
@@ -357,11 +372,47 @@ htmlStr = htmlStr + (htmlImg % ('images/' + pngFileName))
 htmlStr = htmlStr + htmlBreak
 
 #
+# Latency 95 percentile
+#
+htmlStr = htmlStr + ( htmlHeader % (2, 'response', 'Response time 95\'th percentile', 2))
+
+fig, ax = plt.subplots(1, figsize=(10 * imgZoom, 4 * imgZoom))
+fig.autofmt_xdate()
+ax.fmt_xdata = mdates.DateFormatter('%Y-%m-%d %H:%M:%S')
+#ax.set_ylim([0,quantiles[0.9]*2])
+ax.title.set_text('Latency 95\'th percentile')
+
+column='Latency'
+
+percentile95 = majordf[column].quantile(0.95)
+subsetdf = majordf.copy()
+subsetdf.loc[subsetdf[column] > percentile95, column] = 0
+
+#print subsetdf.loc[subsetdf[column] > percentile95, column]
+
+ax.plot(subsetdf[column], linewidth=0.1)
+
+ax.legend(loc='upper left', fontsize=8) 
+
+pngFileName = 'jmeter_series_95q_' + allResultsFileExt + '_' + column + '.png'
+fullFileName = imagesDir + '/' + pngFileName
+fig.savefig(fullFileName)
+
+htmlStr = htmlStr + (htmlImg % ('images/' + pngFileName))
+htmlStr = htmlStr + htmlBreak
+
+
+
+#
+# Latency per response code
+#
+htmlStr = htmlStr + ( htmlHeader % (2, 'response', 'Response time per response code', 2))
+
 codes = majordf['responseCode'].unique()
 
 #
 column='Latency'
-fig, ax = plt.subplots(1, figsize=(10,4))
+fig, ax = plt.subplots(1, figsize=(10 * imgZoom, 4 * imgZoom))
 ax.title.set_text('Latency time per response code')
 for code in majordf['responseCode'].unique():
     #add column with code values
@@ -369,7 +420,7 @@ for code in majordf['responseCode'].unique():
     #very slow!
     #alldf['lat:'+ code] = alldf.apply(lambda r: r['Latency'] if r['responseCode'] == code else np.NaN, axis=1)
     majordf['lat:'+ code] = majordf['Latency'] * ( majordf['responseCode'] == code )
-    ax.plot(majordf['lat:' + code])
+    ax.plot(majordf['lat:' + code], linewidth=0.1)
     #ax.set_ylim([0,quantiles[0.9]*2])
 
 ax.legend(loc='upper left', fontsize=8) 
@@ -385,18 +436,24 @@ htmlStr = htmlStr + htmlBreak
 #
 # mean, min, max
 #
-fig, ax = plt.subplots(1, figsize=(10,4))
-ax.title.set_text('Latency mean & min value')
+fig, ax = plt.subplots(1, figsize=(10 * imgZoom, 4 * imgZoom))
+ax.title.set_text('Latency mean & std deviation')
 #ax.set_ylim([0,quantiles[0.9]*2])
 
 column='elapsed'
 dataCnt = majordf[column].count()
 majordf[column+'_mean'] = majordf[column].rolling(dataCnt/20).mean()
-majordf[column+'_min'] = majordf[column].rolling(dataCnt/10).min()
-majordf[column+'_max'] = majordf[column].rolling(dataCnt/10).max()
+majordf[column+'_std'] = majordf[column].rolling(dataCnt/20).std()
+majordf[column+'_hi'] = majordf[column].rolling(dataCnt/20).mean() + majordf[column].rolling(dataCnt/20).std()
+majordf[column+'_lo'] = majordf[column].rolling(dataCnt/20).mean() - majordf[column].rolling(dataCnt/20).std()
+#lo = majordf[column + '_lo']
+#majordf[ lo < 0 ] = 0
 
-ax.plot(majordf[column+'_mean'], label = 'mean')
-ax.plot(majordf[column+'_min'], label = 'min')
+
+ax.plot(majordf[column+'_mean'], label = 'mean', linewidth=1)
+ax.plot(majordf[column+'_std'], label = 'std', linewidth=1)
+ax.plot(majordf[column+'_hi'], label = 'hi', linewidth=1)
+#ax.plot(majordf[column+'_lo'], label = 'lo', linewidth=1)
 #ax.plot(x, majordf[column+'_max'])
 ax.legend(loc='upper left', fontsize=8) 
 
@@ -423,6 +480,7 @@ for code in majordf['responseCode'].unique():
     htmlStr = htmlStr + htmlTableRowStop
 htmlStr = htmlStr + htmlTableStop
 
+
 #
 # elapsed per code
 #
@@ -431,7 +489,7 @@ codes = majordf['responseCode'].unique()
 
 #
 column='elapsed'
-fig, ax = plt.subplots(1, figsize=(10,4))
+fig, ax = plt.subplots(1, figsize=(10 * imgZoom, 4 * imgZoom))
 ax.title.set_text('Elapsed time per response code')
 for code in majordf['responseCode'].unique():
     #add column with code values
@@ -439,7 +497,7 @@ for code in majordf['responseCode'].unique():
     # very slow!
     #alldf['el:'+ code] = alldf.apply(lambda row: row['elapsed'] if r['responseCode'] == code else np.NaN, axis=1)
     majordf['el:'+ code] = majordf['elapsed'] * ( majordf['responseCode'] == code )
-    ax.plot(majordf['el:' + code])
+    ax.plot(majordf['el:' + code], linewidth=0.1)
     #ax.set_ylim([0,quantiles[0.9]*2])
 
 ax.legend(loc='upper left', fontsize=8) 
@@ -450,6 +508,53 @@ fig.savefig(fullFileName)
 htmlStr = htmlStr + (htmlImg % ('images/' + pngFileName))
 htmlStr = htmlStr + htmlBreak
 
+
+#
+# elapsed for 200 code
+#
+
+codes = majordf['responseCode'].unique()
+
+#
+column='elapsed'
+fig, ax = plt.subplots(1, figsize=(10 * imgZoom, 4 * imgZoom))
+ax.title.set_text('Elapsed time per response code: 200')
+
+code = '200'
+majordf['el:'+ code] = majordf['elapsed'] * ( majordf['responseCode'] == code )
+ax.plot(majordf['el:' + code], linewidth=0.1)
+ax.legend(loc='upper left', fontsize=8) 
+    
+pngFileName = 'jmeter_series_codeOK' + allResultsFileExt + '_' + column + '_' + str(code) + '.png'
+fullFileName = imagesDir + '/' + pngFileName
+fig.savefig(fullFileName)
+htmlStr = htmlStr + (htmlImg % ('images/' + pngFileName))
+htmlStr = htmlStr + htmlBreak
+
+
+#
+# stack by code
+#
+
+#column='elapsed'
+#fig, ax = plt.subplots(1, figsize=(10,4))
+#ax.stackplot(x, y)
+#ax.title.set_text('Stack by count of response code')
+#for code in majordf['responseCode'].unique():
+#    #add column with code values
+#    #
+#    # very slow!
+#    #alldf['el:'+ code] = alldf.apply(lambda row: row['elapsed'] if r['responseCode'] == code else np.NaN, axis=1)
+#    majordf['st:'+ code] = majordf['elapsed'] * ( majordf['responseCode'] == code )
+#    ax.plot(majordf['st:' + code])
+#
+#ax.legend(loc='upper left', fontsize=8) 
+#    
+#pngFileName = 'jmeter_series_code2' + allResultsFileExt + '_' + column + '_' + str(code) + '.png'
+#fullFileName = imagesDir + '/' + pngFileName
+#fig.savefig(fullFileName)
+#htmlStr = htmlStr + (htmlImg % ('images/' + pngFileName))
+#htmlStr = htmlStr + htmlBreak
 
 
 #
