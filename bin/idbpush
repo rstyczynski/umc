@@ -446,13 +446,14 @@ if __name__ == "__main__":
         client=get_db_client()
 
         while not exit.is_set():
-            # retrieve all log files
+            # retrieve logs in a batch of maximum 500 files
             batchlogs=get_batch_logs(500)
             countRecords=0
             countFiles=0
             start_time = time.time()    
-            info2_msg("There is %d files in the batch of logs."%(len(batchlogs)))
+            info1_msg("There is %d files in the batch of logs."%(len(batchlogs)))
 
+            # process all files in the batch
             while len(batchlogs) > 0:
                 logfile=batchlogs.pop()
                 
