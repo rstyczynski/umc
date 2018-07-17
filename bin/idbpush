@@ -220,18 +220,23 @@ def get_umcid_from_logfile(logfile):
         err_msg("Cannot retrieve umc id from logfile %s!"%logfile)
         return None
 
-# *** retrieves the list of all log files to be pushed to the influxdb sorted by modified time
-def refresh_logs():
+# *** retrieves the first batch of log files sorted by modified time
+def get_batch_logs(batchsize=sys.maxint):
     pattern = re.compile(".+_[0-9]+.*\.log$")
     search_re=".*/(" + "|".join(get_umc_ids()) + ")$";
     
-    allfiles=[]
+    batch=[]
+    cnt=0
     for dirname, dirnames, filenames in os.walk(args.logs):
         if re.match(search_re, dirname):
             for filename in filenames:
                 if pattern.match(filename):
-                    allfiles.append(os.path.join(dirname, filename));
-    return sorted(allfiles, key=lambda fn: os.stat(fn).st_mtime, reverse=True)
+                    cnt=cnt+1
+                    if cnt <= batchsize: 
+                        batch.append(os.path.join(dirname, filename))
+        if cnt > batchsize:
+            break
+    return sorted(batch, key=lambda fn: os.stat(fn).st_mtime, reverse=True)
     
 # *** convert to float, return None when cannot convert
 def float_ex(val):
@@ -442,14 +447,14 @@ if __name__ == "__main__":
 
         while not exit.is_set():
             # retrieve all log files
-            alllogs=refresh_logs()
+            batchlogs=get_batch_logs(500)
             countRecords=0
             countFiles=0
             start_time = time.time()    
-            info2_msg("There is %d files in the backlog."%(len(alllogs)))
+            info2_msg("There is %d files in the batch of logs."%(len(batchlogs)))
 
-            while len(alllogs) > 0:
-                logfile=alllogs.pop()
+            while len(batchlogs) > 0:
+                logfile=batchlogs.pop()
                 
                 # check if file exists
                 if not(os.path.exists(logfile)):
@@ -489,7 +494,7 @@ if __name__ == "__main__":
                         umcdefs[umc_id].datapoints = []
                         umcdefs[umc_id].datafiles = []
                     else:
-                        # failed to write to db after many attempts
+                        # failed to write to the db after many attempts
                         err_msg("Force exit due to connection errors!")                    
                         sys.exit(1)
                         
@@ -499,7 +504,7 @@ if __name__ == "__main__":
             for umc_id in umcdefs: 
                 # check to remove files providing no data
                 if len(umcdefs[umc_id].datapoints) == 0 and len(umcdefs[umc_id].datafiles) > 0:
-                    warn_msg("All %d files in the backlog provide no data for %s!"%(len(umcdefs[umc_id].datafiles),umc_id))
+                    warn_msg("All %d files in the batch of logs provide no data for %s!"%(len(umcdefs[umc_id].datafiles),umc_id))
                     if conf_value(conf, "common.idbpush.remove-backlog-files-no-data", False) == True:
                         warn_msg("%d files providing no data for %s will be removed!"%(len(umcdefs[umc_id].datafiles),umc_id))
                         for file in umcdefs[umc_id].datafiles:
@@ -538,7 +543,7 @@ if __name__ == "__main__":
             
             # display info message
             if countRecords > 0:
-                info1_msg("Backlog cleared in %.2f seconds (%d files, %d records)"%
+                info1_msg("Logs in the batch of logs cleared in %.2f seconds (%d files, %d records)"%
                     (time.time()-start_time,countFiles,countRecords))
                     
             # wait between runs
