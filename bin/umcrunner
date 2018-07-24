@@ -301,13 +301,6 @@ fi
 
 # *** run all umc instances from a definition file
 if [ "$cmd" = "--runall" ]; then
-    # exit if the same is running already
-    cnt=$(ps axf -o pgid,pid,command | grep "umcrunner --runall" | grep -v "grep" | awk '{ print $1 }' | uniq | wc -l)
-    if [ $cnt -gt 1 ]; then
-      echo >&2 "The same umcrunner command is already running, exiting..."
-      exit 1
-    fi
-
     # command parameters
     conf=$1 && shift
     
