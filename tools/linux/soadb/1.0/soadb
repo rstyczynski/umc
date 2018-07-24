@@ -30,7 +30,7 @@ function getconnstr() {
 
              if [[ $line =~ ^sql\:.+$ ]] ; then
                  IFS=',' read -ra sqls <<< "$(echo $line | gawk '{ match($0,"^sql:(.+)", m); print m[1] }')"
-                 for s in "${sqls[@]}"; do
+                 for s in ${sqls[@]}; do
                      if [ "$(echo $s | awk '{$1=$1; print $1}')" = "$metricsql" ]; then
                          echo $curcns
                          exit 0
