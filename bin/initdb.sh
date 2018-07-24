@@ -14,7 +14,7 @@ influx -execute "CREATE DATABASE $DBNAME WITH DURATION INF REPLICATION 1 SHARD D
 # change the authentication
 pwd=$(pwd)
 cd $(dirname $(which influx))/../../etc/influxdb/
-rm *.bckp
+rm -f *.bckp
 sed -i.bckp s/^.*auth-enabled.*=.*false/auth-enabled=true/g influxdb.conf
 cd $pwd
 
