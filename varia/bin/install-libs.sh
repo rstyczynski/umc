@@ -43,9 +43,20 @@ install_python () {
     find $LIBS_HOME/python -type d | xargs chmod 0755
     cd $LIBS_HOME/python/$TOOLDN
 
+		# build zlib
+		echo "  - building zlib..."
+		mkdir -p $LIBS_HOME/zlib
+		cd Modules/zlib
+		./configure --prefix=$LIBS_HOME/zlib >>$INSTALL_LOG 2>&1
+		make install >>$INSTALL_LOG 2>&1
+		cd ../..
+
 		# build python binaries
 		echo "  - configuring..." 
 		./configure --prefix=$LIBS_HOME/python >>$INSTALL_LOG 2>&1
+
+		# add zlib config
+		echo "zlib zlibmodule.c -I$LIBS_HOME/zlib/include -L$LIBS_HOME/zlib/lib -lz" >>Modules/Setup
 
 		echo "  - building..." 
 		make >>$INSTALL_LOG 2>&1
