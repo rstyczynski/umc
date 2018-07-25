@@ -8,8 +8,8 @@ start-influxd.sh 2>&1 >/dev/null
 
 # create user and the password
 # this will only work when the influxdb was created and requires no authentication
-influx -execute "CREATE USER $USER WITH PASSWORD '$PASS' WITH ALL PRIVILEGES"
 influx -execute "CREATE DATABASE $DBNAME WITH DURATION INF REPLICATION 1 SHARD DURATION 7d"
+influx -execute "CREATE USER $USER WITH PASSWORD '$PASS' WITH ALL PRIVILEGES"
 
 # change the authentication
 pwd=$(pwd)
