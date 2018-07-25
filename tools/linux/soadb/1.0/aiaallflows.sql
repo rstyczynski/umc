@@ -1,5 +1,4 @@
-
-
+-- AIA all flows statistics
 SELECT count(1) cnt, 
   count(faulted_time) cnt_faulted,
   round(min(durat1on),3) mintime, round(max(durat1on),3) maxtime, round(avg(durat1on),3) avgtime, 
