@@ -7,12 +7,6 @@
 # creating batches of log files. The log files can then be pushed to a remote 
 # destination (e.g. a DB) by a third-party script. 
 
-# TODO:
-# apply changes from NPP
-# - report on mem usage
-# - remove sql connection string check from sql-collector or fix the current regexp 
-# - more space for running time in --stats
-
 # load libs environment variables and setup umc
 source /home/oracle/rodmon/rodmon/libs/umc-libs-env.sh >/dev/null
 source /home/oracle/rodmon/rodmon/umc/bin/umc.h  >/dev/null
@@ -114,8 +108,8 @@ function umc_gpid_check () {
 
 # prints aligned umc stats row
 function printstats() {
-    echo -n $* | awk -F '::' '{printf "%-7s%-20s%-8s%-15s%-7s%-7s%-17s%-22s%-7s%-10s%-10s\n",
-        $1,$2,$3,$4,$5,$6,substr($7, 1, 15),$8,$9,$10,$11,$12,$13}'
+    echo -n $* | awk -F '::' '{printf "%-7s%-20s%-8s%-15s%-7s%-7s%-17s%-22s%-10s%-10s%-10s%-10s\n",
+        $1,$2,$3,$4,$5,$6,substr($7, 1, 15),$8,$9,$10,$11,$12,$13,$14}'
 }
 
 # checks that the argument $1 is a number and displays an error provided as argument $2
@@ -221,7 +215,7 @@ if [ "$cmd" = "--stats" ]; then
 
     # print header
     if [ "$args" != "--noheader" ]; then
-        printstats "GPID::UMC_ID::ROTA_T::UMC::DELAY::COUNT::PARAMS::STARTED::RUN_T::CPU_T::BACKLOG"
+        printstats "GPID::UMC_ID::ROTA_T::UMC::DELAY::COUNT::PARAMS::STARTED::RUN_T::CPU_T::RSS [MB]::BACKLOG"
     fi
 
     # get all instances of umc runner running on this hosts
@@ -254,6 +248,9 @@ if [ "$cmd" = "--stats" ]; then
         cputime=$(ps axf -o pgid,cputime | awk -v gpid=$gpid '{if ($1==gpid) print $2}' | gawk '{ match($1,"([0-9]+):([0-9]+):([0-9]+)", m);
             cputime+=m[3]+m[2]*60+m[1]*60*60} END {printf "%02d:%02d:%02d\n",int(cputime/3600),int(cputime%3600/60),cputime%60}')
 
+        # this will sum up all rss of all processes in the gpid
+        rss=$(ps axf -o pgid,rss | awk -v gpid=$gpid '{if ($1==gpid) rss+=$2 } END {printf "%.2f\n",rss/1024}')
+
         # count files in the backlog - i.e. files that still need to be pushed to the remote destination
         # max files in backlog to show, not to wait too much time to count them
         showMaxFilesCount=100
@@ -266,7 +263,7 @@ if [ "$cmd" = "--stats" ]; then
 
         # print all stats
         printstats "$gpid::$umc_id::$time_int::$umc_tool::$umc_delay::$umc_count::$umc_params
-          ::$start_time::$running_time::$cputime::$backlog_files"
+          ::$start_time::$running_time::$cputime::$rss::$backlog_files"
     done
 
     exit 0
