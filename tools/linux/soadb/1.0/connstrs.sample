@@ -1,0 +1,22 @@
+# Configration file defining connection strings for sql metric files used by soadb probe
+#
+# The format of this file is following:
+#
+# cns: <connection-string>
+# sql: <file1.sql>, <file2.sql>, ...
+#
+# where 
+#    <connection-string>     A valid connection string
+#    <file1.sql>, ...        SQL files metrics that will use a connection string defined by a preceding cns
+# 
+# There can be multiple sql and cns definitions in a single file
+#
+# example:
+# cns: sys/oracle@10.0.2.2:1521:xe as sysdba
+# sql: aiaflows.sql, aiabrmprov.sql
+# 
+# cns: oracle/oracle@10.0.2.10:1521:xe
+# sql: aiaresequencer.sql
+# 
+
+
