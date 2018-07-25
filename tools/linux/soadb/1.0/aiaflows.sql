@@ -163,8 +163,8 @@ FROM (
           )
         ) 
         WHERE
-	        --created_time >= trunc(sysdate - 2/1440, 'MI') AND created_time < trunc(sysdate - 1/1440, 'MI') 
-          created_time BETWEEN to_date('21-03-2018 14:05:00', 'DD-MM-YYYY HH24:MI:SS') AND to_date('21-03-2018 14:10:00', 'DD-MM-YYYY HH24:MI:SS')
+	  created_time >= trunc(sysdate - 2/1440, 'MI') AND created_time < trunc(sysdate - 1/1440, 'MI') 
+          --created_time BETWEEN to_date('21-03-2018 14:05:00', 'DD-MM-YYYY HH24:MI:SS') AND to_date('21-03-2018 14:10:00', 'DD-MM-YYYY HH24:MI:SS')
 ) 
 GROUP BY flow, created_time
 ORDER BY created_time;

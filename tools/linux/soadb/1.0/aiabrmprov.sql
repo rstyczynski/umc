@@ -1,9 +1,9 @@
--- AIA BRM providers statistics for sync customer (SFOBA), update customer accounts (UPDCA) and bill fulfillment order (BFO) flows
+-- AIA BRM providers statistics
 SELECT 
-  created_time, 
-  R3sult, 
-  flow, 
-  count(1) as count
+  created_time as "time", 
+  R3sult as "result", 
+  flow as "flow", 
+  count(1) as "count"
 FROM (
     SELECT 
         to_char(created_time, 'YY-MM-DD HH24:MI') created_time, 
@@ -56,7 +56,8 @@ FROM (
              a1.composite_dn like 'default/ProcessFulfillmentOrderBillingBRMCommsProv%')    
     )
     WHERE
-        created_time BETWEEN to_date('21-03-2018 14:05:00', 'DD-MM-YYYY HH24:MI:SS') AND to_date('21-03-2018 14:10:00', 'DD-MM-YYYY HH24:MI:SS')
+        created_time >= trunc(sysdate - 2/1440, 'MI') AND created_time < trunc(sysdate - 1/1440, 'MI')
+        --created_time BETWEEN to_date('21-03-2018 14:05:00', 'DD-MM-YYYY HH24:MI:SS') AND to_date('21-03-2018 14:10:00', 'DD-MM-YYYY HH24:MI:SS')
 ) 
 GROUP BY
     created_time, R3sult, flow;
