@@ -138,7 +138,11 @@ install_sqlcl () {
 		# install sqlcl locally
 		echo "  - unpacking..." 
 		cd $LIBS_HOME && unzip $INSTALL_HOME/$BINFILE >>$INSTALL_LOG 2>&1
-
+		
+		# add min and max JVM memory
+		sed -i.bckp '/AddVMOption -Xss10M/a AddVMOption -Xms64m\nAddVMOption -Xmx256m' $LIBS_HOME/sqlcl/bin/sql
+		
+		# env variables
 		echo "# sqlcl" >>$ENV_FILE
 		echo "export PATH=$LIBS_HOME/sqlcl/bin/:\$PATH" >>$ENV_FILE
 		echo "" >>$ENV_FILE
