@@ -16,7 +16,7 @@ config=$1 && shift
 
 # check config file exists
 if [ ! -f "$getSensorData_bin/$config" ]; then
-	echo >&2 "$(date): The configuration file '$getSensorData/config' does not exist!" 
+	echo >&2 "$(date): The configuration file '$getSensorData/$config' does not exist!" 
 	exit 1
 fi
 
