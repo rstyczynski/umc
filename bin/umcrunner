@@ -8,8 +8,8 @@
 # destination (e.g. a DB) by a third-party script. 
 
 # load libs environment variables and setup umc
-source /home/oracle/rodmon/rodmon/libs/umc-libs-env.sh >/dev/null
-source /home/oracle/rodmon/rodmon/umc/bin/umc.h  >/dev/null
+source /home/oracle/rodmon/libs/umc-libs-env.sh >/dev/null
+source /home/oracle/rodmon/umc/bin/umc.h  >/dev/null
 
 # this script directory
 scriptDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -72,7 +72,9 @@ function umc_run() {
     rotateTime="$1" && shift
     umc_params="$*"
 
-    mkdir -p $UMC_LOG_DIR/$HOSTNAME/$umc_id
+    if [ ! -d "$UMC_LOG_DIR/$HOSTNAME/$umc_id" ]; then 
+    	mkdir -p $UMC_LOG_DIR/$HOSTNAME/$umc_id
+    fi
 
     # run umc with logdirector
     # this needs an explicit stdin redirection (tail -f /dev/null) as otherwise the background java process was trying
@@ -115,7 +117,7 @@ function printstats() {
 # checks that the argument $1 is a number and displays an error provided as argument $2
 # if the argument $2 is missing, displays a default message
 function checkNumber() {
-  if ! [[ $1 =~ "^[0-9]+$" ]] ; then
+  if ! [[ $1 =~ "^\-?[0-9]+$" ]] ; then
     if [ "$2" = "" ]; then
       echo >&2 "Number expected ($1)!"
     else
@@ -403,6 +405,19 @@ if [ "$cmd" = "--runall" ]; then
     done
     
     exit 0
+fi
+
+# *** list all errors
+if [ "$cmd" = "--errors" ]; then
+	 echo "DATE TIME SIZE FILE" | awk '{ printf "%-11s%-11s%-8s%s\n",$1,$2,$3,$4} ' ;
+	find $UMC_LOG_DIR | grep error.out | \
+	while read line; do 
+		size=$(ls -l $line | awk '{print $5}'); 
+		dt=$(ls -l --time-style='+%Y-%m-%d %H:%M:%S' $line | awk '{print $6}');
+		tm=$(ls -l --time-style='+%Y-%m-%d %H:%M:%S' $line | awk '{print $7}');
+		echo "$dt $tm $size $line" | awk '{ printf "%-11s%-11s%-8.2f%s\n",$1,$2,$3/1024,$4} ' ; 
+	done
+	exit 0
 fi
 
 # *** show help

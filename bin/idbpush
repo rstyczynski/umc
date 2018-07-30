@@ -22,8 +22,7 @@ from threading import Event
 # default values
 DEFAULT_TIMEFORMAT="%Y-%m-%d %H:%M:%S"
 DEFAULT_TIMEFIELD="datetime"
-DEFAULT_BATCHSIZE_ROWS=50
-DEFAULT_BATCHSIZE_FILES=500
+DEFAULT_BATCHSIZE=50
 DEFAULT_DELAYBETWEENWRITES=200
 DEFAULT_RETRYCOUNT=5
 DEFAULT_RETRYINTERVAL=10000
@@ -38,11 +37,11 @@ lasterror=None          # last error text
 lasterrorcount=0        # last error count
 
 # parameters to be read from the configuration file
-delay_writes       = 0
-delay_runs         = 0
-retry_count        = 0
-retry_interval     = 0
-max_batchsize_rows = 0
+delay_writes   = 0
+delay_runs     = 0
+retry_count    = 0
+retry_interval = 0
+max_batchsize  = 0
 
 # messages colors
 class bcolors:
@@ -434,12 +433,11 @@ if __name__ == "__main__":
         sys.exit(1)
     
     # configuration params
-    delay_writes        = conf_value(conf, "common.idbpush.delay-between-writes", DEFAULT_DELAYBETWEENWRITES)
-    delay_runs          = conf_value(conf, "common.idbpush.delay-between-runs", 10000)/1000
-    retry_count         = conf_value(conf, "common.idbpush.connection-error-retry-count", DEFAULT_RETRYCOUNT)
-    retry_interval      = conf_value(conf, "common.idbpush.connection-error-retry-interval", DEFAULT_RETRYINTERVAL)/1000
-    max_batchsize_rows  = conf_value(conf, "common.idbpush.max-batchsize-rows", DEFAULT_BATCHSIZE_ROWS)
-    max_batchsize_files = conf_value(conf, "common.idbpush.max-batchsize-files", DEFAULT_BATCHSIZE_FILES)
+    delay_writes   = conf_value(conf, "common.idbpush.delay-between-writes", DEFAULT_DELAYBETWEENWRITES)
+    delay_runs     = conf_value(conf, "common.idbpush.delay-between-runs", 10000)/1000
+    retry_count    = conf_value(conf, "common.idbpush.connection-error-retry-count", DEFAULT_RETRYCOUNT)
+    retry_interval = conf_value(conf, "common.idbpush.connection-error-retry-interval", DEFAULT_RETRYINTERVAL)/1000
+    max_batchsize  = conf_value(conf, "common.idbpush.max_batchsize", DEFAULT_BATCHSIZE)
 
     umcdefs = {}
 
@@ -449,7 +447,7 @@ if __name__ == "__main__":
 
         while not exit.is_set():
             # retrieve logs in a batch of maximum 500 files
-            batchlogs=get_batch_logs(max_batchsize_files)
+            batchlogs=get_batch_logs(500)
             countRecords=0
             countFiles=0
             start_time = time.time()    
@@ -469,7 +467,6 @@ if __name__ == "__main__":
                 
                 # skip this file if it cannot be identified
                 if umc_id is None:
-                    err_msg("Cannot determine umc_id from the log file %s, skipping this file."%logfile)                    
                     continue
                 
                 # get the umc definition for this umc_id and store it    
@@ -489,7 +486,7 @@ if __name__ == "__main__":
                     len(umcdefs[umc_id].datapoints), len(umcdefs[umc_id].datafiles)))        
                 
                 # write points in batches 
-                if len(umcdefs[umc_id].datapoints) != 0 and len(umcdefs[umc_id].datapoints)/max_batchsize_rows >= 1:
+                if len(umcdefs[umc_id].datapoints) != 0 and len(umcdefs[umc_id].datapoints)/max_batchsize >= 1:
                     if db_write(client, umcdefs[umc_id].datapoints, umcdefs[umc_id].datafiles):
                         info2_msg("Write buffer flushed for umc %s (%d records from %d files wirtten to the DB)."%(umc_id, 
                             len(umcdefs[umc_id].datapoints), len(umcdefs[umc_id].datafiles)))        

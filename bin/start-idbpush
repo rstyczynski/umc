@@ -5,7 +5,11 @@
 CUR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # log directory
-LOG_DIR=$CUR_DIR/../logs/idbpush
+pwd=$(pwd)
+cd $CUR_DIR/.. 
+LOG_DIR=$(pwd)/logs/idbpush
 mkdir -p $LOG_DIR
 
 $CUR_DIR/idbpush --runall metrics.conf >>$LOG_DIR/idbpush.log 2>&1 &
+
+cd $pwd
