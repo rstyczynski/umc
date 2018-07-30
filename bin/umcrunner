@@ -40,6 +40,7 @@ function print_usage () {
     echo "  --help           this help"
     echo "  --stats          displays all running umc instances (see further below what it shows)"
     echo "  --noheader       suppress the header in stats"
+    echo "  --errorlogs      lists error logs of all umc instances from the log directory"    
     echo "  --runall <file>  runs all umc instances from metrics configuration <file>"
     echo "  --stopall        stops all running umc instances"
     echo "  --stop <id>      stops an umc instance"
@@ -407,8 +408,8 @@ if [ "$cmd" = "--runall" ]; then
     exit 0
 fi
 
-# *** list all errors
-if [ "$cmd" = "--errors" ]; then
+# *** list all error logs
+if [ "$cmd" = "--errorlogs" ]; then
 	 echo "DATE TIME SIZE FILE" | awk '{ printf "%-11s%-11s%-8s%s\n",$1,$2,$3,$4} ' ;
 	find $UMC_LOG_DIR | grep error.out | \
 	while read line; do 
