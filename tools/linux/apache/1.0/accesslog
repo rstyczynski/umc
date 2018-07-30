@@ -41,7 +41,7 @@ while [ $current_count -lt $count ]; do
 	currenttime=$(date +%s); 
 	
 	# search all log files
-	find "$accesslogs_root" | egrep "$accesslog_file$" | \
+	find "$accesslogs_root" 2>/dev/null | egrep "$accesslog_file$" | \
 	while read log; do
 
 		# server that this access log is coming from
@@ -57,7 +57,7 @@ while [ $current_count -lt $count ]; do
 		
 		#debug
 		#e=$(date --date "2018-07-25 12:23:05" +%s);
-		#e=$(date --date "2018-07-27 00:01:02" +%s);
+		#e=$(date --date "2018-07-27 09:48:02" +%s);
 		
 		n=$(expr $e / 60); r=$(expr $n \* 60 - 60); 
 		filter=$(date -d @$r +"$al_filter")

@@ -5,7 +5,12 @@
 CUR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # log directory
-LOG_DIR=$CUR_DIR/../logs/umcrunner
+pwd=$(pwd)
+cd $CUR_DIR/..
+LOG_DIR=$(pwd)/logs/umcrunner
+echo $LOG_DIR
 mkdir -p $LOG_DIR
 
 $CUR_DIR/umcrunnerd --runall metrics.conf >>$LOG_DIR/umcrunner-$HOSTNAME.log 2>&1 &
+
+cd $pwd
