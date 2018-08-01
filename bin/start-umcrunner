@@ -9,5 +9,9 @@ if [ "$UMC_LOG_DIR" = "" ]; then
   exit 1  
 fi 
 
+if [ ! -d $UMC_LOG_DIR/umcrunner ]; then 
+  mkdir -p $UMC_LOG_DIR/umcrunner/
+fi 
+
 $CUR_DIR/umcrunnerd >>$UMC_LOG_DIR/umcrunner/umcrunner-$HOSTNAME.log 2>&1 &
 

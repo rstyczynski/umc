@@ -7,12 +7,10 @@
 # creating batches of log files. The log files can then be pushed to a remote 
 # destination (e.g. a DB) by a third-party script. 
 
-# load libs environment variables and setup umc
-#source /home/oracle/rodmon/libs/umc-libs-env.sh >/dev/null
-#source /home/oracle/rodmon/umc/bin/umc.h  >/dev/null
-
 # this script directory
 scriptDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+source $scriptDir/umc.h >/dev/null
 
 # exit this script from within a function
 trap "exit 1" TERM

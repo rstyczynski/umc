@@ -12,7 +12,7 @@ ENV_FILE="$LIBS_HOME/umc-libs-env.sh"
 
 show_help () {
 	echo "UMC libraries installation script"
-	echo "Usage: $(basename "$0") [--yes] [--python] [--jdk] [--sqlcl] [--sql-collector] [--influxdb] [--influxdb-python]"
+	echo "Usage: $(basename "$0") [--yes] [--python [--no-python-zlib]] [--jdk] [--sqlcl] [--sql-collector] [--influxdb] [--influxdb-python]"
 	echo ""
 	echo "When none of the libraries are specified, all libraries will be installed."
 	echo "Option --yes will answer all questions as \"yes\"."
@@ -44,27 +44,38 @@ install_python () {
     cd $LIBS_HOME/python/$TOOLDN
 
 		# build zlib
-		echo "  - building zlib..."
-		mkdir -p $LIBS_HOME/zlib
-		cd Modules/zlib
-		./configure --prefix=$LIBS_HOME/zlib >>$INSTALL_LOG 2>&1
-		make install >>$INSTALL_LOG 2>&1
-		cd ../..
+		if $PYTHON_ZLIB; then
+			echo "  - building zlib..."
+			mkdir -p $LIBS_HOME/zlib
+			cd Modules/zlib
+			./configure --prefix=$LIBS_HOME/zlib >>$INSTALL_LOG 2>&1
+			make install >>$INSTALL_LOG 2>&1
+
+			if [ $? != 0 ]; then
+				echo ""
+				echo >&2 "An error occured while installing zlib."
+				echo >&2 "Check $INSTALL_LOG for details."
+			fi
+
+			cd ../..
+		fi
 
 		# build python binaries
 		echo "  - configuring..." 
 		./configure --prefix=$LIBS_HOME/python >>$INSTALL_LOG 2>&1
 
 		# add zlib config
-		echo "zlib zlibmodule.c -I$LIBS_HOME/zlib/include -L$LIBS_HOME/zlib/lib -lz" >>Modules/Setup
-
+		if $PYTHON_ZLIB; then		
+			echo "zlib zlibmodule.c -I$LIBS_HOME/zlib/include -L$LIBS_HOME/zlib/lib -lz" >>Modules/Setup
+		fi
+		
 		echo "  - building..." 
 		make >>$INSTALL_LOG 2>&1
 		make install >>$INSTALL_LOG 2>&1
 
 		if [ $? != 0 ]; then
 			echo ""
-			echo >&2 "An error occured while installing Pyton."
+			echo >&2 "An error occured while installing Python."
 			echo >&2 "Check $INSTALL_LOG for details."
 		fi
 
@@ -343,6 +354,7 @@ install_influxdb_python () {
 
 # parse arguments
 INSTALLIBS=""
+PYTHON_ZLIB=true
 for i in "$@"; do
 	case $i in
 	    --yes)
@@ -351,6 +363,10 @@ for i in "$@"; do
 	    ;;
 	    --python)
 	    INSTALLIBS="$INSTALLIBS python_"
+	    shift 
+	    ;;
+			--no-python-zlib)
+	    PYTHON_ZLIB=false
 	    shift 
 	    ;;
 	    --jdk)

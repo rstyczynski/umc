@@ -1,1 +1,1 @@
-influx --password 'rodmon' --database 'rodmon' --username 'rodmon'
+influx --password 'rodmon' --database 'rodmon_sample' --username 'rodmon'

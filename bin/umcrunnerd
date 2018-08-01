@@ -2,7 +2,7 @@
 # umcrunner daemon script running umcrunner --runall 
 
 # the script directory
-CUR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+scriptDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 if [ "$UMCRUNNER_CONF" = "" ]; then
   echo >&2 "umcrunner configuration in \$UMCRUNNER_CONF variable has not been set!"
@@ -10,7 +10,7 @@ if [ "$UMCRUNNER_CONF" = "" ]; then
 fi 
 
 # lockfile
-lockfile=$CUR_DIR/.umcrunnerd-$HOSTNAME.lck
+lockfile=$scriptDir/.umcrunnerd-$HOSTNAME.lck
 
 # on this machine run only once at a time
 if [ -e $lockfile ]; then
@@ -22,7 +22,7 @@ trap "rm -f $lockfile; exit" INT TERM EXIT
 touch $lockfile
 
 while true; do
-  $CUR_DIR/umcrunner --runall $UMCRUNNER_CONF
+  $scriptDir/umcrunner --runall $UMCRUNNER_CONF
   sleep 15
 done
 

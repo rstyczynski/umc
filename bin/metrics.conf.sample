@@ -18,7 +18,7 @@ common:
     # influxdb connection details
     db:
       url: http://localhost:8086/  
-      dbname: rodmon
+      dbname: rodmon_sample
       user: rodmon
       pass: rodmon
       

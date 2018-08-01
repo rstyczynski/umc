@@ -2,7 +2,7 @@
 # idbpush daemon script 
 
 # the script directory
-CUR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+scriptDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 if [ "$UMCRUNNER_CONF" = "" ]; then
   echo >&2 "umcrunner configuration in \$UMCRUNNER_CONF variable has not been set!"
@@ -14,4 +14,8 @@ if [ "$UMC_LOG_DIR" = "" ]; then
   exit 1  
 fi 
 
-$CUR_DIR/idbpush --runall $UMCRUNNER_CONF >>$UMC_LOG_DIR/idbpush/idbpush.log 2>&1 &
+if [ ! -d $UMC_LOG_DIR/idbpush ]; then 
+  mkdir -p $UMC_LOG_DIR/idbpush/
+fi
+
+$scriptDir/idbpush --runall $UMCRUNNER_CONF >>$UMC_LOG_DIR/idbpush/idbpush.log 2>&1 &
