@@ -4,12 +4,14 @@
 # the script directory
 CUR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-# log directory
-pwd=$(pwd)
-cd $CUR_DIR/.. 
-LOG_DIR=$(pwd)/logs/idbpush
-mkdir -p $LOG_DIR
+if [ "$UMCRUNNER_CONF" = "" ]; then
+  echo >&2 "umcrunner configuration in \$UMCRUNNER_CONF variable has not been set!"
+  exit 1  
+fi 
 
-$CUR_DIR/idbpush --runall metrics.conf >>$LOG_DIR/idbpush.log 2>&1 &
+if [ "$UMC_LOG_DIR" = "" ]; then
+  echo >&2 "umc log directory in \$UMC_LOG_DIR variable has not been set!"
+  exit 1  
+fi 
 
-cd $pwd
+$CUR_DIR/idbpush --runall $UMCRUNNER_CONF >>$UMC_LOG_DIR/idbpush/idbpush.log 2>&1 &

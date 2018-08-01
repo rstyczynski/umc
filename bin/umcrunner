@@ -139,14 +139,15 @@ function checkUMCID() {
 
 # check HOSTNAME env variable is set
 if [ "$HOSTNAME" = "" ]; then
-  echo >&2 "Fatal error: HOSTNAME variable is not set. Exiting."
+  echo >&2 "Fatal error: \$HOSTNAME variable is not set. Exiting."
   exit 1
 fi
 
-# if umc log directory is not set, then set it to a default logs directory under umc root
+# check umc log directory is set
 if [ "$UMC_LOG_DIR" = "" ]; then
-    UMC_LOG_DIR="$umcRoot/logs"
-fi
+  echo >&2 "umc log directory in \$UMC_LOG_DIR variable has not been set!"
+  exit 1  
+fi 
 
 # the first argument is the command to run
 cmd=$1 && shift

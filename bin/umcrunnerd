@@ -4,6 +4,11 @@
 # the script directory
 CUR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+if [ "$UMCRUNNER_CONF" = "" ]; then
+  echo >&2 "umcrunner configuration in \$UMCRUNNER_CONF variable has not been set!"
+  exit 1  
+fi 
+
 # lockfile
 lockfile=$CUR_DIR/.umcrunnerd-$HOSTNAME.lck
 
@@ -17,7 +22,7 @@ trap "rm -f $lockfile; exit" INT TERM EXIT
 touch $lockfile
 
 while true; do
-  $CUR_DIR/umcrunner $*
+  $CUR_DIR/umcrunner --runall $UMCRUNNER_CONF
   sleep 15
 done
 

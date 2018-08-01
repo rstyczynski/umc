@@ -4,13 +4,10 @@
 # the script directory
 CUR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-# log directory
-pwd=$(pwd)
-cd $CUR_DIR/..
-LOG_DIR=$(pwd)/logs/umcrunner
-echo $LOG_DIR
-mkdir -p $LOG_DIR
+if [ "$UMC_LOG_DIR" = "" ]; then
+  echo >&2 "umc log directory in \$UMC_LOG_DIR variable has not been set!"
+  exit 1  
+fi 
 
-$CUR_DIR/umcrunnerd --runall metrics.conf >>$LOG_DIR/umcrunner-$HOSTNAME.log 2>&1 &
+$CUR_DIR/umcrunnerd >>$UMC_LOG_DIR/umcrunner/umcrunner-$HOSTNAME.log 2>&1 &
 
-cd $pwd
