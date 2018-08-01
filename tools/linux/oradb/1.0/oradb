@@ -46,7 +46,7 @@ function getconnstr() {
 shift
 
 # the next arguments are delay, count and metric
-# metric argument is soadb probe specific
+# metric argument is oradb probe specific
 delay=$1 && shift
 count=$1 && shift
 metric=$1 && shift
@@ -55,7 +55,7 @@ metric=$1 && shift
 # this needs to go to err as otherwise would appear in csv when output is logged to a file
 if [ ! -f "$getSensorData_bin/$metric.sql" ]; then
     echo >&2 "Invalid metric definition. There is no file with name $getSensorData_bin/$metric.sql."
-    echo >&2 "Usage: umc soadb collect <delay> <count> <metric> [--connect <constr>] [<sql-collector arguments>]"
+    echo >&2 "Usage: umc oradb collect <delay> <count> <metric> [--connect <constr>] [<sql-collector arguments>]"
     echo >&2 "Available values for <metric> are:"
     pwd=$(pwd)
     cd $getSensorData_bin

@@ -65,11 +65,11 @@ common:
     configuration-auto-reload: true  
 
 # aiaflows
-umc-soadb.aiaflows:  
+umc-oradb.aiaflows:  
   enabled: true
   umcrunner:    
     hosts: some-hostname 
-    params: 20 soadb 60 60 aiaflows
+    params: 20 oradb 60 60 aiaflows
   idbpush:
     name: aiaflows 
     timefield: time

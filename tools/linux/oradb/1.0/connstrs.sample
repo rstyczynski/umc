@@ -1,4 +1,4 @@
-# Configration file defining connection strings for sql metric files used by soadb probe
+# Configration file defining connection strings for sql metric files used by oradb probe
 #
 # The format of this file is following:
 #

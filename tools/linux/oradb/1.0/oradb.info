@@ -1,4 +1,4 @@
-soadb:
+oradb:
      version:    1.0
      layer:      Middleware
      system:     SOA
