@@ -27,11 +27,8 @@ fi
 # load configuration
 source $getSensorData_bin/$config
 
-# sensor directory
-getSensorData_bin=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-
 # header
-echo "time,system,server,url,errors,success,timeAvg_ms,timeP95_ms,timeP90_ms,sizeAvg_bytes"
+echo "time,system,server,url,errors,success,timeAvg_ms,timeP95_ms,timeP90_ms,sizeAvg_bytes,max_rps,avg_rps"
 
 current_count=0
 while [ $current_count -lt $count ]; do
@@ -78,7 +75,7 @@ while [ $current_count -lt $count ]; do
 			  nerrs=$(echo "$urllines" | awk -v f=$al_statusfield '{ if (match($f,"4|5[0-9]+")) n++ } END { print n?n:0 }')
 				nsucc=$(echo "$urllines" | awk -v f=$al_statusfield '{ if (match($f,"2[0-9]+")) n++ } END { print n?n:0 }')
 
-				# calc average and p95 processing times
+				# calc average, p95 and p90 processing times
 				if [ $al_proctimefield -gt 0 ]; then
 			  	avgpt=$(echo "$urllines" | awk -v ptf=$al_proctimefield '{ n++;sum+=$ptf} END { printf "%.0f",n?(sum/n)*1000:0 }')
 					percpt=$(echo "$urllines" | awk -v ptf=$al_proctimefield '{ print $ptf }' | sort -n | awk '{ values[NR] = $0*1000} END { printf "%.0f,%.0f",
@@ -95,8 +92,13 @@ while [ $current_count -lt $count ]; do
 					avgbt=0
 				fi
 				
+				# calculate requests per second
+				rps=$(echo "$urllines" | awk '{ print $3 }' | sort -n | uniq -c | sort -n)
+				maxrps=$(echo "$rps" | tail -1 | awk '{ print $1 }')
+				avgrps=$(echo "$rps" | awk '{sum+=$1} END { printf "%.2f",sum/NR}')
+				
 				# print output
-			  echo $csvtimestamp,$HOSTNAME,$server,$url,$nerrs,$nsucc,$avgpt,$percpt,$avgbt
+			  echo $csvtimestamp,$HOSTNAME,$server,$url,$nerrs,$nsucc,$avgpt,$percpt,$avgbt,$maxrps,$avgrps
 						  
 			done
 
