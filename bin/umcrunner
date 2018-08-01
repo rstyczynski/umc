@@ -8,8 +8,8 @@
 # destination (e.g. a DB) by a third-party script. 
 
 # load libs environment variables and setup umc
-source /home/oracle/rodmon/libs/umc-libs-env.sh >/dev/null
-source /home/oracle/rodmon/umc/bin/umc.h  >/dev/null
+#source /home/oracle/rodmon/libs/umc-libs-env.sh >/dev/null
+#source /home/oracle/rodmon/umc/bin/umc.h  >/dev/null
 
 # this script directory
 scriptDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
