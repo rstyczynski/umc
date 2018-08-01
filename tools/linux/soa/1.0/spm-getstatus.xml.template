@@ -1,0 +1,16 @@
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:aias="http://xmlns.oracle.com/AIASessionPoolManager">
+   <soapenv:Header>
+<wsse:Security soapenv:mustUnderstand="1" xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
+                                                <wsse:UsernameToken wsu:Id="UsernameToken-1" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
+                                                                <wsse:Username>__USERNAME__</wsse:Username>
+                                                                <wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">__PASSWORD__</wsse:Password>
+                                                </wsse:UsernameToken>
+                                </wsse:Security>
+</soapenv:Header>
+   <soapenv:Body>
+      <aias:GenericAIASessionPoolManagerRequest>
+         <!--Optional:-->
+         <aias:HostId>SEBL_01</aias:HostId>
+      </aias:GenericAIASessionPoolManagerRequest>
+   </soapenv:Body>
+</soapenv:Envelope>

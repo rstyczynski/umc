@@ -1,0 +1,111 @@
+#!/bin/bash
+# umc probe for Siebel Session Pool Manager (SPM) running in SOA platform
+
+getSensorData_bin=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+
+# the first parameter is timestamp directive
+# since we do not use it, we skip it (the value is None)
+shift
+
+# the next arguments are delay and count
+delay=$1 && shift
+count=$1 && shift
+config=$1 && shift
+
+# check config file exists
+if [ ! -f "$getSensorData_bin/$config" ]; then
+	echo >&2 "$(date): The configuration file '$getSensorData_bin/$config' does not exist!" 
+	exit 1
+fi
+
+source ./$config
+
+if [ ! -f "$getSensorData_bin/spm-getstatus.xml.template" ]; then
+	echo >&2 "SPM get status template file does not exist!"
+	exit 1
+fi
+
+rm -f $getSensorData_bin/spm-get-status-*.xml
+
+# create payload
+# generate unique id
+# this not really reliable
+uid=$((1 + RANDOM % 1000))
+
+# use urandom if possible 
+if [ -e /dev/urandom ]; then
+	uid=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1);
+fi
+
+tmpfile=$getSensorData_bin/spm-get-status-$uid.xml
+sed s/__USERNAME__/$USERNAME/gi $getSensorData_bin/spm-getstatus.xml.template >$tmpfile
+sed -i s/__PASSWORD__/$PASSWORD/gi $tmpfile
+
+# remove the tmpfile on exit
+function cleanup {
+	rm -f $tmpfile
+	exit 0
+}
+trap cleanup SIGINT SIGTERM EXIT
+
+# spm status SOAP call
+function getSpmStatus() {
+	server=$1
+	port=$2
+
+	# get status information
+	msgstatus=$(curl --fail -s -X POST --header "Expect:" --header "Content-Type: text/xml; charset=utf-8" \
+		--header "SoapAction: Status" --header "User-Agent: Java1.6.0_37" --header "Host: $HOST_HEADER" \
+		--header "Accept: text/html, image/gif, image/jpeg, */*; q=.2" --data @$tmpfile \
+		http://$server:$port/soa-infra/services/default/AIASessionPoolManager/client)
+	echo "$msgstatus"
+}
+
+# header
+echo "time,hostname,server,poolsize,available,inuse,blocked_900s,avgused_ms,maxused_ms,p95used_ms,p90used_ms"
+
+# loop count times
+current_count=0
+while [ $current_count -lt $count ]; do
+	current_count=$[$current_count+1]
+
+	for server in $SERVER_LIST; do
+  	# get the server name
+  	inx=$(echo $SERVER_LIST | egrep -o ".*$server" | sed "s/ /\n/gi" | wc -l)
+  	sname=$(echo $SERVER_NAMES | awk -v i=$inx '{print $i}')
+
+		# check the server is listening on TCP_PORT
+		echo 2>/dev/null >/dev/tcp/$server/$TCP_PORT
+    
+		# get the spm status when the server is available
+		if [ $? -eq 0 ]; then
+			dt=$(date +"%Y-%m-%d %H:%M:%S")
+			msgstatus=$(getSpmStatus $server $TCP_PORT)
+			if [ $? -ne 0 ]; then
+				echo >&2 "$(date): Error occurred when calling spm getstatus at $server:$TCP_PORT!"
+				exit 1
+			else 
+				# retrieve basic data
+				curpool=$(echo "$msgstatus" | grep "Current Pool Size" | awk '{print substr($4,1,length($4)-1)}')
+				avail=$(echo "$msgstatus" | grep "Current Pool Size" | awk '{print substr($7,1,length($7)-1)}')
+				inuse=$(echo "$msgstatus" | grep "Current Pool Size" | awk '{print $11}')
+				blocked=$(echo "$msgstatus" | grep BPELInstanceID | awk '{resptime=$NF/1000; if(resptime>900) print $NF/1000}' | wc -l)
+				
+				# calculate avg,min,p95 and p90 token in-use values
+				use=$(echo "$msgstatus" | grep BPELInstanceID | awk '{ print $5 }' | sort -n | awk '{ values[NR] = $0; sum+=$0} END { printf "%.0f,%.0f,%.0f,%.0f",
+					sum/NR,values[NR],values[int(NR*0.95-0.5)],values[int(NR*0.90-0.5)] }')
+
+				# output the line
+				echo "$dt,$server,$sname,$curpool,$avail,$inuse,$blocked,$use"
+			fi
+		fi
+	done
+
+	# sleep delay seconds
+	if [ $current_count -lt $count ]; then
+		sleep $delay
+	fi
+done
+
+# clean up
+cleanup
