@@ -18,7 +18,7 @@ if [ -e $lockfile ]; then
    exit 1
 fi
 
-trap "rm -f $lockfile; exit" INT TERM EXIT
+trap "rm -f $lockfile; exit" SIGINT SIGTERM EXIT
 touch $lockfile
 
 while true; do
@@ -27,4 +27,4 @@ while true; do
 done
 
 rm $lockfile
-trap - INT TERM EXIT
+trap - SIGINT SIGTERM EXIT
