@@ -57,10 +57,13 @@ if [ ! -f "$getSensorData_bin/$metric.sql" ]; then
     echo >&2 "Invalid metric definition. There is no file with name $getSensorData_bin/$metric.sql."
     echo >&2 "Usage: umc soadb collect <delay> <count> <metric> [--connect <constr>] [<sql-collector arguments>]"
     echo >&2 "Available values for <metric> are:"
+    pwd=$(pwd)
+    cd $getSensorData_bin
     ls | grep ".sql$" | \
     while read line; do
         printf "  ${line%.*}%-$((20-$(expr length $line)))s  $(cat $line | head -n 1 | grep "\-\-")\n"
     done
+    cd $pwd
     exit 1
 fi
 
