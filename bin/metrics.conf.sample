@@ -36,7 +36,10 @@ common:
     
     # runtime parameters
     # number of records (lines) in a single batch that will be pushed to influxdb
-    max-batchsize: 50
+    max-batchsize-rows: 50
+    
+    # maximum number of files that will be read in a batch
+    max-batchsize-files: 500
     
     # number of milliseconds to wait between db writes
     delay-between-writes: 200
