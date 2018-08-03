@@ -1,9 +1,17 @@
 #!/bin/bash
 # access logs 
 
+# this script directory
 getSensorData_bin=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
-args=("$@")
+# check umc was configured
+if [ ! -d $umcRoot ]; then
+  echo >&2 "umc was not initialized!"
+  exit 1
+fi
+
+# configuration directory
+configDir="$umcRoot/etc/tools/apache"
 
 # the first parameter is timestamp directive
 # since we do not use it, we skip it (the value is None)
@@ -19,13 +27,13 @@ config=$1 && shift
 wakeup_secs_in_minute=20
 
 # check config file exists
-if [ ! -f "$getSensorData_bin/$config" ]; then
-	echo >&2 "$(date): The configuration file '$getSensorData/$config' does not exist!" 
+if [ ! -f "$configDir/$config" ]; then
+	echo >&2 "$(date): The configuration file '$confgiDir/$config' does not exist!" 
 	exit 1
 fi
 
 # load configuration
-source $getSensorData_bin/$config
+source $configDir/$config
 
 # header
 echo "time,system,server,url,errors,success,timeAvg_ms,timeP95_ms,timeP90_ms,sizeAvg_bytes,max_rps,avg_rps"

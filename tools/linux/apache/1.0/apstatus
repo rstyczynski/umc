@@ -1,9 +1,17 @@
 #!/bin/bash
 # Apache status information provided by Apache via mod_status
 
+# this script directory
 getSensorData_bin=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
-args=("$@")
+# check umc was configured
+if [ ! -d $umcRoot ]; then
+  echo >&2 "umc was not initialized!"
+  exit 1
+fi
+
+# configuration directory
+configDir="$umcRoot/etc/tools/apache"
 
 # the first parameter is timestamp directive
 # since we do not use it, we skip it (the value is None)
@@ -15,8 +23,8 @@ count=$1 && shift
 config=$1 && shift
 
 # check config file exists
-if [ ! -f "$getSensorData_bin/$config" ]; then
-	echo >&2 "$(date): The configuration file '$getSensorData/$config' does not exist!" 
+if [ ! -f "$configDir/$config" ]; then
+	echo >&2 "$(date): The configuration file '$confgiDir/$config' does not exist!" 
 	exit 1
 fi
 
@@ -28,60 +36,63 @@ current_count=0
 while [ $current_count -lt $count ]; do
 	current_count=$[$current_count+1]
 
-	cat $getSensorData_bin/$config | egrep -v "^#" | grep -v "DOMAIN" | \
-        while read line; do
-                domain=$(echo $line | awk '{print $1}')
-                tcp_port=$(echo $line | awk '{print $2}')
-                servers=$(echo $line | awk '{print $3}' | sed "s/,/ /gi")
+	cat $configDir/$config | egrep -v "^#" | grep -v "DOMAIN" | \
+  while read line; do
+    domain=$(echo $line | awk '{print $1}')
+    tcp_port=$(echo $line | awk '{print $2}')
+    servers=$(echo $line | awk '{print $3}' | sed "s/,/ /gi")
 
-                if [ "$domain" != "" ] && [ "$tcp_port" != "" ] && [ "$servers" != "" ]; then
+    if [ "$domain" != "" ] && [ "$tcp_port" != "" ] && [ "$servers" != "" ]; then
 
-                        # retrieve appache status for every server in the list
-                        for server in $servers; do
+    	# retrieve appache status for every server in the list
+    	for server in $servers; do
+		
 				# check that the server listen on tcp posrt
-                                echo 2>/dev/null >/dev/tcp/$server/$tcp_port
+      	echo 2>/dev/null >/dev/tcp/$server/$tcp_port
+
 				if [ $? -eq 0 ]; then
 					# retrieve the stats from the server
 					status_url="http://$server:$tcp_port/server-status?auto"
-                                        data=$(curl --fail -s $status_url)
-					
+        	data=$(curl --fail -s $status_url)
+			
 					# check the request was ok
 					if [ $? -eq 0 ]; then
-
 						# parse the data
-                                        	ts=$(date +"%Y-%m-%d-%H:%M:%S")
-                                        	tac=$(echo "$data" | grep "Total Accesses" | awk '{print $3}')
-                                        	tkb=$(echo "$data" | grep "Total kBytes" | awk '{print $3}')
-                                        	cpl=$(echo "$data" | grep "CPULoad" | awk '{print $2}')
-                                        	rps=$(echo "$data" | grep "ReqPerSec" | awk '{print $2}')
-                                        	bps=$(echo "$data" | grep "BytesPerSec" | awk '{print $2}')
-                                        	bwo=$(echo "$data" | grep "BusyWorkers" | awk '{print $2}')
-                                        	iwo=$(echo "$data" | grep "IdleWorkers" | awk '{print $2}')
+          	ts=$(date +"%Y-%m-%d-%H:%M:%S")
+          	tac=$(echo "$data" | grep "Total Accesses" | awk '{print $3}')
+          	tkb=$(echo "$data" | grep "Total kBytes" | awk '{print $3}')
+          	cpl=$(echo "$data" | grep "CPULoad" | awk '{print $2}')
+          	rps=$(echo "$data" | grep "ReqPerSec" | awk '{print $2}')
+          	bps=$(echo "$data" | grep "BytesPerSec" | awk '{print $2}')
+          	bwo=$(echo "$data" | grep "BusyWorkers" | awk '{print $2}')
+          	iwo=$(echo "$data" | grep "IdleWorkers" | awk '{print $2}')
 
-                                        	sb=$(echo "$data" | grep "Scoreboard" | awk '{print $2}')
+          	sb=$(echo "$data" | grep "Scoreboard" | awk '{print $2}')
 
-                                        	sb_wfc=$(echo "$sb" | grep -o "_" | wc -l)
-                                        	sb_sup=$(echo "$sb" | grep -o "S" | wc -l)
-                                        	sb_rrq=$(echo "$sb" | grep -o "R" | wc -l)
-                                        	sb_srp=$(echo "$sb" | grep -o "W" | wc -l)
-                                        	sb_kal=$(echo "$sb" | grep -o "K" | wc -l)
-                                        	sb_dns=$(echo "$sb" | grep -o "D" | wc -l)
-                                        	sb_cls=$(echo "$sb" | grep -o "C" | wc -l)
-                                        	sb_log=$(echo "$sb" | grep -o "L" | wc -l)
-                                        	sb_gfi=$(echo "$sb" | grep -o "G" | wc -l)
-                                        	sb_icl=$(echo "$sb" | grep -o "I" | wc -l)
-                                        	sb_ops=$(echo "$sb" | grep -o "." | wc -l)
+          	sb_wfc=$(echo "$sb" | grep -o "_" | wc -l)
+          	sb_sup=$(echo "$sb" | grep -o "S" | wc -l)
+          	sb_rrq=$(echo "$sb" | grep -o "R" | wc -l)
+          	sb_srp=$(echo "$sb" | grep -o "W" | wc -l)
+          	sb_kal=$(echo "$sb" | grep -o "K" | wc -l)
+          	sb_dns=$(echo "$sb" | grep -o "D" | wc -l)
+          	sb_cls=$(echo "$sb" | grep -o "C" | wc -l)
+          	sb_log=$(echo "$sb" | grep -o "L" | wc -l)
+          	sb_gfi=$(echo "$sb" | grep -o "G" | wc -l)
+          	sb_icl=$(echo "$sb" | grep -o "I" | wc -l)
+          	sb_ops=$(echo "$sb" | grep -o "." | wc -l)
 
-                                        	echo "$ts,\"$domain\",\"$server\",$tcp_port,$tac,$tkb,$cpl,$rps,$bps,$bwo,$iwo,$sb_wfc,$sb_sup,$sb_rrq,$sb_srp,$sb_kal,$sb_dns,$sb_cls,$sb_log,$sb_gfi,$sb_icl,$sb_ops"
+          	echo "$ts,\"$domain\",\"$server\",$tcp_port,$tac,$tkb,$cpl,$rps,$bps,$bwo,$iwo,$sb_wfc,$sb_sup,$sb_rrq,$sb_srp,$sb_kal,$sb_dns,$sb_cls,$sb_log,$sb_gfi,$sb_icl,$sb_ops"
 					else
 						echo >&2 "$(date): It was not possible to retrieve the apache status at '$status_url'!"
 					fi
-                                else
+    		else
 					echo >&2 "$(date): There is no server listening on $server:$tcp_port"
 				fi
-                        done
-                fi
-        done
+      done
+    fi
+  done
+	
+	# todo: adjjust delay time
 	sleep $delay
 done
 

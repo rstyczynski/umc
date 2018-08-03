@@ -1,0 +1,2 @@
+#!/bin/bash
+export ORADB_CONNSTR="sys/oracle@$DB_HOST:$DB_PORT:$DB_SERVICE as sysdba"

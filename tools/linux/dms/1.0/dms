@@ -1,20 +1,17 @@
 #!/bin/bash
 # Tomas Vitvar, tomas@vitvar.com
 
+# this script directory
 getSensorData_bin=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
-args=("$@")
+# check umc was configured
+if [ ! -d $umcRoot ]; then
+  echo >&2 "umc was not initialized!"
+  exit 1
+fi
 
-function getArgument {
-    for ((i=0; i <= ${#args[@]}; i++)); do
-        if [ "${args[i]}" == "$1" ]; then
-            echo "${args[i]}"
-            exit 0
-        fi
-    done
-    echo ""
-}
-
+# configuration directory
+configDir="$umcRoot/etc/tools/dms"
 
 # the first parameter is timestamp directive
 # since we do not use it, we skip it (the value is None)
@@ -26,9 +23,9 @@ count=$1 && shift
 table=$1 && shift
 config=$1 && shift
 
-if [ "$getSensorData_bin/$config" ]; then
+if [ -f "$configDir/$config" ]; then
 	# load variables for this connection
-	source $getSensorData_bin/$config
+	source $configDir/$config
 
 	# use connection information from the configuration file
 	dms-collector --count $count --delay $delay --url "$DMSCOLLECTOR_URL" --connect "$DMSCOLLECTOR_CONNECT" --table $table "$@"

@@ -69,7 +69,7 @@ umc-oradb.aiaflows:
   enabled: true
   umcrunner:    
     hosts: some-hostname 
-    params: 20 oradb 60 60 aiaflows
+    params: 20 oradb 60 60 aiaflows.sql oradb.conf.sample
   idbpush:
     name: aiaflows 
     timefield: time

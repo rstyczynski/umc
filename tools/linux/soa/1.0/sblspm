@@ -1,7 +1,17 @@
 #!/bin/bash
 # umc probe for Siebel Session Pool Manager (SPM) running in SOA platform
 
+# this script directory
 getSensorData_bin=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+
+# check umc was configured
+if [ ! -d $umcRoot ]; then
+  echo >&2 "umc was not initialized!"
+  exit 1
+fi
+
+# configuration directory
+configDir="$umcRoot/etc/tools/soa"
 
 # the first parameter is timestamp directive
 # since we do not use it, we skip it (the value is None)
@@ -13,18 +23,19 @@ count=$1 && shift
 config=$1 && shift
 
 # check config file exists
-if [ ! -f "$getSensorData_bin/$config" ]; then
+if [ ! -f "$configDir/$config" ]; then
 	echo >&2 "$(date): The configuration file '$getSensorData_bin/$config' does not exist!" 
 	exit 1
 fi
 
-source $getSensorData_bin/$config
+source $configDir/$config
 
 if [ ! -f "$getSensorData_bin/spm-getstatus.xml.template" ]; then
 	echo >&2 "SPM get status template file does not exist!"
 	exit 1
 fi
 
+# remove all temp files
 rm -f $getSensorData_bin/spm-get-status-*.xml
 
 # create payload
@@ -101,6 +112,7 @@ while [ $current_count -lt $count ]; do
 		fi
 	done
 
+	# todo adjust delay
 	# sleep delay seconds
 	if [ $current_count -lt $count ]; then
 		sleep $delay

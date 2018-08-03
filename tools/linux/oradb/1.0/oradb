@@ -1,7 +1,17 @@
 #!/bin/bash
 # Tomas Vitvar, tomas@vitvar.com
 
+# this script directory
 getSensorData_bin=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+
+# check umc was configured
+if [ ! -d $umcRoot ]; then
+  echo >&2 "umc was not initialized!"
+  exit 1
+fi
+
+# configuration directory
+configDir="$umcRoot/etc/tools/oradb"
 
 args=("$@")
 
@@ -15,32 +25,6 @@ function getArgument {
     echo ""
 }
 
-# determine the db connection string
-# try to get it from connstrs definition 
-function getconnstr() {
-    metricsql=$1
-    
-    if [ -f "$getSensorData_bin/connstrs" ]; then
-         curcns=""
-         cat $getSensorData_bin/connstrs | egrep -v "^$" | egrep -v "^#" | \
-         while read line; do
-             if [[ $line =~ ^cns\:.+$ ]] ; then
-                 curcns=$(echo $line | gawk '{ match($0,"^cns:[ ]*(.+)", m); print m[1] }')
-             fi
-
-             if [[ $line =~ ^sql\:.+$ ]] ; then
-                 IFS=',' read -ra sqls <<< "$(echo $line | gawk '{ match($0,"^sql:(.+)", m); print m[1] }')"
-                 for s in ${sqls[@]}; do
-                     if [ "$(echo $s | awk '{$1=$1; print $1}')" = "$metricsql" ]; then
-                         echo $curcns
-                         exit 0
-                     fi
-                 done
-             fi
-         done
-    fi 
-}
-
 # the first parameter is timestamp directive
 # since we do not use it, we skip it (the value is None)
 shift
@@ -50,15 +34,21 @@ shift
 delay=$1 && shift
 count=$1 && shift
 metric=$1 && shift
+config=$1 && shift
+
+# load configuration
+if [ -f $configDir/$config ]; then
+  source $configDir/$config
+fi
 
 # check that the metric file exists and print help if it does not
 # this needs to go to err as otherwise would appear in csv when output is logged to a file
-if [ ! -f "$getSensorData_bin/$metric.sql" ]; then
-    echo >&2 "Invalid metric definition. There is no file with name $getSensorData_bin/$metric.sql."
-    echo >&2 "Usage: umc oradb collect <delay> <count> <metric> [--connect <constr>] [<sql-collector arguments>]"
-    echo >&2 "Available values for <metric> are:"
+if [ ! -f "$configDir/$metric" ]; then
+    echo >&2 "Invalid metric file. There is no file with name $configDir/$metric."
+    echo >&2 "Usage: umc oradb collect <delay> <count> <metric-file> [--connect <constr>] [<sql-collector arguments>]"
+    echo >&2 "Available values for <metric-file> are:"
     pwd=$(pwd)
-    cd $getSensorData_bin
+    cd $configDir
     ls | grep ".sql$" | \
     while read line; do
         printf "  ${line%.*}%-$((20-$(expr length $line)))s  $(cat $line | head -n 1 | grep "\-\-")\n"
@@ -68,19 +58,13 @@ if [ ! -f "$getSensorData_bin/$metric.sql" ]; then
 fi
 
 # db connection string, use the default if none cannot be found as per sql metric or is not specified as argument
-if [ "$(getArgument "--connect")" == "" ]; then 
-    cs=$(getconnstr $metric.sql)
-    if [ "$cs" == "" ]; then
-        connstr="--connect $DB_CONNSTR";
-    else
-        connstr="--connect $cs";
-    fi 
-else 
-    connstr=""; 
+connstr=""; 
+if [ "$(getArgument "--connect")" == "" ] && [ -z ${ORADB_CONNSTR+x} ]; then 
+    connstr="--connect $ORADB_CONNSTR";
 fi
 
 # run sql collector
-sql-collector $connstr --query $getSensorData_bin/$metric.sql \
+sql-collector $connstr --query $getSensorData_bin/$metric \
     --count $count \
     --interval $delay \
     --delimiter "$CSVdelimiter" \
