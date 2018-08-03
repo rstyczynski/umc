@@ -20,6 +20,8 @@ show_help () {
 	echo ""
 }
 
+
+
 # INSTALL PYTHON
 install_python () {
 	# binary file for python and tool directory name
