@@ -1,3 +1,6 @@
+[submodule "varia/dms-collector"]
+        path = varia/dms-collector
+        url = https://github.com/tomvit/dms-collector.git
 [submodule "varia/sql-collector"]
 	path = varia/sql-collector
 	url = https://github.com/tomvit/sql-collector.git
