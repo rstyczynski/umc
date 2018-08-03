@@ -1,0 +1,4 @@
+# sample configuration file for dms umc probe
+
+export DMSCOLLECTOR_URL="http://10.0.2.2:7031"
+export DMSCOLLECTOR_CONNECT="weblogic/password1"

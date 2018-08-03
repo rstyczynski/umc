@@ -1,0 +1,40 @@
+#!/bin/bash
+# Tomas Vitvar, tomas@vitvar.com
+
+getSensorData_bin=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+
+args=("$@")
+
+function getArgument {
+    for ((i=0; i <= ${#args[@]}; i++)); do
+        if [ "${args[i]}" == "$1" ]; then
+            echo "${args[i]}"
+            exit 0
+        fi
+    done
+    echo ""
+}
+
+
+# the first parameter is timestamp directive
+# since we do not use it, we skip it (the value is None)
+shift
+
+# the next arguments are delay, count, table and config
+delay=$1 && shift
+count=$1 && shift
+table=$1 && shift
+config=$1 && shift
+
+if [ "$getSensorData_bin/$config" ]; then
+	# load variables for this connection
+	source $getSensorData_bin/$config
+
+	# use connection information from the configuration file
+	dms-collector --count $count --delay $delay --url "$DMSCOLLECTOR_URL" --connect "$DMSCOLLECTOR_CONNECT" --table $table "$@"
+else
+	# when no configuration is provided, assume the url/connect will be provided as arguments
+	dms-collector --count $count --delay $delay --table $table "$@"
+fi 
+
+
