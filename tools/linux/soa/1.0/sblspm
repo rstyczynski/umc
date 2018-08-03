@@ -18,7 +18,7 @@ if [ ! -f "$getSensorData_bin/$config" ]; then
 	exit 1
 fi
 
-source ./$config
+source $getSensorData_bin/$config
 
 if [ ! -f "$getSensorData_bin/spm-getstatus.xml.template" ]; then
 	echo >&2 "SPM get status template file does not exist!"

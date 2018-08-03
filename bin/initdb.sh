@@ -1,6 +1,6 @@
 #!/bin/bash
 # use this script as an example to initialize your influxdb DB
-DBNAME="rodmon_sample"
+DBNAME="rodmon_vfuk_npp"
 USER="rodmon"
 PASS="rodmon"
 
