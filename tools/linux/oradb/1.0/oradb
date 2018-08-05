@@ -59,15 +59,15 @@ fi
 
 # db connection string, use the default if none cannot be found as per sql metric or is not specified as argument
 connstr=""; 
-if [ "$(getArgument "--connect")" == "" ] && [ -z ${ORADB_CONNSTR+x} ]; then 
+if [ "$(getArgument "--connect")" == "" ] && [ "$ORADB_CONNSTR" != "" ]; then 
     connstr="--connect $ORADB_CONNSTR";
 fi
 
 # run sql collector
-sql-collector $connstr --query $getSensorData_bin/$metric \
+sql-collector $connstr --query $configDir/$metric \
     --count $count \
     --interval $delay \
     --delimiter "$CSVdelimiter" \
-    $(cat $getSensorData_bin/global-args | grep -v ^# ) \
+    $(cat $configDir/global-args | grep -v ^# ) \
     "$*" 
 
