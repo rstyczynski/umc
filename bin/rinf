@@ -1,1 +1,1 @@
-influx --password 'rodmon' --database 'rodmon_vfuk_npp' --username 'rodmon'
+influx --host ukbn06hr --port 8086 --password 'rodmon' --database 'rodmon_vfuk_npp' --username 'rodmon'

@@ -2,16 +2,16 @@
 
 stopped=0
 while [ $stopped -eq 0 ]; do
-        pid=$(ps ax | grep -v grep | grep umcrunnerd | awk '{ print $1 }')
-        if [ "$pid" != "" ]; then
-                echo "Attemping to stop umcrunnerd with pid $pid..."
-                kill $pid
-                sleep 1
-        else
-                echo "umcrunnerd is stopped"
-                stopped=1
-        fi
+	pid=$(ps ax | grep -v grep | grep umcrunnerd | awk '{ print $1 }')
+	if [ "$pid" != "" ]; then
+		echo "Attemping to stop umcrunnerd with pid $pid..."
+		kill $pid
+		sleep 1
+	else
+		echo "umcrunnerd is stopped"
+		stopped=1
+	fi
 done
 
-echo "Stopping all umc instances on this host..."
+echo "Stopping all umc on this host..."
 umcrunner --stopall

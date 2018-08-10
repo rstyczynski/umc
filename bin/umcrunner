@@ -109,7 +109,7 @@ function umc_gpid_check () {
 
 # prints aligned umc stats row
 function printstats() {
-    echo -n $* | awk -F '::' '{printf "%-7s%-20s%-8s%-15s%-7s%-7s%-17s%-22s%-10s%-10s%-10s%-10s\n",
+    echo -n $* | awk -F '::' '{printf "%-7s%-24s%-8s%-15s%-7s%-7s%-17s%-22s%-10s%-10s%-10s%-10s\n",
         $1,$2,$3,$4,$5,$6,substr($7, 1, 15),$8,$9,$10,$11,$12,$13,$14}'
 }
 
@@ -331,9 +331,14 @@ if [ "$cmd" = "--runall" ]; then
     
     # stop any metric that is running on this host but it does not exist in the conf file
     # this is to ensure that any deleted or commented umc configuration will be stopped 
-    umcrunner --stats --noheader | \
-    while read line; do 
-        umc_id=$(echo $line | awk '{ print $2 }')
+    ps axf -eo pid,pgid,cmd | egrep "umcrunner \-\-run .+" | grep -v "grep" | \
+    while read line; do
+        params=$(echo $line | egrep -o "\-\-run.+")
+        umc_id=$(echo $params | awk '{print $2}')
+
+    #umcrunner --stats --noheader | \
+    #while read line; do 
+        #umc_id=$(echo $line | awk '{ print $2 }')
         if [ "$(cat $conf | grep "^umc-$umc_id:" | wc -l)" -eq 0 ]; then
           $verbose && echo "$(date): $umc_id is running but does not exist in the definition file, stopping..."
           umcrunner --stop $umc_id
@@ -369,17 +374,17 @@ if [ "$cmd" = "--runall" ]; then
         params=$($scriptDir/getCfg.py $conf $key::umcrunner::params ::)
         
         # check if the params has changed when compared to the currently running umc instnace
-        if [ "$(umc_gpid $umc_id)" != "" ]; then
+        #if [ "$(umc_gpid $umc_id)" != "" ]; then
           # get current parameters of running umc
-          curparams=$(ps ax | grep -v "grep" | grep "umcrunner --run $umc_id" | gawk '{ match($0,".*--run (.+)", m); print m[1]}')
+        #  curparams=$(ps ax | grep -v "grep" | grep "umcrunner --run $umc_id" | gawk '{ match($0,".*--run (.+)", m); print m[1]}')
           
           # stop the umc instance if params has changed
-          if [ "$curparams" != "$umc_id $params" ]; then
-            $verbose && echo "$(date): $umc_id is running and its parameters changed in the definition file, stopping..."
-            umcrunner --stop $umc_id
-            sleep 0.5
-          fi
-        fi
+          #if [ "$curparams" != "$umc_id $params" ]; then
+          #  $verbose && echo "$(date): $umc_id is running and its parameters changed in the definition file, stopping..."
+          #  umcrunner --stop $umc_id
+          #  sleep 0.5
+          #fi
+        #fi
         
         if [ "$(umc_gpid $umc_id)" = "" ]; then        
           # be verbose

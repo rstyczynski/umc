@@ -1,5 +1,8 @@
 #!/bin/bash
 # use this script as an example to initialize your influxdb DB
+# backup command: influxd backup -database rodmon_vfuk_npp tmp/
+
+# variables
 DBNAME="rodmon_vfuk_npp"
 USER="rodmon"
 PASS="rodmon"
