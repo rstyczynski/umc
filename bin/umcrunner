@@ -16,6 +16,10 @@ source $scriptDir/umc.h >/dev/null
 trap "exit 1" TERM
 TOP_PID=$$
 
+# maximum log age in seconds
+LOGROTATE_MAXAGE=1
+LOGROTATE_DELETE=5
+
 function print_usage () {
     echo "Runs, stops and queries umc instances running on a single host."
     echo ""
@@ -74,6 +78,13 @@ function umc_run() {
     if [ ! -d "$UMC_LOG_DIR/$HOSTNAME/$umc_id" ]; then 
     	mkdir -p $UMC_LOG_DIR/$HOSTNAME/$umc_id
     fi
+    
+    # rotate log file when older than LOGROTATE_MAXAGE days
+    find $UMC_LOG_DIR/$HOSTNAME/$umc_id/$umc_id.error.out -mtime +$LOGROTATE_MAXAGE -type f \
+      -exec mv {} $UMC_LOG_DIR/$HOSTNAME/$umc_id/$umc_id.error-$(date +%Y%m%d_%H%M%S).out \; &>/dev/null
+    
+    # delete all log files older than LOGROTATE_DELETE days
+    find $UMC_LOG_DIR/$HOSTNAME/$umc_id/$umc_id.error-* -mtime +$LOGROTATE_DELETE -exec rm {} \; &>/dev/null      
 
     # run umc with logdirector
     # this needs an explicit stdin redirection (tail -f /dev/null) as otherwise the background java process was trying
