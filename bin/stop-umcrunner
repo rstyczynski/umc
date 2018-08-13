@@ -13,5 +13,5 @@ while [ $stopped -eq 0 ]; do
 	fi
 done
 
-echo "Stopping all umc on this host..."
+echo "Stopping all umc instances on this host..."
 umcrunner --stopall
