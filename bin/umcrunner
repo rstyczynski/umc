@@ -29,7 +29,7 @@ function print_usage () {
     echo ""
     echo "  where:"
     echo "  id               A unique id of umc tool instance"
-    echo "  rotate-time      The time to rotate the umc output log"
+    echo "  rotate-time      The time to rotate the umc output log; a value of 0 disables the output log"
     echo "  tool             umc tool id"
     echo "  delay            Delay in seconds between umc tool runs"
     echo "  count            Number of umc tool runs"
@@ -86,18 +86,23 @@ function umc_run() {
     # delete all log files older than LOGROTATE_DELETE days
     find $UMC_LOG_DIR/$HOSTNAME/$umc_id/$umc_id.error-* -mtime +$LOGROTATE_DELETE -exec rm {} \; &>/dev/null      
 
-    # run umc with logdirector
-    # this needs an explicit stdin redirection (tail -f /dev/null) as otherwise the background java process was trying
-    # to read from stdin (that somehow got srewed up when in background) and was causing high cpu.
-    umc $tool collect $delay $count $umc_params 2>>$UMC_LOG_DIR/$HOSTNAME/$umc_id/$umc_id.error.out </dev/null | \
-        logdirector.pl -name $umc_id -dir $UMC_LOG_DIR/$HOSTNAME/$umc_id \
-            -detectHeader \
-            -checkHeaderDups \
-            -rotateByTime run \
-            -timeLimit $rotateTime \
-            -flush \
-            -timeRotationInThread \
-            -rotateOnThreadEnd &
+    # check if output log should be produced
+    if [ $rotateTime -gt 0 ]; then
+      # run umc with logdirector
+      # this needs an explicit stdin redirection (tail -f /dev/null) as otherwise the background java process was trying
+      # to read from stdin (that somehow got srewed up when in background) and was causing high cpu.
+      umc $tool collect $delay $count $umc_params 2>>$UMC_LOG_DIR/$HOSTNAME/$umc_id/$umc_id.error.out </dev/null | \
+          logdirector.pl -name $umc_id -dir $UMC_LOG_DIR/$HOSTNAME/$umc_id \
+              -detectHeader \
+              -checkHeaderDups \
+              -rotateByTime run \
+              -timeLimit $rotateTime \
+              -flush \
+              -timeRotationInThread \
+              -rotateOnThreadEnd &
+    else
+      umc $tool collect $delay $count $umc_params 2>>$UMC_LOG_DIR/$HOSTNAME/$umc_id/$umc_id.error.out </dev/null >/dev/null &
+    fi
 }
 
 # gets the process group id of the umc instance 

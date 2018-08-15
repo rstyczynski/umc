@@ -309,7 +309,7 @@ def get_umc_def(umc_id):
 # *** read data points from the csv log file
 def read_datapoints(logfilename, umcdef):    
     datapoints = []; notags=False; nofields=False; 
-    if umcdef.enabled: 
+    if umcdef.enabled and umcdef.metric is not None: 
         # read datapoints
         with open(logfilename, 'r') as csvfile:
             reader = csv.DictReader(csvfile, delimiter=',')
@@ -480,6 +480,10 @@ if __name__ == "__main__":
                         continue
                     else:
                         info1_msg("Definition retrieved for umc %s"%(umc_id))
+                        if not(umcdef.enabled):
+                            info1_msg("umc id %s is disabled by configuration, no datapoints will be read."%(umc_id))
+                        elif umcdef.metric is None:
+                            info1_msg("umc id %s has no metric defined, no datapoints will be read."%(umc_id))                        
                         umcdefs[umc_id] = umcdef
                 
                 # read datapoints from the log file and store them in the umcdef dict
