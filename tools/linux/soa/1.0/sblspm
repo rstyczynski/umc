@@ -103,8 +103,7 @@ while [ $current_count -lt $count ]; do
 				blocked=$(echo "$msgstatus" | grep BPELInstanceID | awk '{resptime=$NF/1000; if(resptime>900) print $NF/1000}' | wc -l)
 				
 				# calculate avg,min,p95 and p90 token in-use values
-				use=$(echo "$msgstatus" | grep BPELInstanceID | awk '{ print $5 }' | sort -n | awk '{ values[NR] = $0; sum+=$0} END { printf "%.0f,%.0f,%.0f,%.0f",
-					sum/NR,values[NR],values[int(NR*0.95-0.5)],values[int(NR*0.90-0.5)] }')
+        use=$(echo "$msgstatus" | grep BPELInstanceID | awk '{ print $5 }' | sort -n | awk '{ values[NR] = $0; sum+=$0} END { if (NR > 0) { printf "%.0f,%.0f,%.0f,%.0f",sum/NR,values[NR],values[int(NR*0.95-0.5)],values[int(NR*0.90-0.5)] } else { printf "0,0,0,0"  } }')
 
 				# output the line
 				echo "$dt,$server,$sname,$curpool,$avail,$inuse,$blocked,$use"
