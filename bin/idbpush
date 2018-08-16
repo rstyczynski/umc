@@ -274,7 +274,7 @@ def eval_transform(umc_id, transform, tags, fields):
         for e in transform:
             try:
                 exec(e)
-            except Exception ex:
+            except Exception as ex:
                 info1_msg("Error when evaluating transformation '%s' for %s: %s"%(e,umc_id,str(ex)))
 
         # create resulting tags and fields
