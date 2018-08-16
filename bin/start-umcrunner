@@ -2,9 +2,11 @@
 # umcrunnerd start up script 
 
 # the script directory
-CUR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+scriptDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-if [ "$UMC_LOG_DIR" = "" ]; then
+source $scriptDir/umc.h &>/dev/null 
+
+if [ "$scriptDir" = "" ]; then
   echo >&2 "umc log directory in \$UMC_LOG_DIR variable has not been set!"
   exit 1  
 fi 
@@ -13,5 +15,5 @@ if [ ! -d $UMC_LOG_DIR/umcrunner ]; then
   mkdir -p $UMC_LOG_DIR/umcrunner/
 fi 
 
-$CUR_DIR/umcrunnerd >>$UMC_LOG_DIR/umcrunner/umcrunner-$HOSTNAME.log 2>&1 &
+$scriptDir/umcrunnerd >>$UMC_LOG_DIR/umcrunner/umcrunner-$HOSTNAME.log 2>&1 &
 

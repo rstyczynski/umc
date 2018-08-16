@@ -4,6 +4,8 @@
 # the script directory
 scriptDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+source $scriptDir/umc.h &>/dev/null
+
 if [ "$UMCRUNNER_CONF" = "" ]; then
   echo >&2 "umcrunner configuration in \$UMCRUNNER_CONF variable has not been set!"
   exit 1  
