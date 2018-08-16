@@ -1,0 +1,14 @@
+#!/bin/bash
+
+stopped=0
+while [ $stopped -eq 0 ]; do
+	pid=$(ps ax | grep -v grep | grep -v stop-idbpush | grep idbpush | awk '{ print $1 }')
+	if [ "$pid" != "" ]; then
+		echo "Attemping to stop idbpush with pid $pid..."
+		kill $pid
+		sleep 1
+	else
+		echo "idbpush is stopped"
+		stopped=1
+	fi
+done
