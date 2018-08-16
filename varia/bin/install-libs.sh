@@ -227,8 +227,8 @@ install_dmscollector () {
 # INSTALL INFLUXDB
 install_influxdb () {
 	# binary file for influxdb
-	BINFILE="influxdb-1.5.2_linux_amd64.tar.gz"
-	TOOLDN="influxdb-1.5.2-1"
+	BINFILE="influxdb-1.6.1_linux_amd64.tar.gz"
+	TOOLDN="influxdb-1.6.1-1"
 
 	echo "* Installing influxdb: $BINFILE"
 
