@@ -307,15 +307,15 @@ def get_umc_def(umc_id):
     metric=conf_value(umcconf, "idbpush.name", None)
         
     # tags and fields cols of this umc definition
-    tcols = [x.strip().lower() for x in conf_value(umcconf, "idbpush.tags").split(',') if x != '' ]
-    fcols = [x.strip().lower() for x in conf_value(umcconf, "idbpush.fields").split(',') if x != '' ]
+    tcols = [x.strip() for x in conf_value(umcconf, "idbpush.tags").split(',') if x != '' ]
+    fcols = [x.strip() for x in conf_value(umcconf, "idbpush.fields").split(',') if x != '' ]
     
     # combine with common tags and fields cols
     tcols.extend(x for x in 
-        [y.strip().lower() for y in conf_value(conf, "common.idbpush.tags").split(',') ] 
+        [y.strip() for y in conf_value(conf, "common.idbpush.tags").split(',') ] 
         if x != '' and x not in tcols and '!'+x not in tcols )
     fcols.extend(x for x in 
-        [y.strip().lower() for y in conf_value(conf, "common.idbpush.fields").split(',') ] 
+        [y.strip() for y in conf_value(conf, "common.idbpush.fields").split(',') ] 
         if x != '' and x not in fcols and '!'+x not in tcols )
     
     # remove all commented out fields and tags
@@ -331,7 +331,7 @@ def get_umc_def(umc_id):
         err_msg("The time format '%s' is invalid for umc '%s': %s!" % (timeformat,umc_id,e)) 
         return None
             
-    timefield=conf_value(umcconf, "idbpush.timefield", conf_value(conf, "common.idbpush.timefield", DEFAULT_TIMEFIELD)).lower()    
+    timefield=conf_value(umcconf, "idbpush.timefield", conf_value(conf, "common.idbpush.timefield", DEFAULT_TIMEFIELD))   
     filter=conf_value(umcconf, "idbpush.filter", None)
     
     # transformation expressions
@@ -348,8 +348,8 @@ def read_datapoints(logfilename, umcdef):
         with open(logfilename, 'r') as csvfile:
             reader = csv.DictReader(csvfile, delimiter=',')
             for row in reader:
-                # convert all keys to lowercase and remove None keys
-                row = { k.lower():v for k, v in row.items() if k is not None }
+                # remove None keys
+                row = { k:v for k, v in row.items() if k is not None }
                 
                 # timestamp
                 try:
@@ -367,8 +367,8 @@ def read_datapoints(logfilename, umcdef):
                     continue     
                 
                 # create tags and fields
-                tags   = { k.lower():str(v)      for k, v in row.items() if k in umcdef.tcols }
-                fields = { k.lower():float_ex(v) for k, v in row.items() if k in umcdef.fcols }                
+                tags   = { k:str(v)      for k, v in row.items() if k in umcdef.tcols }
+                fields = { k:float_ex(v) for k, v in row.items() if k in umcdef.fcols }                
                 notags = (len(tags) == 0)
 
                 # evaluate transformations
