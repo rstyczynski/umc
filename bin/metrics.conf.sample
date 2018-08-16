@@ -77,11 +77,11 @@ umc-dms.jdbc:
     tags: "Host,ServerName,Name"
     fields: "ConnectionCreate_maxTime,ConnectionCreate_completed,ConnectionCreate_time,ConnectionCreate_active,ConnectionCreate_maxActive,
       Name,ConnectionCreate_minTime,ConnectionOpenCount_count,ConnectionCreate_avg,ConnectionCloseCount_count"
-    filter:
+    filter: 
     transform:
-      - "servername=re.search(r'.+(SOA[0-9]+)', servername).group(1)"
-      - "host='test'"
-    
+      - "ServerName=re.search(r'.+(SOA[0-9]+)', ServerName).group(1)"
+      - "Host='test'"
+
 # aiaflows
 umc-oradb.aiaflows:  
   enabled: true
