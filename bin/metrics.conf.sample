@@ -64,6 +64,24 @@ common:
     # automatically reload configuration during runtime when it changes
     configuration-auto-reload: true  
 
+# dms test
+umc-dms.jdbc:
+  enabled: true
+  umcrunner:
+    hosts: _ALL_
+    params: 20 dms 60 60 JDBC_DataSource config.sample
+  idbpush:
+    name: dms_jdbc
+    timefield: datetime
+    timeformat: "%y-%m-%d %H:%M:%S"
+    tags: "Host,ServerName,Name"
+    fields: "ConnectionCreate_maxTime,ConnectionCreate_completed,ConnectionCreate_time,ConnectionCreate_active,ConnectionCreate_maxActive,
+      Name,ConnectionCreate_minTime,ConnectionOpenCount_count,ConnectionCreate_avg,ConnectionCloseCount_count"
+    filter:
+    transform:
+      - "servername=re.search(r'.+(SOA[0-9]+)', servername).group(1)"
+      - "host='test'"
+    
 # aiaflows
 umc-oradb.aiaflows:  
   enabled: true

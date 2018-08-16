@@ -257,8 +257,39 @@ def eval_filter(umc_id, filter, tags, fields):
                 exec(k + "=" + str(v))
         return eval(filter)
     except Exception as e:
-        err_msg("Error when evaluating the filter '%s' for %s: %s!" % (filter, umc_id, e)) 
+        err_msg("Error when evaluating the filter '%s' for %s: %s!" % (filter, umc_id, str(e))) 
         return False      
+
+def eval_transform(umc_id, transform, tags, fields):
+    try:
+        # declare variables and assign values to them
+        for k,v in tags.items():
+            if v is not None:
+                exec(k + "=\"" + v + "\"")
+        for k,v in fields.items():
+            if v is not None:
+                exec(k + "=" + str(v))
+        
+        # transform                 
+        for e in transform:
+            try:
+                exec(e)
+            except Exception ex:
+                info1_msg("Error when evaluating transformation '%s' for %s: %s"%(e,umc_id,str(ex)))
+
+        # create resulting tags and fields
+        __t2 = {}
+        for k,v in tags.items():
+            exec("__t2['%s']=%s"%(k,k))
+        
+        __f2 = {}
+        for k,v in fields.items():
+            exec("__f2['%s']=%s"%(k,k))
+        
+        return __t2,__f2
+    except Exception as e:
+        err_msg("Error when evaluating transformations for %s: %s"%(umc_id, str(e)))
+        return tags,fields
 
 # *** reads and checks umc definition for a specific umc id
 def get_umc_def(umc_id):
@@ -303,8 +334,11 @@ def get_umc_def(umc_id):
     timefield=conf_value(umcconf, "idbpush.timefield", conf_value(conf, "common.idbpush.timefield", DEFAULT_TIMEFIELD)).lower()    
     filter=conf_value(umcconf, "idbpush.filter", None)
     
+    # transformation expressions
+    transform=conf_value(umcconf, "idbpush.transform", None)
+    
     return Map(umcid=umc_id,umcconf=umcconf,metric=metric,enabled=enabled,tcols=tcols,fcols=fcols,
-        timeformat=timeformat,timefield=timefield,filter=filter,datapoints=[],datafiles=[])
+        timeformat=timeformat,timefield=timefield,filter=filter,transform=transform,datapoints=[],datafiles=[])
 
 # *** read data points from the csv log file
 def read_datapoints(logfilename, umcdef):    
@@ -336,11 +370,15 @@ def read_datapoints(logfilename, umcdef):
                 tags   = { k.lower():str(v)      for k, v in row.items() if k in umcdef.tcols }
                 fields = { k.lower():float_ex(v) for k, v in row.items() if k in umcdef.fcols }                
                 notags = (len(tags) == 0)
-                
+
+                # evaluate transformations
+                if umcdef.transform is not None:
+                    tags,fields = eval_transform(umcdef.umcid, umcdef.transform,tags,fields)
+
                 # skip row if the filter is defined and holds on this row
                 if umcdef.filter is not None and not(eval_filter(umcdef.umcid, umcdef.filter, tags, fields)):
                     continue
-                
+                                    
                 if len(fields) > 0:            
                     datapoints.append({ "measurement" : umcdef.metric, "time" : timestamp, "fields" : fields, "tags": tags })
                     
