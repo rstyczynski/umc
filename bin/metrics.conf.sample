@@ -76,7 +76,7 @@ umc-dms.jdbc:
     timeformat: "%y-%m-%d %H:%M:%S"
     tags: "Host,ServerName,Name"
     fields: "ConnectionCreate_maxTime,ConnectionCreate_completed,ConnectionCreate_time,ConnectionCreate_active,ConnectionCreate_maxActive,
-      Name,ConnectionCreate_minTime,ConnectionOpenCount_count,ConnectionCreate_avg,ConnectionCloseCount_count"
+      ConnectionCreate_minTime,ConnectionOpenCount_count,ConnectionCreate_avg,ConnectionCloseCount_count"
     filter: 
     transform:
       - "ServerName=re.search(r'.+(SOA[0-9]+)', ServerName).group(1)"
