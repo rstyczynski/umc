@@ -6,7 +6,7 @@ scriptDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 source $scriptDir/umc.h &>/dev/null 
 
-if [ "$scriptDir" = "" ]; then
+if [ "$UMC_LOG_DIR" = "" ]; then
   echo >&2 "umc log directory in \$UMC_LOG_DIR variable has not been set!"
   exit 1  
 fi 
