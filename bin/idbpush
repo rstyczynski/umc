@@ -19,11 +19,13 @@ from time import gmtime, strftime
 from influxdb import InfluxDBClient
 from threading import Event
 
+from requests.exceptions import *
+
 # default values
 DEFAULT_TIMEFORMAT="%Y-%m-%d %H:%M:%S"
 DEFAULT_TIMEFIELD="datetime"
 DEFAULT_BATCHSIZE_ROWS=50
-DEFAULT_BATCHSIZE_FILES=500
+DEFAULT_BATCHSIZE_FILES=300
 DEFAULT_DELAYBETWEENWRITES=200
 DEFAULT_RETRYCOUNT=5
 DEFAULT_RETRYINTERVAL=10000
@@ -370,17 +372,16 @@ def read_datapoints(logfilename, umcdef):
                 tags   = { k:str(v)      for k, v in row.items() if k in umcdef.tcols }
                 fields = { k:float_ex(v) for k, v in row.items() if k in umcdef.fcols }                
                 notags = (len(tags) == 0)
+                
+                # only add this row if there is at least one field with some value
+                if len([ v for k,v in fields.items() if v is not None ])>0:
+                    # evaluate transformations
+                    if umcdef.transform is not None:
+                        tags,fields = eval_transform(umcdef.umcid, umcdef.transform,tags,fields)
 
-                # evaluate transformations
-                if umcdef.transform is not None:
-                    tags,fields = eval_transform(umcdef.umcid, umcdef.transform,tags,fields)
-
-                # skip row if the filter is defined and holds on this row
-                if umcdef.filter is not None and not(eval_filter(umcdef.umcid, umcdef.filter, tags, fields)):
-                    continue
-                                    
-                if len(fields) > 0:            
-                    datapoints.append({ "measurement" : umcdef.metric, "time" : timestamp, "fields" : fields, "tags": tags })
+                    # only add this row if filter holds on this row or there is no filter
+                    if umcdef.filter is None or eval_filter(umcdef.umcid, umcdef.filter, tags, fields):
+                        datapoints.append({ "measurement" : umcdef.metric, "time" : timestamp, "fields" : fields, "tags": tags })
                     
             # // end reading rows
         # // end open file
@@ -409,7 +410,7 @@ def db_write(client, datapoints, datafiles):
             lastdbcall = int(round(time.time() * 1000))
             if retryCount > 0:
                 info1_msg("Connection to the DB was successful after %d retries."%retryCount);
-        except Exception as e:
+        except (ConnectionError, Timeout) as e:
             err_msg("Error occurred when inserting data: %s"%(e))                                                    
             if retry_count == -1 or retryCount < retry_count:
                 err_msg("Will retry in %d seconds..."%(retry_interval))                            
@@ -420,7 +421,14 @@ def db_write(client, datapoints, datafiles):
                 retry = True
             else:
                 err_msg("Maximum number of %d retries reached!"%(retryCount))                          
-                return False                            
+                return False                                            
+        except Exception as e:
+            # TODO: check the status code and if 400, do something with the data in the buffer
+            # such as dump it to a text file or try to divide it to parts and submit it
+            err_msg("Error occurred when inserting data, all records in the write buffer (%d) will be discarded!: %s"
+                %(,len(datapoints),str(e)))
+            retry = False
+            pass                                                    
             
         if not(retry):
             # success
