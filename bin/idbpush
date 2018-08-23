@@ -426,7 +426,7 @@ def db_write(client, datapoints, datafiles):
             # TODO: check the status code and if 400, do something with the data in the buffer
             # such as dump it to a text file or try to divide it to parts and submit it
             err_msg("Error occurred when inserting data, all records in the write buffer (%d) will be discarded!: %s"
-                %(,len(datapoints),str(e)))
+                %(len(datapoints),str(e)))
             retry = False
             pass                                                    
             
