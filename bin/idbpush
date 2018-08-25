@@ -243,11 +243,11 @@ def get_batch_logs(batchsize=sys.maxint):
     return sorted(batch, key=lambda fn: os.stat(fn).st_mtime, reverse=True)
     
 # *** convert to float, return def (default is None) when cannot convert
-def float_ex(val, def=None):
+def float_ex(val, defv=None):
     try:
         return float(val)
     except:
-        return def 
+        return defv 
 
 # *** evaluates filter on the row's tags and fields values        
 def eval_filter(umc_id, filter, tags, fields):
@@ -369,7 +369,7 @@ def read_datapoints(logfilename, umcdef):
                     else:
                         if umcdef.tzfield is not None and umcdef.tzfield in row:
                             tzoffset = float_ex(row[umcdef.tzfield], DEFAULT_TIMEZONE)                        
-                        timestamp = (unix_time_millis(datetime.datetime.strptime(row[umcdef.timefield],umcdef.timeformat)) - tzoffset*60*60) * 1000000
+                        timestamp = (unix_time_millis(datetime.datetime.strptime(row[umcdef.timefield],umcdef.timeformat)) - int(tzoffset*60*60)) * 1000000
                 except Exception as e:
                     # output error and skip this row
                     err_msg("Cannot read or convert time to timestamp for %s: %s"%(umcdef.umcid,str(e)))
