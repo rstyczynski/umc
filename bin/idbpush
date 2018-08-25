@@ -369,7 +369,7 @@ def read_datapoints(logfilename, umcdef):
                     else:
                         if umcdef.tzfield is not None and umcdef.tzfield in row:
                             tzoffset = float_ex(row[umcdef.tzfield], DEFAULT_TIMEZONE)                        
-                        timestamp = (unix_time_millis(datetime.datetime.strptime(row[umcdef.timefield],umcdef.timeformat)) - int(tzoffset*60*60)) * 1000000
+                        timestamp = (unix_time_millis(datetime.datetime.strptime(row[umcdef.timefield],umcdef.timeformat)) - int(tzoffset*60*60*1000)) * 1000000
                 except Exception as e:
                     # output error and skip this row
                     err_msg("Cannot read or convert time to timestamp for %s: %s"%(umcdef.umcid,str(e)))
