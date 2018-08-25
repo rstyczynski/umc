@@ -24,6 +24,7 @@ from requests.exceptions import *
 # default values
 DEFAULT_TIMEFORMAT="%Y-%m-%d %H:%M:%S"
 DEFAULT_TIMEFIELD="datetime"
+DEFAULT_TIMEZONE=0
 DEFAULT_BATCHSIZE_ROWS=50
 DEFAULT_BATCHSIZE_FILES=300
 DEFAULT_DELAYBETWEENWRITES=200
@@ -241,12 +242,12 @@ def get_batch_logs(batchsize=sys.maxint):
             break
     return sorted(batch, key=lambda fn: os.stat(fn).st_mtime, reverse=True)
     
-# *** convert to float, return None when cannot convert
-def float_ex(val):
+# *** convert to float, return def (default is None) when cannot convert
+def float_ex(val, def=None):
     try:
         return float(val)
     except:
-        return None 
+        return def 
 
 # *** evaluates filter on the row's tags and fields values        
 def eval_filter(umc_id, filter, tags, fields):
@@ -334,17 +335,21 @@ def get_umc_def(umc_id):
         return None
             
     timefield=conf_value(umcconf, "idbpush.timefield", conf_value(conf, "common.idbpush.timefield", DEFAULT_TIMEFIELD))   
+    tzfield=conf_value(umcconf, "idbpush.tzfield", None)   
+    
     filter=conf_value(umcconf, "idbpush.filter", None)
     
     # transformation expressions
     transform=conf_value(umcconf, "idbpush.transform", None)
     
     return Map(umcid=umc_id,umcconf=umcconf,metric=metric,enabled=enabled,tcols=tcols,fcols=fcols,
-        timeformat=timeformat,timefield=timefield,filter=filter,transform=transform,datapoints=[],datafiles=[])
+        timeformat=timeformat,timefield=timefield,tzfield=tzfield,filter=filter,transform=transform,datapoints=[],datafiles=[])
 
 # *** read data points from the csv log file
 def read_datapoints(logfilename, umcdef):    
     datapoints = []; notags=False; nofields=False; 
+    tzoffset=float_ex(conf_value(conf, "common.idbpush.timezone", DEFAULT_TIMEZONE), DEFAULT_TIMEZONE)
+    
     if umcdef.enabled and umcdef.metric is not None: 
         # read datapoints
         with open(logfilename, 'r') as csvfile:
@@ -362,7 +367,9 @@ def read_datapoints(logfilename, umcdef):
                     elif umcdef.timeformat == "_time_ms_":
                         timestamp = long(row[umcdef.timefield]) * 1000000               
                     else:
-                        timestamp = unix_time_millis(datetime.datetime.strptime(row[umcdef.timefield],umcdef.timeformat)) * 1000000
+                        if umcdef.tzfield is not None and umcdef.tzfield in row:
+                            tzoffset = float_ex(row[umcdef.tzfield], DEFAULT_TIMEZONE)                        
+                        timestamp = (unix_time_millis(datetime.datetime.strptime(row[umcdef.timefield],umcdef.timeformat)) - tzoffset*60*60) * 1000000
                 except Exception as e:
                     # output error and skip this row
                     err_msg("Cannot read or convert time to timestamp for %s: %s"%(umcdef.umcid,str(e)))
