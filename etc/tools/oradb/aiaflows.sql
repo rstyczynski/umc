@@ -1,12 +1,12 @@
 -- retrieves metrics for AIA flows (order management, update customer accounts) in the past minute
 SELECT 
-  created_time as TIME, 
-  flow as FLOW, 
-  count(1) as COUNT_OK, 
-  count(err) as COUNT_ERR, 
-  Round(min(durati0n),2) as MIN, 
-  Round(max(durati0n),2) as MAX, 
-  Round(avg(durati0n),2) as AVG 
+  created_time as "Time", 
+  flow as "Flow", 
+  count(1) as "CountOk", 
+  count(err) as "CountErr", 
+  Round(min(durati0n),2) as "Min", 
+  Round(max(durati0n),2) as "Max", 
+  Round(avg(durati0n),2) as "Avg" 
 FROM (
   SELECT 
     flow, 

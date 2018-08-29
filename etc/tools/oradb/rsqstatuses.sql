@@ -1,11 +1,11 @@
 -- Resequencer statuses
 SELECT
-	to_char(sysdate,'YYYY-MM-DD HH24:MI:SS') as "time",
+	to_char(sysdate,'YYYY-MM-DD HH24:MI:SS') as "Time",
 	decode(gs.status, '0','READY','1','LOCKED','3','ERRORED','4','TIMED OUT','6','GROUP ERROR') || '-' ||
-	decode(m.status,'0','READY','2','PROCESSED','3','ERRORED','4','TIMED OUT','6','ABORTED') as "grpmsg_status",
-	gs.status as "grp_status",
-	m.status as "msg_status",
-	count(1) as "count",
+	decode(m.status,'0','READY','2','PROCESSED','3','ERRORED','4','TIMED OUT','6','ABORTED') as "GrpMsgStatus",
+	gs.status as "GrpStatus",
+	m.status as "MsgStatus",
+	count(1) as "Count",
 	SUBSTR(gs.component_dn,-INSTR(reverse(gs.component_dn),'/') + 1) as "component"
 FROM 
 	__SOAINFRA_SCHEMA__.mediator_group_status gs, __SOAINFRA_SCHEMA__.mediator_resequencer_message m

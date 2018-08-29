@@ -1,9 +1,9 @@
 -- AIA BRM providers statistics
 SELECT 
-  created_time as "time", 
-  R3sult as "result", 
-  flow as "flow", 
-  count(1) as "count"
+  created_time as "Time", 
+  R3sult as "Result", 
+  flow as "Flow", 
+  count(1) as "Count"
 FROM (
     SELECT 
         to_char(created_time, 'YY-MM-DD HH24:MI') created_time, 

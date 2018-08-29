@@ -1,5 +1,5 @@
 -- AIA Siebel provider statistics
-select created_time as "time",  R3sult as "result", flow as "flow", count(1) as "count"
+select created_time as "Time",  R3sult as "Result", flow as "Flow", count(1) as "Count"
 from
   (select a1.id, to_char(a1.created_time, 'YY-MM-DD HH24:MI') created_time, a1.state, error_message,
     case

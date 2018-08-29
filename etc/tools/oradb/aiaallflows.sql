@@ -1,11 +1,11 @@
 -- AIA all flows statistics
-SELECT count(1) cnt, 
-  count(faulted_time) cnt_faulted,
-  round(min(durat1on),3) mintime, round(max(durat1on),3) maxtime, round(avg(durat1on),3) avgtime, 
-  percentile_disc(0.5) within group (ORDER BY durat1on ASC) p50,
-  percentile_disc(0.9) within group (ORDER BY durat1on ASC) p90,
-  percentile_disc(0.95) within group (ORDER BY durat1on ASC) p95,
-  min(instance_id) sample_cid, NVL(SUBSTR(cdns, 0, INSTR(cdns, ',')-1), cdns) AS entry_point, cdns
+SELECT count(1) as "Count", 
+  count(faulted_time) as "CountFaulted",
+  round(min(durat1on),3) mintime, round(max(durat1on),3) as "MaxTime", round(avg(durat1on),3) as "AvgTime", 
+  percentile_disc(0.5) within group (ORDER BY durat1on ASC) as "p50",
+  percentile_disc(0.9) within group (ORDER BY durat1on ASC) as "p90",
+  percentile_disc(0.95) within group (ORDER BY durat1on ASC) as "p95",
+  min(instance_id) as "SampleCid", NVL(SUBSTR(cdns, 0, INSTR(cdns, ',')-1), cdns) AS as "EntryPoint", cdns as "Cdns"
 FROM (
   SELECT ecid, min(instance_id) instance_id,
     extract(minute FROM (max(end_time)-min(created_time)))*60+

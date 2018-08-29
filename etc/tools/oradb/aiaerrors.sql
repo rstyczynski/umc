@@ -1,5 +1,5 @@
 -- AIA errors per flow
-select to_char(max(created_time),'YY-MM-DD HH24:MI') as "time", flow as "flow", count(1) as "count", error_type as "error_type" from (
+select to_char(max(created_time),'YY-MM-DD HH24:MI') as "Time", flow as "Flow", count(1) as "Count", error_type as "ErrorType" from (
   select flow,
   case
     when error_type is null then 'UNKNOWN_ERROR'
