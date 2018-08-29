@@ -4,10 +4,21 @@
 # the script directory
 scriptDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+source $scriptDir/umc.h &>/dev/null
+
 if [ "$UMCRUNNER_CONF" = "" ]; then
   echo >&2 "umcrunner configuration in \$UMCRUNNER_CONF variable has not been set!"
   exit 1  
 fi 
+
+if [ "$UMC_LOG_DIR" = "" ]; then
+  echo >&2 "umc log directory in \$UMC_LOG_DIR variable has not been set!"
+  exit 1
+fi
+
+if [ ! -d $UMC_LOG_DIR/umcrunner ]; then
+  mkdir -p $UMC_LOG_DIR/umcrunner/
+fi
 
 # lockfile
 lockfile=$scriptDir/.umcrunnerd-$HOSTNAME.lck
@@ -18,13 +29,15 @@ if [ -e $lockfile ]; then
    exit 1
 fi
 
-trap "rm -f $lockfile; exit" SIGINT SIGTERM EXIT
+trap "$scriptDir/umcrunner --stopall >>$UMC_LOG_DIR/umcrunner/umcrunner-$HOSTNAME.log 2>&1; rm -f $lockfile; exit 0" SIGINT SIGTERM EXIT
+
 touch $lockfile
 
 while true; do
-  $scriptDir/umcrunner --runall $UMCRUNNER_CONF
+  $scriptDir/umcrunner --runall $UMCRUNNER_CONF >>$UMC_LOG_DIR/umcrunner/umcrunner-$HOSTNAME.log 2>&1
   sleep 15
 done
 
 rm $lockfile
+
 trap - SIGINT SIGTERM EXIT
