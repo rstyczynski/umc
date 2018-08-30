@@ -15,15 +15,15 @@ from
     case
       when instr(a1.composite_dn, 'UpdateSalesOrder') > 0 then 'UPDSO'
       when instr(a1.composite_dn, 'QueryCustomerParty') > 0 then 'SFOBA'
-      when instr(a1.composite_dn, 'SyncCustomerSiebelEventAggregator') > 0 then 'UPDCA-EA'
-      when instr(a1.composite_dn, 'SyncAcctSiebelAggrEventConsumer') > 0 then 'UPDCA-EC'
+      when instr(a1.composite_dn, 'SyncCustomerSiebelEventAggregator') > 0 then 'UPDCA-1'
+      when instr(a1.composite_dn, 'SyncAccountSiebelReqABCSImpl') > 0 then 'UPDCA-3'
       else 'UNKNOWN'
     end Flow
   from __SOAINFRA_SCHEMA__.composite_instance a1, __SOAINFRA_SCHEMA__.composite_instance_fault a2
   where (a1.composite_dn like 'default/UpdateSalesOrderSiebelCommsProv%' or
          a1.composite_dn like 'default/QueryCustomerPartyListSiebelProv%' or
          a1.composite_dn like 'default/SyncCustomerSiebelEventAggregator%' or
-         a1.composite_dn like 'default/SyncAcctSiebelAggrEventConsumer%') and
+         a1.composite_dn like 'default/SyncAccountSiebelReqABCSImpl%') and
 	 a1.created_time >= trunc(sysdate - 2/1440, 'MI') AND a1.created_time < trunc(sysdate - 1/1440, 'MI') and
          a1.id = a2.composite_instance_id (+)
 ) group by created_time, flow, R3sult
