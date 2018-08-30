@@ -299,7 +299,7 @@ install_pythonlib () {
 	module="$1"
 	version="$2"
 	echo "  - Checking module $module..."
-	python $INSTALL_HOME/../bin/checkModule.py $module-123
+	python $INSTALL_HOME/../bin/checkModule.py $module
 	if [ $? -ne 0 ]; then
 		echo "  - Module $module is not installed."
 		
@@ -380,6 +380,7 @@ install_influxdb_python () {
 	install_pythonlib "urllib3" "1.22"
 	install_pythonlib "requests" "2.18.4"
 	install_pythonlib "python-dateutil" "2.7.3"
+	install_pythonlib "PyYAML" "3.12"	
 	install_pythonlib "influxdb" "5.0.0"
 }
 
