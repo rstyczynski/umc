@@ -152,7 +152,7 @@ install_sqlcl () {
 		cd $LIBS_HOME && unzip $INSTALL_HOME/$BINFILE >>$INSTALL_LOG 2>&1
 		
 		# add min and max JVM memory
-		sed -i.bckp '/AddVMOption -Xss10M/a AddVMOption -Xms64m\nAddVMOption -Xmx64m' $LIBS_HOME/sqlcl/bin/sql
+		sed -i.bckp '/AddVMOption -Xss10M/a AddVMOption -Xms64m\nAddVMOption -Xmx64m\nAddVMOption -Duser.timezone=UTC' $LIBS_HOME/sqlcl/bin/sql
 		
 		# env variables
 		echo "# sqlcl" >>$ENV_FILE
