@@ -106,11 +106,13 @@ def send_request(method, url):
     while True:
         try:
             furl='http://%s%s'%(connect_str, url)    
-            return {
-                'get' : requests.get(furl, timeout=(args.connect_timeout, args.read_timeout)),
-                'post': requests.post(furl, timeout=(args.connect_timeout, args.read_timeout))  
-            }[method]
+            if method=="get":
+                return requests.get(furl, timeout=(args.connect_timeout, args.read_timeout))
+            elif method=="post":
+                return requests.post(furl, timeout=(args.connect_timeout, args.read_timeout))
+            else: raise Exception("Fatal: the method %s is not supported!"%method)
         except requests.exceptions.ConnectionError as e:
+            old_connect_str=connect_str
             connect_str=None
             if server_list is not None:
                 for hostname,sdef in server_list.items():
@@ -119,6 +121,7 @@ def send_request(method, url):
                         sdef.discarded=True
                         break
             if connect_str is None:
+                connect_str=old_connect_str
                 raise e 
         # except
     # while
@@ -166,6 +169,7 @@ if __name__ == "__main__":
                 break
         
         if command_def is not None:
+            print "here!"
             if not(command_def["confirm"]) or args.yes or utils.query_yes_no(utils.unpack(vars(args),command_def["q"]) + " Are you sure?"):
                 response=send_request("post", utils.unpack(vars(args),command_def["url"]))
                 m = response.json()
@@ -217,7 +221,7 @@ if __name__ == "__main__":
     except requests.exceptions.ConnectTimeout as e:
         sys.stderr.write("Connect timeout occured when sending the request")        
     except requests.exceptions.ConnectionError as e:
-        sys.stderr.write("Unable to connect: %s\n"%str(e))        
+        sys.stderr.write("Unable to connect: %s\n"%connect_str)        
     except Exception as e:
         sys.stderr.write("%s\n\n"%str(e))
         

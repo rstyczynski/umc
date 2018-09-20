@@ -69,34 +69,6 @@ class PathDef():
         
         return new_path
 
-# utility functions
-# def get_path_params(path_def, path):
-#     path_re=path_def
-# 
-#     # find all params in path_def
-#     params_def=re.findall("(\{[a-zA-Z0-9_]+\})", path_def)
-# 
-#     # create re pattern by replacing parameters in path_def with pattern to match parameter values
-#     for p_def in params_def: path_re=path_re.replace(p_def, "([a-zA-Z\-0-9\._]+)")
-# 
-#     # get params values
-#     res=re.findall(path_re, path)
-#     values=[]
-#     for x in res:
-#         if type(x) is tuple: values.extend(list(x))
-#         else: values.append(x)
-# 
-#     params=Map()
-#     params.__path_def__=path_def
-#     params.__path__=path
-#     for x in range(0, len(params_def)):
-#         if x < len(values): params[params_def[x][1:-1]]=str(values[x])
-#         else:
-#             Msg.warn_msg("The path '%s' does not match definition '%s'"%(path, path_def))
-#             return None
-# 
-#     return params
-
 # HTTPServer
 class UmcRunnerHTTPServer():
         
@@ -169,7 +141,7 @@ class ProxyRequest():
         
     def __send_request(self):
         try:
-            Msg.info2_msg("Sending proxy request to %s"%(self.url))
+            Msg.info2_msg("Sending proxy request %s %s"%(self.method.upper(),self.url))
             headers={ "Via" : "1.1 %s"%socket.gethostname() }
             if self.method=="get": 
                 self.response = requests.get(self.url,timeout=(GlobalContext.config.umcrunner_params.proxy_timeout_connect, 
@@ -397,10 +369,7 @@ class Handler(BaseHTTPRequestHandler):
         #if self.path == "/stopall":
         #    GlobalContext.exitEvent.set()
         #    self.send(202) # accepted
-        #    return
-        
-        # others are not found
-        self.send_response(404)
+        #    return        
  
     def log_request(self, size):
         Msg.info2_msg('HTTP request from (%s) %s %s'%(self.address_string(), self.requestline, str(size)))
