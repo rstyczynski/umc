@@ -99,8 +99,8 @@ class RefreshProcessesTask():
                             rc=umcdef.proc.returncode
                             if rc != 0:
                                 Msg.warn_msg("umc instance %s failed/terminated with exit code %d. Will attempt to restart it after %d seconds."
-                                    %(umcdef.umc_instanceid,rc,60))
-                                umcdef.start_after=time.time()+60
+                                    %(umcdef.umc_instanceid,rc,GlobalContext.config.umcrunner_params.run_after_failure))
+                                umcdef.start_after=time.time()+GlobalContext.config.umcrunner_params.run_after_failure
                                 umcdef.num_errors = umcdef.num_errors + 1
                                 umcdef.lasterror_time = time.time()
                             umcdef.returncodes.insert(0,(time.time(), rc))

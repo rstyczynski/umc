@@ -80,6 +80,11 @@ common:
     # umcrunner nodes in the environment on the same request in paralllel;
     # when set to False, the proxy requests will be sent in sequence 
     proxy_run_threads: True
+
+    # when umc instance fails or is terminated, wait X seconds before the next start
+    # this value should be greater or equal to min-starting-time
+    run-after-failure: 60
+
   
   # ** common definitions for idbpush
   idbpush:
