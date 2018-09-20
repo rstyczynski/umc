@@ -16,3 +16,5 @@ varia/access-OSB*
 *.vfuk*
 db-backup
 *.pyc
+*.test
+*.out
