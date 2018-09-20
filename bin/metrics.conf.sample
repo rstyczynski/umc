@@ -23,10 +23,7 @@ common:
       # tcp port the server should be listening on all servers
       tcp-port: 1989
       
-      # umcrunner http server will listen on hostname/tcp-port by default
-      # when hostname does not resolve to a desired ip address, the following configuration defines
-      # hostnames and their ip address it should bint to, tcp_port and whether it should be enabled or disabled  
-      # defines hostname, ip_addres, tcp_port, enabled|disabled that should be used for that hostname
+      # The following configuration defines hostnames and their ip address umcrunnerd will bind to on respective hosts
       # when tcp_port is omitted, the default tcp-port will be used
       server-binding:
         - hostname=ukbn01hr, address=192.168.10.101, enabled=True 
@@ -85,7 +82,6 @@ common:
     # this value should be greater or equal to min-starting-time
     run-after-failure: 60
 
-  
   # ** common definitions for idbpush
   idbpush:
     # influxdb connection details
