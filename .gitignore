@@ -15,3 +15,4 @@ tools/linux/soadb/1.0/connstrs
 varia/access-OSB*
 *.vfuk*
 db-backup
+*.pyc
