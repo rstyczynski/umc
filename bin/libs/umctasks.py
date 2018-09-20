@@ -221,6 +221,7 @@ class CollectStatsTask():
             GlobalContext.umcrunner_stats = Map(
                 pid=proc.pid,
                 hostname=socket.gethostname(),
+                uptime=time.time()-proc.create_time(),
                 cpu=d["cpu_times"].user,
                 rss=float(d["memory_info"].rss/1024/1024),
                 threads=proc.num_threads(),

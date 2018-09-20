@@ -50,7 +50,7 @@ class PathDef():
         for x in range(0, len(params_def)):
             if x < len(values): params[params_def[x][1:-1]]=str(values[x])
             else:
-                Msg.warn_msg("The path '%s' does not match definition '%s'"%(path, self.path_def))
+                #Msg.warn_msg("The path '%s' does not match definition '%s'"%(path, self.path_def))
                 return None
         
         return params
