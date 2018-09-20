@@ -131,28 +131,33 @@ def send_request(method, url):
 if __name__ == "__main__":    
 
     # arguments
-    parser = argparse.ArgumentParser(description='umcrunner client')
-    parser.add_argument('--connect', required=False, default=None, help='umcrunner daemon host nad port to connect',metavar="<host:port>")
-    parser.add_argument('--connect-timeout', required=False, default=0.5, help='HTTP connection timeout, default=0.5s',metavar="<timeout>")
-    parser.add_argument('--read-timeout', required=False, default=10, help='HTTP read timeout, default=10s',metavar="<timeout>")
+    parser = argparse.ArgumentParser(description='umcrunner client', add_help=False)
+    conopts = parser.add_argument_group('optional connection arguments')    
+    conopts.add_argument('--connect', required=False, default=None, help='umcrunner daemon host nad port to connect',metavar="<host:port>")
+    conopts.add_argument('--connect-timeout', required=False, default=0.5, help='HTTP connection timeout, default=0.5s',metavar="<timeout>")
+    conopts.add_argument('--read-timeout', required=False, default=10, help='HTTP read timeout, default=10s',metavar="<timeout>")
     
-    # main commands
-    parser.add_argument('--stats', required=False, metavar="hosts|umc", dest='resource',const='hosts',action='store',nargs='?',type=str,
+    group=parser.add_argument_group("stats and commands")
+    statcom = group.add_mutually_exclusive_group(required=True)    
+    statcom.add_argument('--stats', required=False, metavar="hosts|umc", dest='resource',const='hosts',action='store',nargs='?',type=str,
         help='resource stats to retrieve, default="hosts"')    
-    parser.add_argument('--terminate', metavar="<umc>", required=False, default=None, action='store',help='terminate umc instance')
+    statcom.add_argument('--terminate', metavar="<umc>", required=False, default=None, action='store',help='terminate umc instance')
     
-    parser.add_argument('--hostname', required=False, metavar="<name>", default='all',action='store',type=str,
+    prmopts = parser.add_argument_group('parameters for stats and commands')    
+    prmopts.add_argument('--hostname', required=False, metavar="<name>", default='all',action='store',type=str,
         help='run request on a host, default="all"')
-        
-    parser.add_argument('--describe', required=False, help='describe resource structure',action='store_true') 
-    parser.add_argument('--format', required=False, metavar="<text|json>", default="text", help='output format, default=text', action='store', type=str) 
     
-    parser.add_argument('--cont', required=False, default=False, action='store_true',help='display stats continuosly')
-    parser.add_argument('--refresh', required=False, metavar="<interval>", default=5, action='store',type=int,help='refresh interval for continuous display of data.')
+    fmtopts = parser.add_argument_group('output format and display arguments')    
+    fmtopts.add_argument('--format', required=False, metavar="<text|json>", default="text", help='output format, default=text', action='store', type=str) 
+    fmtopts.add_argument('--noterm', required=False, help='do not detect terminal dimensions',action='store_true')    
+    fmtopts.add_argument('--cont', required=False, default=False, action='store_true',help='display stats continuosly')
+    fmtopts.add_argument('--refresh', required=False, metavar="<interval>", default=5, action='store',type=int,help='refresh interval for continuous display of stats')
     
-    parser.add_argument('--noterm', required=False, help='will not detect terminal dimensions',action='store_true')    
-    parser.add_argument('--yes', required=False, default=False, help='answers all questions as \'yes\'',action='store_true')    
-    parser.add_argument('--verbose', required=False, help='be verbose',action='store_true')
+    otopts = parser.add_argument_group('optional other arguments')
+    otopts.add_argument("-h", "--help", action="help", help="show this help message and exit")
+    otopts.add_argument('--describe', required=False, help='describe resource structure',action='store_true')     
+    otopts.add_argument('--yes', required=False, default=False, help='answer all questions as \'yes\'',action='store_true')    
+    otopts.add_argument('--verbose', required=False, help='be verbose',action='store_true')
     args=parser.parse_args()
     Msg.verbose = args.verbose
 
@@ -169,7 +174,6 @@ if __name__ == "__main__":
                 break
         
         if command_def is not None:
-            print "here!"
             if not(command_def["confirm"]) or args.yes or utils.query_yes_no(utils.unpack(vars(args),command_def["q"]) + " Are you sure?"):
                 response=send_request("post", utils.unpack(vars(args),command_def["url"]))
                 m = response.json()
