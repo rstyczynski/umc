@@ -99,7 +99,15 @@ commands = {
     "terminate" : { 
         "url" : "/terminate/hosts/{hostname}/umc/{terminate}", "confirm" : True, 
         "q" : "This will terminate umc instances '{terminate}' on {hostname} host(s)!", 
-        "help" : "terminate umc instance" }
+        "help" : "terminate umc instance" },
+    "disable" : { 
+        "url" : "/disable/hosts/{hostname}/umc/{disable}", "confirm" : True, 
+        "q" : "This will disable and terminate umc instances '{disable}' on {hostname} host(s)!", 
+        "help" : "disable and terminate umc instance; note that this change is not persistent." },
+    "enable" : { 
+        "url" : "/enable/hosts/{hostname}/umc/{enable}", "confirm" : True, 
+        "q" : "This will enable umc instances '{enable}' on {hostname} host(s)!", 
+        "help" : "enable umc instance; note that this change is not persistent." }
 }
 
 # send request
@@ -161,6 +169,8 @@ if __name__ == "__main__":
     statcom.add_argument('--stats', required=False, metavar="hosts|umc", dest='resource',const='hosts',action='store',nargs='?',type=str,
         help='resource stats to retrieve, default="hosts"')    
     statcom.add_argument('--terminate', metavar="<umc>", required=False, default=None, action='store',help='terminate umc instance')
+    statcom.add_argument('--disable', metavar="<umc>", required=False, default=None, action='store',help='disable and terminate umc instance; this operation is not persistent')
+    statcom.add_argument('--enable', metavar="<umc>", required=False, default=None, action='store',help='enable umc instance; this operation is not persistent')
     
     prmopts = parser.add_argument_group('parameters for stats and commands')    
     prmopts.add_argument('--hostname', required=False, metavar="<name>", default='all',action='store',type=str,

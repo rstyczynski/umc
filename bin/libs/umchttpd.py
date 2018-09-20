@@ -343,6 +343,31 @@ class Handler(BaseHTTPRequestHandler):
             finally:
                 ud.lock.release()
         return self.msg("%s: umc instance id '%s' not found."%(params.hostname, params.umc_instance), code=404)
+
+    # callback to disable umc instance
+    def callback_umc_disable(self,params):
+        for ud in GlobalContext.umcdefs:
+            ud.lock.acquire()
+            try:
+                if ud.enabled and ud.umc_instanceid==params.umc_instance:
+                    ud.enabled = False
+                    self.callback_umc_terminate(params)
+                    return self.msg("%s: umc instance id '%s' was disabled."%(params.hostname, ud.umc_instanceid)) 
+            finally:
+                ud.lock.release()
+        return self.msg("%s: umc instance id '%s' not found."%(params.hostname, params.umc_instance), code=404)
+
+    # callback to enable umc instance
+    def callback_umc_enable(self,params):
+        for ud in GlobalContext.umcdefs:
+            ud.lock.acquire()
+            try:
+                if not(ud.enabled) and ud.umc_instanceid==params.umc_instance:
+                    ud.enabled = True
+                    return self.msg("%s: umc instance id '%s' was enabled."%(params.hostname, ud.umc_instanceid)) 
+            finally:
+                ud.lock.release()
+        return self.msg("%s: umc instance id '%s' not found."%(params.hostname, params.umc_instance), code=404)
     
     # *** HTTP methods handlers
     # reading data
@@ -367,6 +392,16 @@ class Handler(BaseHTTPRequestHandler):
         # terminate umc instance
         if self.process_cluster_request("post", "/terminate/hosts/{hostname}/umc/{umc_instance}", 0, 
             self.callback_umc_terminate) is not None:            
+            return
+
+        # disable umc instance
+        if self.process_cluster_request("post", "/disable/hosts/{hostname}/umc/{umc_instance}", 0, 
+            self.callback_umc_disable) is not None:            
+            return
+
+        # enable umc instance
+        if self.process_cluster_request("post", "/enable/hosts/{hostname}/umc/{umc_instance}", 0, 
+            self.callback_umc_enable) is not None:            
             return
             
         # others are not found 
