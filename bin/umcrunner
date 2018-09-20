@@ -107,7 +107,11 @@ commands = {
     "enable" : { 
         "url" : "/enable/hosts/{hostname}/umc/{enable}", "confirm" : True, 
         "q" : "This will enable umc instances '{enable}' on {hostname} host(s)!", 
-        "help" : "enable umc instance; note that this change is not persistent." }
+        "help" : "enable umc instance; note that this change is not persistent." },
+    "stop" : { 
+        "url" : "/stop/hosts/{hostname}", "confirm" : True, 
+        "q" : "This will stop umcrunner on {hostname} host(s)!", 
+        "help" : "stop umcrunner." }
 }
 
 # send request
@@ -171,6 +175,7 @@ if __name__ == "__main__":
     statcom.add_argument('--terminate', metavar="<umc>", required=False, default=None, action='store',help='terminate umc instance')
     statcom.add_argument('--disable', metavar="<umc>", required=False, default=None, action='store',help='disable and terminate umc instance; this operation is not persistent')
     statcom.add_argument('--enable', metavar="<umc>", required=False, default=None, action='store',help='enable umc instance; this operation is not persistent')
+    statcom.add_argument('--stop', required=False, default=None, action='store_true',help='stop umcrunner daemon')
     
     prmopts = parser.add_argument_group('parameters for stats and commands')    
     prmopts.add_argument('--hostname', required=False, metavar="<name>", default='all',action='store',type=str,
@@ -250,11 +255,11 @@ if __name__ == "__main__":
         print ""
         pass
     except requests.exceptions.ReadTimeout as e:
-        sys.stderr.write("Read timeout occured when sending the request")        
+        sys.stderr.write("Read timeout occured when sending the request.\n\n")        
     except requests.exceptions.ConnectTimeout as e:
-        sys.stderr.write("Connect timeout occured when sending the request")        
+        sys.stderr.write("Connect timeout occured when sending the request.\n\n")        
     except requests.exceptions.ConnectionError as e:
-        sys.stderr.write("Unable to connect: %s\n"%connect_str)        
+        sys.stderr.write("Unable to connect: %s\n\n"%connect_str)                
     #except Exception as e:
     #    sys.stderr.write("%s\n\n"%str(e))
         

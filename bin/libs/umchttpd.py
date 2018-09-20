@@ -349,10 +349,13 @@ class Handler(BaseHTTPRequestHandler):
         for ud in GlobalContext.umcdefs:
             ud.lock.acquire()
             try:
-                if ud.enabled and ud.umc_instanceid==params.umc_instance:
-                    ud.enabled = False
-                    self.callback_umc_terminate(params)
-                    return self.msg("%s: umc instance id '%s' was disabled."%(params.hostname, ud.umc_instanceid)) 
+                if ud.umc_instanceid==params.umc_instance:
+                    if ud.enabled: 
+                        ud.enabled = False
+                        self.callback_umc_terminate(params)
+                        return self.msg("%s: umc instance id '%s' was disabled."%(params.hostname, ud.umc_instanceid)) 
+                    else:
+                        return self.msg("%s: umc instance id '%s' is already disabled."%(params.hostname, ud.umc_instanceid))                         
             finally:
                 ud.lock.release()
         return self.msg("%s: umc instance id '%s' not found."%(params.hostname, params.umc_instance), code=404)
@@ -362,12 +365,20 @@ class Handler(BaseHTTPRequestHandler):
         for ud in GlobalContext.umcdefs:
             ud.lock.acquire()
             try:
-                if not(ud.enabled) and ud.umc_instanceid==params.umc_instance:
-                    ud.enabled = True
-                    return self.msg("%s: umc instance id '%s' was enabled."%(params.hostname, ud.umc_instanceid)) 
+                if ud.umc_instanceid==params.umc_instance:
+                    if not(ud.enabled):
+                        ud.enabled = True
+                        return self.msg("%s: umc instance id '%s' was enabled."%(params.hostname, ud.umc_instanceid)) 
+                    else:
+                        return self.msg("%s: umc instance id '%s' is already enabled."%(params.hostname, ud.umc_instanceid)) 
             finally:
                 ud.lock.release()
         return self.msg("%s: umc instance id '%s' not found."%(params.hostname, params.umc_instance), code=404)
+    
+    # callback to stop umcrunner
+    def callback_stop(self,params):
+        GlobalContext.exitEvent.set()
+        return self.msg("%s: umcrunner exit event set."%(params.hostname), code=202)
     
     # *** HTTP methods handlers
     # reading data
@@ -404,6 +415,11 @@ class Handler(BaseHTTPRequestHandler):
             self.callback_umc_enable) is not None:            
             return
             
+        # enable umc instance
+        if self.process_cluster_request("post", "/stop/hosts/{hostname}", 0, 
+            self.callback_stop) is not None:            
+            return
+
         # others are not found 
         self.send_response(404)
         
