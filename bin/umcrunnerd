@@ -47,6 +47,7 @@ class GlobalContext():
     server_list = None      # list of servers in umcrunner environment
     exitEvent = Event()     # global exit event, set when exiting umcrunner
     umcdefs = None          # umc definitions read from configuration file
+    umcrunner_stats=None    # umcrunner instance statistics
     httpd = None            # httpd server, instance of UmcRunnerHTTPServer
     paused = False          # True the loop tasks should be paused
     

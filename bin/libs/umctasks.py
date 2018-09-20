@@ -47,37 +47,38 @@ class UmcRunTask():
     def run_task(self, GlobalContext):
         running=[]; started=[]; waiting=[]
         for umcdef in GlobalContext.umcdefs:
-            umcdef.lock.acquire()
-            try:
-                if umcdef.proc is None and time.time()>umcdef.start_after:
-                    if umcdef.last_started_time is not None and time.time()-umcdef.last_started_time < GlobalContext.config.umcrunner_params.min_starting_time:
-                        Msg.warn_msg("umc instance id '%s' starting frequency is too high (<%d seconds), will not start it now!"
-                            %(umcdef.umc_instanceid,GlobalContext.config.umcrunner_params.min_starting_time))
-                        waiting.append("%s, WT=%.2fs"%(umcdef.umc_instanceid,GlobalContext.config.umcrunner_params.min_starting_time))                        
+            if umcdef.enabled:
+                umcdef.lock.acquire()
+                try:
+                    if umcdef.proc is None and time.time()>umcdef.start_after:
+                        if umcdef.last_started_time is not None and time.time()-umcdef.last_started_time < GlobalContext.config.umcrunner_params.min_starting_time:
+                            Msg.warn_msg("umc instance id '%s' starting frequency is too high (<%d seconds), will not start it now!"
+                                %(umcdef.umc_instanceid,GlobalContext.config.umcrunner_params.min_starting_time))
+                            waiting.append("%s, WT=%.2fs"%(umcdef.umc_instanceid,GlobalContext.config.umcrunner_params.min_starting_time))                        
+                        else:
+                            try:
+                                # run umcinstance as a child process
+                                umcdef.proc = self.run_umc(umcdef, GlobalContext)
+                                
+                                # start time
+                                start_t=time.time()
+                                umcdef.start_after=0
+                                umcdef.last_started_time=start_t
+                                umcdef.num_runs = umcdef.num_runs + 1
+                                if umcdef.first_started_time == 0:
+                                    umcdef.first_started_time = time.time()
+                                
+                                started.append("%s, PID=%d"%(umcdef.umc_instanceid,umcdef.proc.pid))
+                            except Exception as e:
+                                Msg.warn_msg("Error occurred while starting umc instance %s. The exception was: %s"%(umcdef.umc_instanceid, str(e)))
+                                pass
                     else:
-                        try:
-                            # run umcinstance as a child process
-                            umcdef.proc = self.run_umc(umcdef, GlobalContext)
-                            
-                            # start time
-                            start_t=time.time()
-                            umcdef.start_after=0
-                            umcdef.last_started_time=start_t
-                            umcdef.num_runs = umcdef.num_runs + 1
-                            if umcdef.first_started_time == 0:
-                                umcdef.first_started_time = time.time()
-                            
-                            started.append("%s, PID=%d"%(umcdef.umc_instanceid,umcdef.proc.pid))
-                        except Exception as e:
-                            Msg.warn_msg("Error occurred while starting umc instance %s. The exception was: %s"%(umcdef.umc_instanceid, str(e)))
-                            pass
-                else:
-                    if umcdef.proc is not None: 
-                        running.append("%s, PID=%d"%(umcdef.umc_instanceid,umcdef.proc.pid))
-                    else: 
-                        waiting.append("%s, WT=%.2fs"%(umcdef.umc_instanceid,umcdef.start_after-time.time()))
-            finally:
-                umcdef.lock.release()
+                        if umcdef.proc is not None: 
+                            running.append("%s, PID=%d"%(umcdef.umc_instanceid,umcdef.proc.pid))
+                        else: 
+                            waiting.append("%s, WT=%.2fs"%(umcdef.umc_instanceid,umcdef.start_after-time.time()))
+                finally:
+                    umcdef.lock.release()
         # for
 
         time_run = time.time()
@@ -156,11 +157,24 @@ class CollectStatsTask():
     #     return count
     
     def run_task(self, GlobalContext):
+        counts=Map(umc_count=0, umc_enabled=0, umc_disabled=0, umc_running=0, umc_waiting=0, num_children=0,
+            umc_rss=0, umc_cpu=0, umc_runs=0, umc_errors=0, last_errortime=0)
         if GlobalContext.umcdefs is not None:
             start_t=time.time();
             for ud in GlobalContext.umcdefs:
                 ud.lock.acquire()
                 try:
+                    counts.umc_count += 1
+                    if ud.enabled: counts.umc_enabled += 1
+                    else:
+                        counts.umc_disabled += 1
+                    counts.umc_errors += ud.num_errors
+                    counts.umc_runs += ud.num_runs
+                    if ud.lasterror_time > counts.last_errortime:
+                        counts.last_errortime = ud.lasterror_time
+                    if time.time()<ud.start_after:
+                        counts.umc_waiting += 1
+
                     stats = {}; 
                     
                     # backlog
@@ -172,6 +186,8 @@ class CollectStatsTask():
                     p = {}
                     try:
                         if ud.proc is not None:
+                            counts.umc_running += 1
+                            
                             p["top_pid"] = ud.proc.pid
                             p["uptime"] = time.time() - ud.proc.create_time()
                             
@@ -184,8 +200,11 @@ class CollectStatsTask():
 
                             p["rss"] = float(rss/1024/1024) # in MB
                             p["cpu"] = cpu   
-                            p["num_chproc"] = len(kids)             
+                            p["num_chproc"] = len(kids)    
                             
+                            counts.umc_rss += p["rss"]
+                            counts.umc_cpu += p["cpu"]
+                            counts.num_children += p["num_chproc"]    
                         # end if
                     except:
                         pass
@@ -195,6 +214,19 @@ class CollectStatsTask():
                 finally:
                     ud.lock.release()
             # for            
+            
+            # umcrunner stats
+            proc=psutil.Process()
+            d = proc.as_dict(attrs=['cpu_times', 'memory_info'])
+            GlobalContext.umcrunner_stats = Map(
+                pid=proc.pid,
+                hostname=socket.gethostname(),
+                cpu=d["cpu_times"].user,
+                rss=float(d["memory_info"].rss/1024/1024),
+                threads=proc.num_threads(),
+                umc_counts=counts
+            )
+            
             Msg.info2_msg("Stats collected in %.2f seconds"%(time.time()-start_t))
             return True
         # if umcdefs

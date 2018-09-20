@@ -173,7 +173,7 @@ umc-oradb.aiaflows:
 
 # iostat
 umc-iostat:  
-  enabled: true
+  enabled: false
   umcrunner:    
     hosts: _ALL_
     params: 20 iostat 10 10   

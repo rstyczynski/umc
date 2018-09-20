@@ -37,7 +37,7 @@ class PathDef():
         for p_def in params_def: path_re=path_re.replace(p_def, "([a-zA-Z\-0-9\._]+)")
         
         # get params values
-        res=re.findall(path_re, path)
+        res=re.findall("^" + path_re + "$", path)
         values=[]
         for x in res:
             if type(x) is tuple: values.extend(list(x))
@@ -347,6 +347,12 @@ class Handler(BaseHTTPRequestHandler):
     # *** HTTP methods handlers
     # reading data
     def do_GET(self):
+        # umcrunner stats
+        if self.process_cluster_request("get", "/stats/hosts/{hostname}", 
+            GlobalContext.config.umcrunner_params.stats_interval, 
+            lambda params : Map(code=200, json=[ GlobalContext.umcrunner_stats.to_json() ] )) is not None:
+            return
+
         # all umc stats
         if self.process_cluster_request("get", "/stats/hosts/{hostname}/umc", 
             GlobalContext.config.umcrunner_params.stats_interval, 

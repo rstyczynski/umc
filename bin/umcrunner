@@ -38,7 +38,7 @@ def format_state(cdef, value, entry):
     return "1" if value is True else "0"    
 
 def format_time(cdef, value, entry):
-    return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(float(value)))    
+    return "-" if value is None or value==0 else time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(float(value)))    
 
 def format_float(cdef, value, entry):
     return "%.2f"%value
@@ -53,6 +53,23 @@ def format_runs(cdef, value, entry):
 
 def format_returncode(cdef, value, entry):
     return value[0][1] if len(value)>0 else "-"
+
+def format_cedrwe(cdef, value, entry):
+    return '-'.join(["%.2d"%int(v) for v in value.split('-')])
+
+stats_umcrunner = [
+    { "name" : "HOST",        "mlen" : 0,  "value" : "{hostname}",                                          "help" : "umcrunner hostname" }, 
+    { "name" : "PID",         "mlen" : 0,  "value" : "{pid}",                                               "help" : "umcrunner process ID" }, 
+    { "name" : "RSS",         "mlen" : 0,  "value" : "{rss}",                "format" : format_float,       "help" : "Amount of memory in MBs" }, 
+    { "name" : "CPU",         "mlen" : 0,  "value" : "{cpu}",                "format" : format_float,       "help" : "CPU time" }, 
+    { "name" : "THR",         "mlen" : 0,  "value" : "{threads}",                                           "help" : "Number of threads" }, 
+    { "name" : "CN-EN-DI-RN-WT-ER", "mlen" : 0,  "value" : "{umc_counts.umc_count}-{umc_counts.umc_enabled}-{umc_counts.umc_disabled}-{umc_counts.umc_running}-{umc_counts.umc_waiting}-{umc_counts.umc_errors}",   
+                                                                             "format" : format_cedrwe,      "help" : "umc instances counts, CN=total, EN=enabled, DI=disabled, RN=running, WT=waiting, ER=errors" }, 
+    { "name" : "U_CHP",       "mlen" : 0,  "value" : "{umc_counts.num_children}",                           "help" : "Number of umc instances children processes" }, 
+    { "name" : "U_RSS",       "mlen" : 0,  "value" : "{umc_counts.umc_rss}", "format" : format_float,       "help" : "Total amount of memory in MBs of all umc instances." }, 
+    { "name" : "U_CPU",       "mlen" : 0,  "value" : "{umc_counts.umc_cpu}", "format" : format_float,       "help" : "Total CPU time of all umc instances." }, 
+    { "name" : "LAST_ERROR",  "mlen" : 0,  "value" : "{umc_counts.last_errortime}","format" : format_time , "help" : "Last time an error occurred." }
+]
 
 stats_umc = [
     { "name" : "HOST/ID",     "mlen" : 0,  "value" : "{hostname}/{umc_instanceid}",                         "help" : "umc instance ID" }, 
@@ -71,6 +88,8 @@ stats_umc = [
 
 # resource definitions
 resources = {
+    "hosts" : { "url" : "/stats/hosts/{hostname}", "table_def" : stats_umcrunner, 
+        "help" : "umcrunner runtime information" }, 
     "umc" : { "url" : "/stats/hosts/{hostname}/umc", "table_def" : stats_umc, 
         "help" : "umc instances configuration and runtime information" } 
 }
@@ -226,8 +245,8 @@ if __name__ == "__main__":
         sys.stderr.write("Connect timeout occured when sending the request")        
     except requests.exceptions.ConnectionError as e:
         sys.stderr.write("Unable to connect: %s\n"%connect_str)        
-    except Exception as e:
-        sys.stderr.write("%s\n\n"%str(e))
+    #except Exception as e:
+    #    sys.stderr.write("%s\n\n"%str(e))
         
 
     
