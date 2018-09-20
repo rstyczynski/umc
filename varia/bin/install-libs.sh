@@ -380,8 +380,9 @@ install_influxdb_python () {
 	install_pythonlib "urllib3" "1.22"
 	install_pythonlib "requests" "2.18.4"
 	install_pythonlib "python-dateutil" "2.7.3"
-	install_pythonlib "PyYAML" "3.12"	
 	install_pythonlib "influxdb" "5.0.0"
+	install_pythonlib "psutil" "5.4.6"	
+	install_pythonlib "PyYAML" "3.12"	
 }
 
 # parse arguments
