@@ -11,9 +11,77 @@
 # idbpush
 #  
 
-# common settings
+# *** common settings
 common:
-  # common definitions for idbpush
+  # ** common definitions for umcrunner
+  umcrunner:    
+    # http server configuration
+    http:
+      # true to enable http server
+      enabled: True
+      
+      # tcp port the server should be listening on all servers
+      tcp-port: 1989
+      
+      # umcrunner http server will listen on hostname/tcp-port by default
+      # when hostname does not resolve to a desired ip address, the following configuration defines
+      # hostnames and their ip address it should bint to, tcp_port and whether it should be enabled or disabled  
+      # defines hostname, ip_addres, tcp_port, enabled|disabled that should be used for that hostname
+      # when tcp_port is omitted, the default tcp-port will be used
+      server-binding:
+        - hostname=ukbn01hr, address=192.168.10.101, enabled=True 
+        - hostname=ukbn02hr, address=192.168.10.102, enabled=True
+        - hostname=ukbn03hr, address=192.168.10.103, enabled=True
+        
+    # the interval umcrunner will run umc commands (or check umc commands are running)   
+    run-interval: 10
+
+    # collection interval of stats
+    # a value of -1 will disable stats collection  
+    stats-interval: 5
+    
+    # oprhans checking interval
+    # a value of -1 will disable orphans checking  
+    orphans-interval: 8
+
+    # max processes checking interval
+    # a value of -1 will disable max processes checking  
+    maxproc-interval: 8
+    
+    # the maximum number of processes that umcrunner can run; when exceed umcrunner will not run any new instances
+    # a value of -1 will set this to unlimitted
+    max-processes: 200
+
+    # maximum zombies checking interval
+    # a value of -1 will disable max processes checking  
+    # umc instance may be a zombie process but that should disappear so there could be 
+    # a maximum of zombie process which should be equal to the number of umc instances running by umcrunner; when this number 
+    # is exceeded, umcrunner will pause and will not run any new umc instances
+    maxzombies-interval: 8
+
+    # a delay umc runner waits before running next loop
+    loop-interval: 1
+    
+    # minimum time in seconds between starting the same umc instance
+    # this prevents umc instanc from running to frequently in case it is failing due to errors
+    min-starting-time: 60
+  
+    # automatically reload configuration during runtime when it changes
+    configuration-auto-reload: true  
+        
+    # number of runs' return codes that will be kept in history in stats
+    returncodes-history: 5
+    
+    # connect and read timeouts when sending http proxy requests to hosts in the environment
+    proxy-timeout-connect: 0.4
+    proxy-timeout-read: 10
+    
+    # Running proxy requests in threads will send all proxy requests to 
+    # umcrunner nodes in the environment on the same request in paralllel;
+    # when set to False, the proxy requests will be sent in sequence 
+    proxy_run_threads: True
+  
+  # ** common definitions for idbpush
   idbpush:
     # influxdb connection details
     db:
@@ -73,8 +141,8 @@ common:
 umc-dms.jdbc:
   enabled: true
   umcrunner:
-    hosts: _ALL_
-    params: 20 dms 60 60 JDBC_DataSource config.sample
+    hosts: ukbn01hr,ukbn02hr
+    params: 20 dms 10 10 JDBC_DataSource config.sample
   idbpush:
     name: dms_jdbc
     timefield: datetime
@@ -91,8 +159,9 @@ umc-dms.jdbc:
 umc-oradb.aiaflows:  
   enabled: true
   umcrunner:    
-    hosts: some-hostname 
-    params: 20 oradb 60 60 aiaflows.sql oradb.conf.sample
+    hosts: ukbn01hr
+    params: 20 oradb 10 10 aiaflows.sql oradb.conf.sample
+    options: setsid
   idbpush:
     name: aiaflows 
     timefield: time
@@ -106,7 +175,7 @@ umc-iostat:
   enabled: true
   umcrunner:    
     hosts: _ALL_
-    params: 20 iostat 60 60   
+    params: 20 iostat 10 10   
   idbpush:
     name: iostat 
     fields: "tps,kB_read/s,kB_wrtn/s,kB_read,kB_wrtn"      
@@ -117,7 +186,7 @@ umc-ifconfig:
   enabled: true
   umcrunner:    
     hosts: _ALL_
-    params: 20 ifconfig 60 60   
+    params: 20 ifconfig 10 10   
   idbpush:
     name: ifconfig 
     fields: "RXpackets,RXerrors,RXdropped,RXoverruns,RXframe,TXpackets,TXerrors,TXdropped,
@@ -129,7 +198,7 @@ umc-netstattcp:
   enabled: true
   umcrunner:    
     hosts: _ALL_
-    params: 20 netstattcp 60 60   
+    params: 20 netstattcp 10 10   
   idbpush:
     name: netstattcp 
     fields: "active_connections_openings,passive_connection_openings,failed_connection_attempts,connection_resets_received,connections_established,
@@ -141,7 +210,7 @@ umc-free:
   enabled: true
   umcrunner:    
     hosts: _ALL_
-    params: 20 free 60 60   
+    params: 20 free 10 10   
   idbpush:
     name: free 
     fields: "total,used,free,shared,buffers,cached,usedNoBuffersCache,freePlusBuffersCache,SwapTotal,SwapUsed,SwapFree"      
@@ -152,7 +221,7 @@ umc-uptime:
   enabled: true
   umcrunner:    
     hosts: _ALL_
-    params: 20 uptime 60 60   
+    params: 20 uptime 10 10   
   idbpush:
     name: uptime 
     fields: "users,load1min,load5min,load15min"      

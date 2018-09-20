@@ -1,0 +1,30 @@
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+#
+# dms-collector - a tool to retrieve dms table values from dms spy application on 
+# defined intervals and convert them to csv format.
+# 
+# 08-2018, Tomas Vitvar, tomas@vitvar.com
+
+import os
+import errno
+import sys
+
+namedpipe=sys.argv[1]
+data=sys.argv[2]
+
+result = False
+
+try:
+    pipeout = os.open(namedpipe, os.O_WRONLY | os.O_NONBLOCK)
+    try:
+        os.write(pipeout, data + "\n"); 
+        result = True
+    finally:
+        os.close(pipeout)
+except OSError as err:
+    if err.errno == errno.EAGAIN or err.errno == errno.EWOULDBLOCK or err.errno == errno.ENXIO:
+        sys.exit(1)
+    else:
+        sys.stderr.write("Error writing data: %s"%(str(err)))
+        sys.exit(2)

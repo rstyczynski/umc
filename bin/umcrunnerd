@@ -1,43 +1,169 @@
-#!/bin/bash
-# umcrunner daemon script running umcrunner --runall 
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+#
+# umcrunnerd - umcrunner daemon to run umc instances
+# 09-2018, Tomas Vitvar, tomas@vitvar.com
 
-# the script directory
-scriptDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+import os
+import sys
+import signal
+import yaml
+import datetime
+import socket
+import time
+import argparse
+import subprocess 
+import psutil
+import atexit
+import re
+import json
 
-source $scriptDir/umc.h &>/dev/null
+from time import sleep
+from threading import Event
+from subprocess import PIPE
 
-if [ "$UMCRUNNER_CONF" = "" ]; then
-  echo >&2 "umcrunner configuration in \$UMCRUNNER_CONF variable has not been set!"
-  exit 1  
-fi 
+# local libraries
+import proc_utils as putils
+import messages as Msg
+import umctasks as Tasks
+from umcconfig import UmcConfig
+from umchttpd import UmcRunnerHTTPServer
+ 
+# http server
+import thread
+import threading
 
-if [ "$UMC_LOG_DIR" = "" ]; then
-  echo >&2 "umc log directory in \$UMC_LOG_DIR variable has not been set!"
-  exit 1
-fi
+# *** constants
+VERSION="0.2"
 
-if [ ! -d $UMC_LOG_DIR/umcrunner ]; then
-  mkdir -p $UMC_LOG_DIR/umcrunner/
-fi
+# global umcrunner context 
+class GlobalContext():
+    args = None             # input command line arguments 
+    configFile = None       # configuration file
+    homeDir = os.path.dirname(os.path.realpath(__file__))  
+    logRootDir = None       # root directory for umc instance output logs        
+                            # location of umcrunner  
+    config = None           # umc configuration object
+    server_list = None      # list of servers in umcrunner environment
+    exitEvent = Event()     # global exit event, set when exiting umcrunner
+    umcdefs = None          # umc definitions read from configuration file
+    httpd = None            # httpd server, instance of UmcRunnerHTTPServer
+    paused = False          # True the loop tasks should be paused
+    
+# *** helper functions
 
-# lockfile
-lockfile=$scriptDir/.umcrunnerd-$HOSTNAME.lck
+# resolves hostname to ip address
+def resolve(hostname):
+    try:
+        return socket.gethostbyname(hostname)
+    except socket.error:
+        return None
 
-# on this machine run only once at a time
-if [ -e $lockfile ]; then
-   echo >&2 "Already running!"
-   exit 1
-fi
+# gets a lock using domain sockets to prevent this script from running more than once
+def get_lock():
+    get_lock._lock_socket = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+    try:
+        get_lock._lock_socket.bind('\0umcrunner-magic-yxgfg2dffdghfgfd2dsd45sagfdd')
+        return True
+    except socket.error:
+        return False
+            
+# signal handler; terminate all child processes on exit        
+def signal_quit(singal, frame):
+    Msg.warn_msg("Shutting down...")
+    putils.terminate_children()
+    GlobalContext.exitEvent.set()
+        
+# *** MAIN
+if __name__ == "__main__":    
+    # *** arguments
+    parser = argparse.ArgumentParser(description='umcrunnerd')
+    parser.add_argument('--config', required=False, help='run all umc instances from <file>',metavar='<file>')
+    parser.add_argument('--logs', required=False, help='location of umc logs directory',metavar='<dir>')
+    parser.add_argument('--verbose', required=False, help='be verbose',action='store_true')
+    GlobalContext.args=parser.parse_args()
+    
+    # location of logs
+    GlobalContext.logRootDir = GlobalContext.args.logs
+    if GlobalContext.logRootDir == None:
+        GlobalContext.logRootDir=os.environ.get('UMC_LOG_DIR', GlobalContext.homeDir + "/../logs") 
+    
+    # configuration file
+    GlobalContext.configFile=GlobalContext.args.config
+    if GlobalContext.configFile == None:
+        GlobalContext.configFile=os.environ.get('UMCRUNNER_CONFIG', None)
+    if GlobalContext.configFile is None:
+        sys.stderr.write("Configuration file must be specified on command line or in UMCRUNNER_CONFIG environment variable!\n")
+        sys.exit(1)
+    
+    # set verbose param on messages
+    Msg.verbose = GlobalContext.args.verbose
+    
+    # *** exit conditions
+    # get the lock and exit when already running
+    if not(get_lock()):
+        sys.stderr.write("Already running!\n")
+        sys.exit(1)
 
-trap "$scriptDir/umcrunner --stopall >>$UMC_LOG_DIR/umcrunner/umcrunner-$HOSTNAME.log 2>&1; rm -f $lockfile; exit 0" SIGINT SIGTERM EXIT
+    # register signals to quit the process
+    for sig in ('TERM', 'HUP', 'INT'):
+        signal.signal(getattr(signal, 'SIG'+sig), signal_quit);
+    
+    # register atexit handler
+    atexit.register(putils.terminate_children)    
+    
+    # *** main start
+    # umc configuration
+    GlobalContext.config = UmcConfig(GlobalContext.configFile) 
+    
+    # welcome 
+    Msg.info1_msg("umcrunner started with pid %d, the signature is %s"%(os.getpid(),Tasks.UmcRunTask.UMCRUNNER_SIGNATURE))
+    Msg.info1_msg("umcrunner parameters are: umc_home=%s, configFile=%s, log_root=%s, hostname=%s"
+        %(GlobalContext.homeDir,GlobalContext.configFile,GlobalContext.logRootDir,socket.gethostname()))
 
-touch $lockfile
-
-while true; do
-  $scriptDir/umcrunner --runall $UMCRUNNER_CONF >>$UMC_LOG_DIR/umcrunner/umcrunner-$HOSTNAME.log 2>&1
-  sleep 15
-done
-
-rm $lockfile
-
-trap - SIGINT SIGTERM EXIT
+    # all servers lists
+    GlobalContext.server_list = GlobalContext.config.get_server_list()
+    Msg.info2_msg("Servers that I see: %s"%GlobalContext.server_list)
+    
+    # load umc definitions
+    GlobalContext.umcdefs = []
+    for umcdef in GlobalContext.config.conf_umcrunner():
+        GlobalContext.umcdefs.append(umcdef)
+    Msg.info1_msg("There are %d umc definitions."%len(GlobalContext.umcdefs))
+    
+    # http server to handle api requests
+    GlobalContext.httpd = UmcRunnerHTTPServer(GlobalContext)
+    GlobalContext.httpd.start_httpd()
+        
+    try:
+        # ensure or children processes will share the same process group id 
+        # (except the ones that require session ID)
+        os.setpgrp()
+        
+        # all task being run as part of the main loop
+        tasks = Tasks.TasksDef(GlobalContext)
+        tasks.addTask(Tasks.CollectStatsTask, GlobalContext.config.umcrunner_params.stats_interval, True)
+        tasks.addTask(Tasks.OrphansCheckTask, GlobalContext.config.umcrunner_params.orphans_interval, True)
+        tasks.addTask(Tasks.MaxProcessesTask, GlobalContext.config.umcrunner_params.maxproc_interval, True)
+        tasks.addTask(Tasks.MaxZombiesTask, GlobalContext.config.umcrunner_params.maxzombies_interval, True)
+        tasks.addTask(Tasks.RefreshProcessesTask, GlobalContext.config.umcrunner_params.run_interval, True)
+        tasks.addTask(Tasks.UmcRunTask, GlobalContext.config.umcrunner_params.run_interval, False)
+            
+        # *** main umcrunner loop
+        while not GlobalContext.exitEvent.is_set():
+            # run all tasks as per the schedule
+            tasks.run_all()
+            
+            # wait loop_interval seconds 
+            GlobalContext.exitEvent.wait(GlobalContext.config.umcrunner_params.loop_interval)
+            
+        # main loop
+        
+    finally:
+        # exiting    
+        Msg.info1_msg("umcrunner is about to end due to exit event.")
+        
+        # stop httpd
+        GlobalContext.httpd.stop_httpd()
+    
+        
