@@ -1,8 +1,19 @@
 #!/bin/bash
-# umcrunnerd start up script 
+# umcrunnerd start up script
 
 # the script directory
 scriptDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-$scriptDir/umcrunnerd &
+echo $UMC_LOG_DIR
 
+if [ "$UMC_LOG_DIR" = "" ]; then
+        echo "umc environment has not been initialized!"
+        exit 1
+fi
+
+dir="$UMC_LOG_DIR/$HOSTNAME/umcrunnerd/"
+mkdir -p $dir
+
+$scriptDir/umcrunnerd &>$dir/umcrunnerd.out &
+if [ "$?" -eq 0 ]; then
+        echo "umcrunnerd started, out log is in $dir"
