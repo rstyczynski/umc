@@ -10,24 +10,24 @@ from time import sleep
 
 from utils import Map
 import messages as Msg
-    
+
 # the main umcrunner run task that runs umc instances according to the configuration
 class UmcRunTask():
     UMCRUNNER_SIGNATURE="umcrunner-AF453BD"
-    UMC_LAUNCH_CMD="echo \"{signature}\" &>/dev/null; source {umc_home}/umc.h &>/dev/null; set -o pipefail; umc {umc_toolid} collect {delay} {count} {params} 2>>{log_dir}/{umc_toolid}.error.out </dev/null | logdirector.pl -name {umc_toolid} -dir {log_dir} -detectHeader -checkHeaderDups -rotateByTime run -timeLimit {rotation_timelimit} -flush -timeRotationInThread -rotateOnThreadEnd"
+    UMC_LAUNCH_CMD="echo \"{signature}\" &>/dev/null; source {umc_home}/umc.h &>/dev/null; set -o pipefail; umc {umc_toolid} collect {delay} {count} {params} 2>>{log_dir}/{umc_instanceid}.error.out </dev/null | logdirector.pl -name {umc_instanceid} -dir {log_dir} -detectHeader -checkHeaderDups -rotateByTime run -timeLimit {rotation_timelimit} -flush -timeRotationInThread -rotateOnThreadEnd"
     DEFAULT_SHELL="/bin/bash"
-    
-    def get_log_dir(self, umc_toolid, GlobalContext):
-        return "{log_root_dir}/{hostname}/{umc_toolid}".format(log_root_dir=GlobalContext.logRootDir,hostname=socket.gethostname(),umc_toolid=umc_toolid)
-    
+
+    def get_log_dir(self, umc_instanceid, GlobalContext):
+        return "{log_root_dir}/{hostname}/{umc_instanceid}".format(log_root_dir=GlobalContext.logRootDir,hostname=socket.gethostname(),umc_instanceid=umc_instanceid)
+
     # run umc instance
     def run_umc(self,umcdef,GlobalContext): # umc_instanceid,umc_toolid,delay,count,params,rotation_timelimit):
         # create log directory for this tool if it does not exist
-        log_dir=self.get_log_dir(umcdef.umc_toolid, GlobalContext)
+        log_dir=self.get_log_dir(umcdef.umc_instanceid, GlobalContext)
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
-            
-        # tell what we are doing    
+
+        # tell what we are doing
         Msg.info1_msg("Starting umc instance id '{umc_instanceid}': umc='{umc_toolid}', delay={delay}, count={count}, params='{params}', rotation_timelimit={rotation_timelimit}, log_dir='{log_dir}'".
             format(umc_instanceid=umcdef.umc_instanceid,umc_toolid=umcdef.umc_toolid,delay=umcdef.delay,count=umcdef.count,params=umcdef.params,
                 rotation_timelimit=umcdef.rotation_timelimit,log_dir=umcdef.log_dir))
@@ -37,12 +37,12 @@ class UmcRunTask():
         preexec=None
         if "setsid" in umcdef.options:
             preexec=ctypes.CDLL('libc.so.6').setsid
-            
-        p = psutil.Popen(UmcRunTask.UMC_LAUNCH_CMD.format(umc_toolid=umcdef.umc_toolid,delay=umcdef.delay,count=umcdef.count,params=umcdef.params,rotation_timelimit=umcdef.rotation_timelimit,
-                signature=UmcRunTask.UMCRUNNER_SIGNATURE,umc_home=GlobalContext.homeDir,log_dir=log_dir), 
+
+        p = psutil.Popen(UmcRunTask.UMC_LAUNCH_CMD.format(umc_instanceid=umcdef.umc_instanceid,umc_toolid=umcdef.umc_toolid,delay=umcdef.delay,count=umcdef.count,params=umcdef.params,rotation_timelimit=umcdef.rotation_timelimit,
+                signature=UmcRunTask.UMCRUNNER_SIGNATURE,umc_home=GlobalContext.homeDir,log_dir=log_dir),
             shell=True, executable=UmcRunTask.DEFAULT_SHELL, preexec_fn=preexec, stdin=None, stdout=None, stderr=None)
-        
-        return p
+
+        return p    
     
     def run_task(self, GlobalContext):
         running=[]; started=[]; waiting=[]
