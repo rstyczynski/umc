@@ -45,7 +45,7 @@ uid=$((1 + RANDOM % 1000))
 
 # use urandom if possible 
 if [ -e /dev/urandom ]; then
-	uid=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1);
+	uid=$(head -c 8 /dev/urandom | base64 | tr -d '=+/');
 fi
 
 tmpfile=$getSensorData_bin/spm-get-status-$uid.xml
@@ -65,7 +65,7 @@ function getSpmStatus() {
 	port=$2
 
 	# get status information
-	msgstatus=$(curl --fail -s -X POST --header "Expect:" --header "Content-Type: text/xml; charset=utf-8" \
+	msgstatus=$(curl --fail -s --max-time 10 -X POST --header "Expect:" --header "Content-Type: text/xml; charset=utf-8" \
 		--header "SoapAction: Status" --header "User-Agent: Java1.6.0_37" --header "Host: $HOST_HEADER" \
 		--header "Accept: text/html, image/gif, image/jpeg, */*; q=.2" --data @$tmpfile \
 		http://$server:$port/soa-infra/services/default/AIASessionPoolManager/client)
