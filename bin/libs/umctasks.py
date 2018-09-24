@@ -5,6 +5,7 @@ import re
 import psutil
 import socket
 import ctypes
+import utils
 
 from time import sleep
 
@@ -94,25 +95,25 @@ class RefreshProcessesTask():
             if umcdef.proc is not None:
                 try:
                     # update the process return code if any
-                    if umcdef.proc is not None:
-                        umcdef.proc.poll()
-                        if not(umcdef.proc.is_running()) and umcdef.proc.returncode is not None:
-                            rc=umcdef.proc.returncode
-                            if rc != 0:
-                                Msg.warn_msg("umc instance %s failed/terminated with exit code %d. Will attempt to restart it after %d seconds."
-                                    %(umcdef.umc_instanceid,rc,GlobalContext.config.umcrunner_params.run_after_failure))
-                                umcdef.start_after=time.time()+GlobalContext.config.umcrunner_params.run_after_failure
-                                umcdef.num_errors = umcdef.num_errors + 1
-                                umcdef.lasterror_time = time.time()
-                            umcdef.returncodes.insert(0,(time.time(), rc))
-                            if len(umcdef.returncodes)>GlobalContext.config.umcrunner_params.retc_history:
-                                del umcdef.returncodes[-(len(umcdef.returncodes)-GlobalContext.config.umcrunner_params.retc_history):]
-                        
+                    umcdef.proc.poll()
+                    if not(umcdef.proc.is_running()) and umcdef.proc.returncode is not None:
+                        rc=umcdef.proc.returncode
+                        if rc != 0:
+                            Msg.warn_msg("umc instance %s failed/terminated with exit code %d. Will attempt to restart it after %d seconds."
+                                %(umcdef.umc_instanceid,rc,GlobalContext.config.umcrunner_params.run_after_failure))
+                            umcdef.start_after=time.time()+GlobalContext.config.umcrunner_params.run_after_failure
+                            umcdef.num_errors = umcdef.num_errors + 1
+                            umcdef.lasterror_time = time.time()
+                        umcdef.returncodes.insert(0,(time.time(), rc))
+                        if len(umcdef.returncodes)>GlobalContext.config.umcrunner_params.retc_history:
+                            del umcdef.returncodes[-(len(umcdef.returncodes)-GlobalContext.config.umcrunner_params.retc_history):]
+        
                     # clear the process is not runnig or check the process is zombie; this happens when the process ends normally but we still hold a refernece to it
                     if not(umcdef.proc.is_running()) or (umcdef.proc.is_running() and umcdef.proc.status() == psutil.STATUS_ZOMBIE):   
+                        del umcdef.proc
                         umcdef.proc=None
                         sleep(0.1)
-                    
+                                        
                 except Exception as e:
                     Msg.warn_msg("There was a problem when quering the process with pid %d: %s"%(umcdef.proc.pid,str(e)))
                     if e.__class__ == psutil.NoSuchProcess:
@@ -124,6 +125,12 @@ class RefreshProcessesTask():
     def run_task(self, GlobalContext):
         for umcdef in GlobalContext.umcdefs:
             self.refresh_single_instance(umcdef, GlobalContext)
+        
+        # report number of open handles per type
+        if Msg.verbose:
+            fd_result = utils.fd_table_status()
+            Msg.info2_msg('Open file handles: %s'%utils.fd_table_status_str())
+        
         return True
     
 # stats collection
@@ -239,16 +246,19 @@ class OrphansCheckTask():
     # retrieves all pids and their pgid from os
     def get_all_pgids(self):
         pgids={}
-        cmd=subprocess.Popen('ps ax -o pid,pgid', shell=True, stdout=subprocess.PIPE)
-        for e in cmd.stdout:
-            m = re.match(r"^[ ]*([0-9]+)[ ]+([0-9]+)[ ]*$", e) 
-            if m:
-                pid = int(m.group(1))
-                pgid = m.group(2)            
-                if pgid not in pgids:
-                    pgids[pgid] = []
-                if pid != os.getpid():
-                    pgids[pgid].append(pid)
+        cmd=subprocess.Popen('ps ax -o pid,pgid', shell=True, stdin=None, stdout=subprocess.PIPE, stderr=None)
+        try:
+            for e in cmd.stdout:
+                m = re.match(r"^[ ]*([0-9]+)[ ]+([0-9]+)[ ]*$", e) 
+                if m:
+                    pid = int(m.group(1))
+                    pgid = m.group(2)            
+                    if pgid not in pgids:
+                        pgids[pgid] = []
+                    if pid != os.getpid():
+                        pgids[pgid].append(pid)
+        finally:
+            del cmd
         return pgids
     # get_all_pgids
     

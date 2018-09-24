@@ -1,6 +1,18 @@
 
+import os
 import sys
+import stat
 import json
+
+_fd_types = (
+    ('REG', stat.S_ISREG),
+    ('FIFO', stat.S_ISFIFO),
+    ('DIR', stat.S_ISDIR),
+    ('CHR', stat.S_ISCHR),
+    ('BLK', stat.S_ISBLK),
+    ('LNK', stat.S_ISLNK),
+    ('SOCK', stat.S_ISSOCK)
+)
 
 # *** helper Map object
 class Map(dict):
@@ -74,3 +86,23 @@ def query_yes_no(question, default="yes"):
         else:
             sys.stdout.write("Please respond with 'yes' or 'no' "
                              "(or 'y' or 'n').\n")
+                             
+def fd_table_status():
+    result = []
+    for fd in range(100):
+        try:
+            s = os.fstat(fd)
+        except Exception as e:
+            continue
+        for fd_type, func in _fd_types:
+            if func(s.st_mode):
+                break
+        else:
+            fd_type = str(s.st_mode)
+        result.append((fd, fd_type))
+    return result
+
+def fd_table_status_str():
+    fd_result = fd_table_status()
+    return ', '.join(['{0}: {1}'.format(*i) for i in fd_result])
+    
