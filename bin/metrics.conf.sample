@@ -81,7 +81,13 @@ common:
     # when umc instance fails or is terminated, wait X seconds before the next start
     # this value should be greater or equal to min-starting-time
     run-after-failure: 60
-
+    
+    # when os error occurs during the main umcrunner loop, umcrunner will sleep for 
+    # a number of seconds and then continues and after max_attempts umcrunner stops
+    # when max-attempts is -1, umcrunner will never stop on os errors
+    oserror-max-attempts: 5
+    oserror-wait-time: 60
+  
   # ** common definitions for idbpush
   idbpush:
     # influxdb connection details

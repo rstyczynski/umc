@@ -47,7 +47,11 @@ class UmcConfig:
                 proxy_run_threads   = self.value("common.umcrunner.proxy-run-threads", True),
 
                 min_starting_time   = self.value("common.umcrunner.min-starting-time", 60),
-                run_after_failure   = self.value("common.umcrunner.run-after-failure", 60))
+                run_after_failure   = self.value("common.umcrunner.run-after-failure", 60),
+                
+                oserror_max_attempts = self.value("common.umcrunner.oserror-max-attempts", 5),
+                oserror_wait_time    = self.value("common.umcrunner.oserror-wait-time", 60))
+                
                              
         except Exception as e:
             raise Exception("Error when reading the configuration file %s: %s"%(self.configFile,e))

@@ -34,7 +34,7 @@ import thread
 import threading
 
 # *** constants
-VERSION="0.2"
+VERSION="0.3"
 
 # global umcrunner context 
 class GlobalContext():
@@ -150,19 +150,36 @@ if __name__ == "__main__":
         tasks.addTask(Tasks.RefreshProcessesTask, GlobalContext.config.umcrunner_params.run_interval, True)
         tasks.addTask(Tasks.UmcRunTask, GlobalContext.config.umcrunner_params.run_interval, False)
             
+        # os error attempts
+        oserror_retry_attempts = 0
+        
         # *** main umcrunner loop
         while not GlobalContext.exitEvent.is_set():
             # run all tasks as per the schedule
-            tasks.run_all()
-            
-            # wait loop_interval seconds 
-            GlobalContext.exitEvent.wait(GlobalContext.config.umcrunner_params.loop_interval)
-            
+            try:
+                tasks.run_all()
+                
+                # reset os error attempts
+                oserror_retry_attempts = 0
+                
+                # wait loop_interval seconds 
+                GlobalContext.exitEvent.wait(GlobalContext.config.umcrunner_params.loop_interval)
+            except OSError as e:
+                # os error occurred
+                oserror_retry_attempts += 1
+                Msg.warn_msg("OS error occurred (errno=%d): %s"%(e.errno, str(e)))
+                
+                # , wait for X seconds if attempts allow
+                if GlobalContext.config.umcrunner_params.oserror_max_attempts == -1 or oserror_retry_attempts <= GlobalContext.config.umcrunner_params.oserror_max_attempts:
+                    Msg.warn_msg("Waiting %d seconds, attempt %d..."%(GlobalContext.config.umcrunner_params.oserror_wait_time, oserror_retry_attempts))
+                    GlobalContext.exitEvent.wait(GlobalContext.config.umcrunner_params.oserror_wait_time)
+                else:
+                    raise
         # main loop
         
     finally:
         # exiting    
-        Msg.info1_msg("umcrunner is about to end due to exit event.")
+        Msg.info1_msg("umcrunner is about to end.")
         
         # stop httpd
         GlobalContext.httpd.stop_httpd()
