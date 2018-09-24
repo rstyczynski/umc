@@ -57,12 +57,16 @@ def format_returncode(cdef, value, entry):
 def format_cedrwe(cdef, value, entry):
     return '/'.join(["%.2d"%int(v) for v in value.split('/')])
 
+def format_cpuload(cdef, value, entry):
+    return "%.4f"%(entry["cpu"]/entry["uptime"])
+
 stats_umcrunner = [
     { "name" : "HOST",        "mlen" : 0,  "value" : "{hostname}",                                          "help" : "umcrunner hostname" }, 
     { "name" : "PID",         "mlen" : 0,  "value" : "{pid}",                                               "help" : "umcrunner process ID" }, 
     { "name" : "UPT",         "mlen" : 0,  "value" : "{uptime}",             "format" : format_uptime,      "help" : "umcrunner uptime" }, 
     { "name" : "RSS",         "mlen" : 0,  "value" : "{rss}",                "format" : format_float,       "help" : "Amount of memory in MBs" }, 
     { "name" : "CPU",         "mlen" : 0,  "value" : "{cpu}",                "format" : format_float,       "help" : "CPU time" }, 
+    { "name" : "CPU/s",       "mlen" : 0,  "value" : "",                     "format" : format_cpuload,     "help" : "CPU load" }, 
     { "name" : "THR",         "mlen" : 0,  "value" : "{threads}",                                           "help" : "Number of threads" }, 
     { "name" : "CN/EN/DI/RN/WT/ER", "mlen" : 0,  "value" : "{umc_counts.umc_count}/{umc_counts.umc_enabled}/{umc_counts.umc_disabled}/{umc_counts.umc_running}/{umc_counts.umc_waiting}/{umc_counts.umc_errors}",   
                                                                              "format" : format_cedrwe,      "help" : "umc instances counts, CN=total, EN=enabled, DI=disabled, RN=running, WT=waiting, ER=errors" }, 
