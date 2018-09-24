@@ -5,7 +5,7 @@
 # the script directory
 scriptDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 UMC_HOME=$(cd $scriptDir && cd ../../../umc && pwd -P)   
-IMAGE="tomvit/umc-oel511:1.3"
+IMAGE="tomvit/umc-oel511:1.5"
 
 # create umc network
 docker network ls | grep umcnet >/dev/null
@@ -24,10 +24,10 @@ create_node() {
   docker kill umc-$name &>/dev/null
   docker rm umc-$name &>/dev/null
   if [ "$nostart" != "nostart" ]; then
-    docker run --net umcnet -it -h $name -v $UMC_HOME:/root/umc --name umc-$name --ip $ip -d $IMAGE \
-	/bin/bash -l -c 'umcrunnerd --runall metrics.conf.sample --verbose &>/root/umc/bin/$HOSTNAME.out' 
+    docker run --user oracle --net umcnet -it -h $name -v $UMC_HOME:/home/oracle/umc --name umc-$name --ip $ip -d $IMAGE \
+	/bin/bash -l -c 'umcrunnerd --verbose &>/home/oracle/umc/bin/$HOSTNAME.out' 
   else
-    docker run --net umcnet -it -h $name -v $UMC_HOME:/root/umc --name umc-$name --ip $ip -d $IMAGE /bin/bash -l
+    docker run --user oracle --net umcnet -it -h $name -v $UMC_HOME:/home/oracle/umc --name umc-$name --ip $ip -d $IMAGE /bin/bash -l
   fi
 }
 
