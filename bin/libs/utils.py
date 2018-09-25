@@ -85,8 +85,7 @@ class PathDef():
         new_path=params.__path__
         for k,v in paramsMap.items():
             if params.get(k):
-                print k,params.get(k),v
-                new_path = new_path.replace("%s"%params.get(k),v)
+                new_path = new_path.replace("%s"%params.get(k), v, 1)
             else:
                 raise Exception("The param '%s' has not been found in path definition '%s'."%(k, self.path_def))
         

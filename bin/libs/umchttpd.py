@@ -243,7 +243,7 @@ class Handler(BaseHTTPRequestHandler):
                         Msg.info2_msg("Data from %d proxy requests retrieved in %.2f seconds."%(len(resp),time.time()-start_t))                                   
                         
                         # add result to cache; the result from individual servers should always be json array                    
-                        content = Map(content="[%s]"%",".join([ r.response.text.strip()[1:-1] for r in resp ]))
+                        content = Map(content="[%s]"%",".join([ r.response.text.strip()[1:-1] for r in resp if r.response.text.strip()!= "[]" ]))                        
                         if cache_maxage > 0:
                             cache.create_data(self.path, content.content, time.time(), cache_maxage) 
                     # if not in cache
