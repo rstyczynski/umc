@@ -95,7 +95,7 @@ stats_umc = [
 resources = {
     "hosts" : { "url" : "/stats/hosts/{hostname}", "table_def" : stats_umcrunner, 
         "help" : "umcrunner runtime information" }, 
-    "umc" : { "url" : "/stats/hosts/{hostname}/umc", "table_def" : stats_umc, 
+    "umc" : { "url" : "/stats/hosts/{hostname}/umc/{umc}", "table_def" : stats_umc, 
         "help" : "umc instances configuration and runtime information" } 
 }
 
@@ -193,6 +193,8 @@ if __name__ == "__main__":
     prmopts = parser.add_argument_group('parameters for stats and commands')    
     prmopts.add_argument('-h','--hostname', required=False, metavar="<name>", default='all',action='store',type=str,
         help='run request on a host, default="all"')
+    prmopts.add_argument('-u','--umc', required=False, metavar="<id>", default='all',action='store',type=str,
+        help='retrieve umc instance id <id>, default="all"')
     
     fmtopts = parser.add_argument_group('output format and display arguments')    
     fmtopts.add_argument('-f','--format', required=False, metavar="<text|json>", default="text", help='output format, default=text', action='store', type=str) 

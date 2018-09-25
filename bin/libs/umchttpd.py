@@ -293,7 +293,8 @@ class Handler(BaseHTTPRequestHandler):
         for ud in GlobalContext.umcdefs:
             ud.lock.acquire()
             try:
-                content.json.append(ud.to_json(CustomEncoder,exclude=['proc','options','lock']))
+                if params.umc=='all' or ud.umc_instanceid.startswith(params.umc): 
+                    content.json.append(ud.to_json(CustomEncoder,exclude=['proc','options','lock']))
             finally:
                 ud.lock.release()
         return content
@@ -359,8 +360,8 @@ class Handler(BaseHTTPRequestHandler):
             lambda params : Map(code=200, json=[ GlobalContext.umcrunner_stats.to_json() ] )) is not None:
             return
 
-        # all umc stats
-        if self.process_cluster_request("get", "/stats/hosts/{hostname}/umc", 
+        # umc stats
+        if self.process_cluster_request("get", "/stats/hosts/{hostname}/umc/{umc}", 
             GlobalContext.config.umcrunner_params.stats_interval, 
             self.callback_umcdef_content) is not None:
             return
