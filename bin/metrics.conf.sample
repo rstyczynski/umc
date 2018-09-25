@@ -26,10 +26,15 @@ common:
       # The following configuration defines hostnames and their ip address umcrunnerd will bind to on respective hosts
       # when tcp_port is omitted, the default tcp-port will be used
       server-binding:
-        - hostname=ukbn01hr, address=192.168.10.101, enabled=True 
-        - hostname=ukbn02hr, address=192.168.10.102, enabled=True
-        - hostname=ukbn03hr, address=192.168.10.103, enabled=True
+        - hostname=ukbn01hr.umc.local, address=192.168.10.101, enabled=True 
+        - hostname=ukbn02hr.umc.local, address=192.168.10.102, enabled=True
+        - hostname=ukbn03hr.umc.local, address=192.168.10.103, enabled=True
         
+    # log file copies, a number of log file copies that will be produced by logdirector; this allows umcrunner to produce log files
+    # for multiple consumers; idbpush as one of such consumers then consumes log files identified with a group number 
+    # (defined in common.umcrunner.log-file-group parameter); 
+    log-file-copies: 2
+    
     # the interval umcrunner will run umc commands (or check umc commands are running)   
     run-interval: 10
 
@@ -94,8 +99,8 @@ common:
     db:
       url: http://localhost:8086/  
       dbname: rodmon_sample
-      user: rodmon
-      pass: rodmon
+      user: 
+      pass:
       
     # common time field and time format used by all umc definitions
     # this can be overriden in umc definition 
