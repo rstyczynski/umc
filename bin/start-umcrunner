@@ -4,16 +4,17 @@
 # the script directory
 scriptDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-echo $UMC_LOG_DIR
-
-if [ "$UMC_LOG_DIR" = "" ]; then
+if [ "$UMCRUNNER_CONFIG" = "" ] || [ ""$UMC_LOG_DIR = "" ]; then
         echo "umc environment has not been initialized!"
         exit 1
 fi
 
-dir="$UMC_LOG_DIR/$HOSTNAME/umcrunnerd/"
+dir="$UMC_LOG_DIR/umcrunnerd"
 mkdir -p $dir
 
-$scriptDir/umcrunnerd &>$dir/umcrunnerd.out &
+$scriptDir/umcrunnerd $* &>$dir/umcrunnerd-$HOSTNAME.out &
 if [ "$?" -eq 0 ]; then
-        echo "umcrunnerd started, out log is in $dir"
+        echo "umcrunnerd started, out log is in $dir/umcrunnerd-$HOSTNAME.out"
+else
+	echo "error occurred when starting umcrunnerd!"
+fi

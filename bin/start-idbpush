@@ -6,18 +6,17 @@ scriptDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 source $scriptDir/umc.h &>/dev/null
 
-if [ "$UMCRUNNER_CONF" = "" ]; then
-  echo >&2 "umcrunner configuration in \$UMCRUNNER_CONF variable has not been set!"
-  exit 1  
-fi 
-
-if [ "$UMC_LOG_DIR" = "" ]; then
-  echo >&2 "umc log directory in \$UMC_LOG_DIR variable has not been set!"
-  exit 1  
-fi 
-
-if [ ! -d $UMC_LOG_DIR/idbpush ]; then 
-  mkdir -p $UMC_LOG_DIR/idbpush/
+if [ "$UMCRUNNER_CONFIG" = "" ] || [ "$UMC_LOG_DIR" = "" ]; then
+  echo "umc environment has not been initialized!"
+  exit 1
 fi
 
-$scriptDir/idbpush --runall $UMCRUNNER_CONF >>$UMC_LOG_DIR/idbpush/idbpush.log 2>&1 &
+dir="$UMC_LOG_DIR/idbpush"
+mkdir -p $dir
+
+$scriptDir/idbpush $* &>$dir/idbpush-$HOSTNAME.out &
+if [ "$?" -eq 0 ]; then
+        echo "idbpush started, out log is in $dir/idbpush-$HOSTNAME.out"
+else
+	echo "error occurred when starting idbpush!"
+fi
