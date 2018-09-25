@@ -158,7 +158,7 @@ common:
 umc-dms.jdbc:
   enabled: true
   umcrunner:
-    hosts: ukbn01hr,ukbn02hr
+    hosts: ukbn01hr.umc.local,ukbn02hr.umc.local
     params: 20 dms 10 10 JDBC_DataSource config.sample
   idbpush:
     name: dms_jdbc
@@ -176,7 +176,7 @@ umc-dms.jdbc:
 umc-oradb.aiaflows:  
   enabled: true
   umcrunner:    
-    hosts: ukbn01hr
+    hosts: ukbn01hr.umc.local
     params: 20 oradb 10 10 aiaflows.sql oradb.conf.sample
     options: setsid
   idbpush:
