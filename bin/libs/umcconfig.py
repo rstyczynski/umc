@@ -45,7 +45,7 @@ class UmcConfig:
                 retc_history        = self.value("common.umcrunner.returncodes-history", 10),
 
                 proxy_timeout_connect = self.value("common.umcrunner.proxy-timeout-connect", 0.5),
-                proxy_timeout_read  = self.value("common.umcrunner.proxy-timeout-connect", 0.5),
+                proxy_timeout_read  = self.value("common.umcrunner.proxy-timeout-read", 5),
                 proxy_run_threads   = self.value("common.umcrunner.proxy-run-threads", True),
 
                 min_starting_time   = self.value("common.umcrunner.min-starting-time", 60),
