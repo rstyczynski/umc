@@ -57,7 +57,7 @@ my $linesUntilRotation :shared = 0; # number of lines writen to th current file 
 my $rotateOnThreadEnd = 0; # true to rotate the file on thread end/exit of the log director
 
 # log file copies
-my $logFileCopies = 1; # number of log file copies on rotaion; when this number of greater than 1, the number will be appended to the filename at the end
+my $logFileCopies = 0; # number of log file copies on rotaion; when this number of greater than 1, the number will be appended to the filename at the end
 
 #other
 my $exit = 0;			#flag to exit main loop, set by INT signal handler
@@ -367,7 +367,7 @@ sub moveLogFile {
         }
         
         if ( -e "$dstEffectiveDir/$logNameExt" ) {
-               if ($logFileCopies > 1) {
+               if ($logFileCopies > 0) {
                  for (my $i=1; $i <= $logFileCopies; $i++) {
                     copy("$dstEffectiveDir/$logNameExt", "$dstEffectiveDir/$rotatedLogNameExt" . "." . $i); 
                  }
