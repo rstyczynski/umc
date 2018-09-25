@@ -2,7 +2,7 @@
 
 use Getopt::Long;
 use Pod::Usage;
-use File::Copy qw(move);
+use File::Copy qw(copy);
 use FileHandle;
 use strict;
 use threads;
@@ -56,6 +56,9 @@ my $reopenFile :shared = 0; #true if the log file needs to be reopened in the ma
 my $linesUntilRotation :shared = 0; # number of lines writen to th current file before it was rotated in the thread
 my $rotateOnThreadEnd = 0; # true to rotate the file on thread end/exit of the log director
 
+# log file copies
+my $logFileCopies = 1; # number of log file copies on rotaion; when this number of greater than 1, the number will be appended to the filename at the end
+
 #other
 my $exit = 0;			#flag to exit main loop, set by INT signal handler
 my $firstLineHeader = ""; #a header read from the file when it is opened; this is used when detectHeaderDups is enabled
@@ -82,6 +85,7 @@ GetOptions ('dir=s'   	    => \$dstDir,      	# string
             'timeRotationInThread' => \$timeRotationInThread,  # flag
             'rotateOnThreadEnd' => \$rotateOnThreadEnd, # flag
             'checkHeaderDups' => \$checkHeaderDups,  # flag
+            'logFileCopies=i' => \$logFileCopies,  # integer
 		    'help|?'	    => \$help, 		    # flag
 		    'man'		    => \$man)		    # flag
 or $optError=1;
@@ -363,7 +367,14 @@ sub moveLogFile {
         }
         
         if ( -e "$dstEffectiveDir/$logNameExt" ) {
-                move("$dstEffectiveDir/$logNameExt", "$dstEffectiveDir/$rotatedLogNameExt");
+               if ($logFileCopies > 1) {
+                 for (my $i=1; $i <= $logFileCopies; $i++) {
+                    copy("$dstEffectiveDir/$logNameExt", "$dstEffectiveDir/$rotatedLogNameExt" . "." . $i); 
+                 }
+               } else {
+                    copy("$dstEffectiveDir/$logNameExt", "$dstEffectiveDir/$rotatedLogNameExt");                 
+               }
+               unlink "$dstEffectiveDir/$logNameExt"
         }
 }
 
@@ -506,6 +517,8 @@ logdirector.pl - stdout log director and rotation script.
                 enable time rotation in thread. Useful when time rotation needs to be independent of data coming from stdin,
  -rotateOnThreadEnd 
                 when rotating in thread, then this flag will rotate the file on the thread end, 
+
+ -logFileCopies number of log file copies when rotating the file, 
  
  -identifier 	log process identifier to be used by administrator/scripts to locate log director running in background,
  -flush 	do not buffer output. flush each line. Default is to use buffering,

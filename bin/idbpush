@@ -31,6 +31,7 @@ DEFAULT_DELAYBETWEENWRITES=200
 DEFAULT_RETRYCOUNT=5
 DEFAULT_RETRYINTERVAL=10000
 DEFAULT_REMOVEFILESNODATA=True
+DEFAULT_LOG_FILE_GROUP=1
 
 # *** global variables
 conf=None               # configuration file
@@ -46,6 +47,7 @@ delay_runs         = 0
 retry_count        = 0
 retry_interval     = 0
 max_batchsize_rows = 0
+log_file_group     = 0
 
 # messages colors
 class bcolors:
@@ -226,7 +228,7 @@ def get_umcid_from_logfile(logfile):
 
 # *** retrieves the first batch of log files sorted by modified time
 def get_batch_logs(batchsize=sys.maxint):
-    pattern = re.compile(".+_[0-9]+.*\.log$")
+    pattern = re.compile(".+_[0-9]+.*\.log.{log_file_group}$".format(log_file_group=log_file_group))
     search_re=".*/(" + "|".join(get_umc_ids()) + ")$";
     
     batch=[]
@@ -450,7 +452,7 @@ def db_write(client, datapoints, datafiles):
 if __name__ == "__main__":    
     # arguments
     parser = argparse.ArgumentParser(description='InfluxDB push tool for umc')
-    parser.add_argument('--runall', required=True, help='push a backlog of umc metrics defined in <file>',metavar='<file>')
+    parser.add_argument('--config', required=False, help='push a backlog of umc metrics defined in <file>',metavar='<file>')
     parser.add_argument('--logs', required=False, help='location of umc logs directory',metavar='<dir>')
     parser.add_argument('--verbose', required=False, help='be verbose',action='store_true')
     args=parser.parse_args()
@@ -469,21 +471,23 @@ if __name__ == "__main__":
     if args.logs == None:
         args.logs=os.environ.get('UMC_LOG_DIR',os.path.dirname(os.path.realpath(__file__)) + "/../logs") 
 
-    info2_msg("Using configuration file %s"%args.runall)
+    info2_msg("Using configuration file %s"%args.config)
     info2_msg("The logs directory is in %s"%args.logs)
     
     # read configuration file
     try:
-        nfl=os.path.dirname(os.path.realpath(__file__)) + "/" + args.runall
-        if not(os.path.exists(args.runall)) and os.path.exists(nfl):
-            warn_msg("The file %s does not exist in the current directory, will try the idbpush home directory."%(args.runall))
-            args.runall = nfl
+        # configuration file
+        if args.config is None:
+            args.config=os.environ.get('UMCRUNNER_CONFIG', None)
+            if args.config is None:
+                sys.stderr.write("Configuration file must be specified on command line or in UMCRUNNER_CONFIG environment variable!\n")
+                sys.exit(1)
         
-        with open(args.runall, 'r') as confDoc:
+        with open(args.config, 'r') as confDoc:
             conf=yaml.load(confDoc)
-        conf_mtime=os.stat(args.runall).st_mtime    
+        conf_mtime=os.stat(args.config).st_mtime    
     except Exception as e:
-        err_msg("Error when reading the configuration file %s: %s"%(args.runall,e))
+        err_msg("Error when reading the configuration file %s: %s"%(args.config,e))
         sys.exit(1)
     
     # configuration params
@@ -493,6 +497,7 @@ if __name__ == "__main__":
     retry_interval      = conf_value(conf, "common.idbpush.connection-error-retry-interval", DEFAULT_RETRYINTERVAL)/1000
     max_batchsize_rows  = conf_value(conf, "common.idbpush.max-batchsize-rows", DEFAULT_BATCHSIZE_ROWS)
     max_batchsize_files = conf_value(conf, "common.idbpush.max-batchsize-files", DEFAULT_BATCHSIZE_FILES)
+    log_file_group      = conf_value(conf, "common.idbpush.log-file-group", DEFAULT_LOG_FILE_GROUP)
 
     umcdefs = {}
 
@@ -586,11 +591,11 @@ if __name__ == "__main__":
                         sys.exit(1)
                     
             # check for changes of configuration file
-            if os.stat(args.runall).st_mtime != conf_mtime:
+            if os.stat(args.config).st_mtime != conf_mtime:
                 if conf_value(conf, "common.idbpush.configuration-auto-reload", False) == True:
-                    info1_msg("Configuration file %s has changed, will try to reload it."%args.runall)
+                    info1_msg("Configuration file %s has changed, will try to reload it."%args.config)
                     try:
-                        with open(args.runall, 'r') as confDoc2:
+                        with open(args.config, 'r') as confDoc2:
                             conf2=yaml.load(confDoc2)
                         umcdefs = {}                    
                         conf=conf2
@@ -599,8 +604,8 @@ if __name__ == "__main__":
                         info1_msg("Error occurred when realoding the configuration file:\n%s."%e)
                         info1_msg("Will use the previous configuration.")
                 else:
-                    warn_msg("Configuration file %s has changed but you need to restart idbpush manually for changes to take effect!"%args.runall)
-                conf_mtime=os.stat(args.runall).st_mtime
+                    warn_msg("Configuration file %s has changed but you need to restart idbpush manually for changes to take effect!"%args.config)
+                conf_mtime=os.stat(args.config).st_mtime
             
             # display info message
             if countRecords > 0:

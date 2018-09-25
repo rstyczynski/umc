@@ -114,6 +114,11 @@ common:
     tags: system, source
     fields:
     
+    # log file group to be consumed by idbpush
+    # umcrunner may produce multiple copies of the same file for various consumers (by using common.umcrunner.log-file-copies);
+    # file gruop number identifies log files to be consumed by idbpush
+    log-file-group: 1
+    
     # runtime parameters
     # number of records (lines) in a single batch that will be pushed to influxdb
     max-batchsize-rows: 50

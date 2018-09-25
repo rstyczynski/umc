@@ -32,6 +32,8 @@ class UmcConfig:
                 http_enabled        = self.value("common.umcrunner.http.enabled", True),
                 tcp_port            = self.value("common.umcrunner.http.tcp-port", 1989),
                 
+                log_file_copies     = self.value("common.umcrunner.log-file-copies", 1),
+                
                 run_interval        = self.value("common.umcrunner.run-interval", 10),
                 stats_interval      = self.value("common.umcrunner.stats-interval", 5),
                 orphans_interval    = self.value("common.umcrunner.orphans-interval", 5),
@@ -43,14 +45,14 @@ class UmcConfig:
                 retc_history        = self.value("common.umcrunner.returncodes-history", 10),
 
                 proxy_timeout_connect = self.value("common.umcrunner.proxy-timeout-connect", 0.5),
-                proxy_timeout_read    = self.value("common.umcrunner.proxy-timeout-connect", 0.5),
+                proxy_timeout_read  = self.value("common.umcrunner.proxy-timeout-connect", 0.5),
                 proxy_run_threads   = self.value("common.umcrunner.proxy-run-threads", True),
 
                 min_starting_time   = self.value("common.umcrunner.min-starting-time", 60),
                 run_after_failure   = self.value("common.umcrunner.run-after-failure", 60),
                 
                 oserror_max_attempts = self.value("common.umcrunner.oserror-max-attempts", 5),
-                oserror_wait_time    = self.value("common.umcrunner.oserror-wait-time", 60))
+                oserror_wait_time   = self.value("common.umcrunner.oserror-wait-time", 60))
                 
                              
         except Exception as e:
