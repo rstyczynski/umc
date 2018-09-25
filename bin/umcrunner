@@ -140,28 +140,36 @@ def send_request(method, url):
             connect_str="%s:%s"%(socket.gethostname(),1989)
     
     while True:
+        response = None
         try:
             furl='http://%s%s'%(connect_str, url)    
             if method=="get":
-                return requests.get(furl, timeout=(args.connect_timeout, args.read_timeout))
+                response=requests.get(furl, timeout=(args.connect_timeout, args.read_timeout), allow_redirects=True)
             elif method=="post":
-                return requests.post(furl, timeout=(args.connect_timeout, args.read_timeout))
+                response=requests.post(furl, timeout=(args.connect_timeout, args.read_timeout), allow_redirects=True)
             else: raise Exception("Fatal: the method %s is not supported!"%method)
+            return response
         except requests.exceptions.ConnectionError as e:
             old_connect_str=connect_str
             connect_str=None
-            if server_list is not None:
-                for hostname,sdef in server_list.items():
-                    if sdef.discarded is None:
-                        connect_str="%s:%s"%(sdef.address,sdef.tcp_port)
-                        sdef.discarded=True
-                        break
+            
+            # only try the next server if this request was not redirected already
+            # in which case, the final destination server cannot be connected to
+            if response is None or response.history is not None: 
+                if server_list is not None:
+                    for hostname,sdef in server_list.items():
+                        if sdef.discarded is None:
+                            connect_str="%s:%s"%(sdef.address,sdef.tcp_port)
+                            sdef.discarded=True
+                            break
+            
+            # raise error if all options tried out
             if connect_str is None:
                 connect_str=old_connect_str
                 raise e 
-        # except
-    # while
-# send_request
+        # // except
+    # // while
+# // send_request
 
 # *** MAIN
 if __name__ == "__main__":    

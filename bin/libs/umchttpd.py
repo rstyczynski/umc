@@ -17,57 +17,12 @@ from umctasks import RefreshProcessesTask
 import messages as Msg
 import proc_utils as putils
 from utils import Map
+from utils import PathDef
 
 allinstances_data = None
 rlock_allhostsreq = threading.RLock() 
 
 GlobalContext = None
-
-class PathDef():
-    def __init__(self, path_def):
-        self.path_def=path_def
-
-    def params(self, path):
-        path_re=self.path_def
-        
-        # find all params in path_def
-        params_def=re.findall("(\{[a-zA-Z0-9_]+\})", self.path_def)
-        
-        # create re pattern by replacing parameters in path_def with pattern to match parameter values
-        for p_def in params_def: path_re=path_re.replace(p_def, "([a-zA-Z\-0-9\._]+)")
-        
-        # get params values
-        res=re.findall("^" + path_re + "$", path)
-        values=[]
-        for x in res:
-            if type(x) is tuple: values.extend(list(x))
-            else: values.append(x)
-        
-        params=Map()
-        params.__path_def__=self.path_def
-        params.__path__=path
-        params.replace = self.replace
-        for x in range(0, len(params_def)):
-            if x < len(values): params[params_def[x][1:-1]]=str(values[x])
-            else:
-                #Msg.warn_msg("The path '%s' does not match definition '%s'"%(path, self.path_def))
-                return None
-        
-        return params
-    
-    def replace(paramsMap, path):
-        params = self.params(path)
-        if params is None:
-            return None
-
-        new_path=self.path_def
-        for k,v in paramsMap:
-            if params.get(k):
-                new_path = new_path.replace("{%s}"%k,v)
-            else:
-                Msg.warn_msg("The param '%s' has not been found in path definition '%s'."%(k, self.path_def))
-        
-        return new_path
 
 # HTTPServer
 class UmcRunnerHTTPServer():
@@ -234,6 +189,15 @@ class Handler(BaseHTTPRequestHandler):
             self.wfile.write(data)
             self.wfile.write('\n')        
     
+    def get_server_list(self, params):
+        server_list=[]
+        for hostname,server_def in GlobalContext.server_list.items():
+            if server_def.enabled:
+                if params.hostname=='all' or hostname.startswith(params.hostname):
+                    server_list.append(server_def)
+        return server_list
+    # get_server_list
+    
     # process request in the umcrunner cluster in the following way:
     # if path_def contains {hostname} and its value is 'all', then proxy the request to all umcrunner servers in the cluster; 
     # otherwise redirect the request to respctive hostname; if the hostname is this umcrunner instance, then process the request here
@@ -245,8 +209,12 @@ class Handler(BaseHTTPRequestHandler):
         if params is None or params.hostname is None:
             return None
         
+        # get a list of servers this should be proxied to
+        # if there is more than one, then proxy them, otherwise run the locally or redirect via client
+        server_list = self.get_server_list(params)
+        
         # hostname is "all", will forward to individual umcrunner servers
-        if params.hostname=="all":
+        if len(server_list) > 1:
             # check if this has been proxied already
             if self.headers.get("Via") is None:
                 # acquire lock on this path to prevent other threads from doing the same
@@ -257,15 +225,15 @@ class Handler(BaseHTTPRequestHandler):
                     if content is None:       
                         # not in cache              
                         # proxy to all umcrunner hosts including "me" (this one)
-                        Msg.info2_msg("Sending %d proxy requests."%(len(GlobalContext.server_list.items())))
+                        Msg.info2_msg("Sending %d proxy requests."%(len(server_list)))
                         
                         start_t=time.time(); prqs=[]                    
-                        for hostname,server_def in GlobalContext.server_list.items():
-                            if server_def.enabled:
-                                prqs.append(ProxyRequest(method,'http://{address}:{tcp_port}{fw_path}'
-                                    .format(address=server_def.address,tcp_port=server_def.tcp_port,fw_path=self.path.replace("all", hostname)),
-                                    GlobalContext.config.umcrunner_params.proxy_run_threads))
-                                prqs[-1].send_request()
+                        for server_def in server_list:
+                            prqs.append(ProxyRequest(method,'http://{address}:{tcp_port}{fw_path}'
+                                .format(address=server_def.address,tcp_port=server_def.tcp_port,
+                                fw_path=params.replace(params,Map(hostname=server_def["hostname"]))),
+                                GlobalContext.config.umcrunner_params.proxy_run_threads))
+                            prqs[-1].send_request()
 
                         # wait for all responses
                         for x in prqs: x.wait_for_response()
@@ -292,27 +260,29 @@ class Handler(BaseHTTPRequestHandler):
                 Msg.warn_msg("A request to %s can only come from a client, not a proxy! (%s)"%(self.path,self.headers.get("Via"))) 
                 self.send(400, None, "Request to the resource that comes via a proxy is not allowed!")
                 return False              
-        # if hostname=="all"
-        else:
+        # // if multiple hostnames        
+        elif len(server_list)==1:
             # params.hostname should be a valid hostname
-            server_def = GlobalContext.server_list.get(params.hostname)
-            if server_def is not None:
-                if not(server_def.me):
-                    # host should be a known host, redirect the request onto it rather than being a proxy
-                    self.send(308, { "Location" : "http://{address}:{tcp_port}{fw_path}"
-                        .format(address=server_def.address,tcp_port=server_def.tcp_port,fw_path=self.path.replace("all", params.hostname)) }, "")
-                    return
-                else:
-                    content = get_content(params)
-                    if content is not None:
-                        self.send(content.code, { "Content-Type" : "application/json" }, "[%s]"%",".join(content.json) )
-                    else:
-                        # should not happen really
-                        self.send(500, None, "" )
-                    return True
+            server_def = server_list[0]
+            if not(server_def.me):
+                # host should be a known host, redirect the request onto it rather than being a proxy
+                location_url="http://{address}:{tcp_port}{fw_path}".format(address=server_def.address,tcp_port=server_def.tcp_port,
+                    fw_path=params.replace(params,Map(hostname=server_def["hostname"])))
+                Msg.info2_msg("Redirecting the request to '%s'"%location_url)                
+                self.send(308, { "Location" : location_url }, "")
+                return
             else:
-                self.send(404, None, "The host %s does not exist!"%params.hostname)
-                return False
+                content = get_content(params)
+                if content is not None:
+                    self.send(content.code, { "Content-Type" : "application/json" }, "[%s]"%",".join(content.json) )
+                else:
+                    # should not happen really
+                    self.send(500, None, "" )
+                return True
+        # // if one hostname only
+        else:
+            self.send(404, None, "The host %s cannot be found!"%params.hostname)
+            return False
         # else 
     # process_cluster_request       
 
