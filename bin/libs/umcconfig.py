@@ -163,6 +163,7 @@ class UmcConfig:
             sb_def = { k:v.strip('",\'') for k,v in re.findall(r'(\S+)=(".*?"|\S+)', sb) }
             if sb_def.get("hostname") is not None:
                 df = Map(
+                    hostname=sb_def["hostname"],
                     address=sb_def["address"],
                     tcp_port=sb_def["tcp_port"] if sb_def.get("tcp_port") else tcp_port,
                     enabled=(True if sb_def.get("enabled") is not None and sb_def["enabled"].lower() == 'true' else False),
