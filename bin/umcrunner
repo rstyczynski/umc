@@ -34,7 +34,7 @@ args=None
 server_list=None
 connect_str=None
 
-# formatting functions
+# *** formatting functions
 def format_state(cdef, value, entry):
     return "1" if value is True else "0"    
 
@@ -61,6 +61,7 @@ def format_cedrwe(cdef, value, entry):
 def format_cpuload(cdef, value, entry):
     return "%.4f"%(entry["cpu"]/entry["uptime"])
 
+# resource table definition
 stats_umcrunner = [
     { "name" : "HOST",        "mlen" : 0,  "value" : "{hostname}",                                          "help" : "umcrunner hostname" }, 
     { "name" : "PID",         "mlen" : 0,  "value" : "{pid}",                                               "help" : "umcrunner process ID" }, 
@@ -92,9 +93,13 @@ stats_umc = [
     { "name" : "LAST_ERROR",  "mlen" : 0,  "value" : "{lasterror_time}",     "format" : format_time ,       "help" : "Last time an error occurred." }
 ]
 
+# rules_umc = [
+#     { "rule" : "{stats.p.uptime} > ({delay}*{count})", "type" : "warning", "msg" : "umc instance {umc_instanceid} on {hostname} is running longer than it should!" }
+# ]
+
 # resource definitions
 resources = {
-    "hosts" : { "url" : "/stats/hosts/{hostname}", "table_def" : stats_umcrunner, 
+    "hosts" : { "url" : "/stats/hosts/{hostname}", "table_def" : stats_umcrunner, "rules_def" : rules_umc, 
         "help" : "umcrunner runtime information" }, 
     "umc" : { "url" : "/stats/hosts/{hostname}/umc/{umc}", "table_def" : stats_umc, 
         "help" : "umc instances configuration and runtime information" } 
@@ -239,7 +244,7 @@ if __name__ == "__main__":
                         if x.get("msg") is not None:
                             sys.stdout.write("- %s\n"%x["msg"])
                         else:
-                            sys.stderr.write("Unknown message format!\n")
+                            sys.stderr.write("- <unknown message format>\n")
                 else:                        
                     sys.stdout.write("%s\n"%json.dumps(response.json(), indent=2))
             
