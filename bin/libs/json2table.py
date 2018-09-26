@@ -24,9 +24,6 @@ class Table:
                     if v.upper()==s:
                         sort_def[s] = "{%s}"%k
                         break
-                    # // 
-                # // for
-            # // for
         # // for table_def
         
         return sort_def
