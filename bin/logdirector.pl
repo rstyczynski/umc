@@ -374,7 +374,7 @@ sub moveLogFile {
                } else {
                     copy("$dstEffectiveDir/$logNameExt", "$dstEffectiveDir/$rotatedLogNameExt");                 
                }
-               unlink "$dstEffectiveDir/$logNameExt"
+               truncate "$dstEffectiveDir/$logNameExt", 0;
         }
 }
 
