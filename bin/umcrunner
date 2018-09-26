@@ -23,6 +23,7 @@ import messages as Msg
 from time import sleep
 from datetime import datetime, timedelta
 from json2table import Table
+from utils import PathDef
 
 # local libraries
 import libs.messages as Msg
@@ -181,7 +182,7 @@ if __name__ == "__main__":
     conopts.add_argument('--connect-timeout', required=False, default=0.5, help='HTTP connection timeout, default=0.5s',metavar="<timeout>")
     conopts.add_argument('--read-timeout', required=False, default=10, help='HTTP read timeout, default=10s',metavar="<timeout>")
     
-    group=parser.add_argument_group("stats and commands")
+    group=parser.add_argument_group("statistics and commands")
     statcom = group.add_mutually_exclusive_group(required=True)    
     statcom.add_argument('-s','--stats', required=False, metavar="hosts|umc", dest='resource',const='hosts',action='store',nargs='?',type=str,
         help='resource stats to retrieve, default="hosts"')    
@@ -190,19 +191,24 @@ if __name__ == "__main__":
     statcom.add_argument('-e','--enable', metavar="<umc>", required=False, default=None, action='store',help='enable umc instance; this operation is not persistent')
     statcom.add_argument('--stop', required=False, default=None, action='store_true',help='stop umcrunner daemon')
     
-    prmopts = parser.add_argument_group('parameters for stats and commands')    
+    prmopts = parser.add_argument_group('statistics and commands options')    
     prmopts.add_argument('-h','--hostname', required=False, metavar="<name>", default='all',action='store',type=str,
         help='run request on a host, default="all"')
     prmopts.add_argument('-u','--umc', required=False, metavar="<id>", default='all',action='store',type=str,
         help='retrieve umc instance id <id>, default="all"')
+
+    srtopts = parser.add_argument_group('sorting options')    
+    srtopts.add_argument('--sort', required=False, metavar="<col1,col2,...>", default=None,action='store',type=str,
+        help='sort by listed columns')
+    srtopts.add_argument('-r','--reverse', required=False, default=False, help='sort in reverse order',action='store_true')    
     
-    fmtopts = parser.add_argument_group('output format and display arguments')    
+    fmtopts = parser.add_argument_group('output format and display options')    
     fmtopts.add_argument('-f','--format', required=False, metavar="<text|json>", default="text", help='output format, default=text', action='store', type=str) 
     fmtopts.add_argument('--noterm', required=False, help='do not detect terminal dimensions',action='store_true')    
     fmtopts.add_argument('--cont', required=False, default=False, action='store_true',help='display stats continuosly')
     fmtopts.add_argument('--refresh', required=False, metavar="<interval>", default=5, action='store',type=int,help='refresh interval for continuous display of stats')
     
-    otopts = parser.add_argument_group('optional other arguments')
+    otopts = parser.add_argument_group('other options')
     otopts.add_argument("--help", action="help", help="show this help message and exit")
     otopts.add_argument('--describe', required=False, help='describe resource structure',action='store_true')     
     otopts.add_argument('--yes', required=False, default=False, help='answer all questions as \'yes\'',action='store_true')    
@@ -216,12 +222,14 @@ if __name__ == "__main__":
         if configFile is not None:
             server_list = UmcConfig(configFile).get_server_list()
 
+        # get the command to run, if any
         command_def=None
         for cmd,cmd_def in commands.items():
             if vars(args).get(cmd) is not None:
                 command_def = cmd_def
                 break
         
+        # run the command
         if command_def is not None:
             if not(command_def["confirm"]) or args.yes or utils.query_yes_no(utils.unpack(vars(args),command_def["q"]) + " Are you sure?"):
                 response=send_request("post", utils.unpack(vars(args),command_def["url"]))
@@ -236,12 +244,12 @@ if __name__ == "__main__":
                     sys.stdout.write("%s\n"%json.dumps(response.json(), indent=2))
             
             sys.exit(0)            
-        # command
-        
+        # // command
+                
         # print statistics for chosen resource
         rdef = resources.get(args.resource)
         if rdef is not None:
-            table = Table(rdef["table_def"])
+            table = Table(rdef["table_def"], args.sort, args.reverse)
             if args.describe:
                 sys.stdout.write("%s (URL=%s).\n\n"%(rdef["help"],rdef["url"]))
                 table.describe(args.noterm)
@@ -261,11 +269,12 @@ if __name__ == "__main__":
                         sleep(args.refresh)
                     else:
                         break;
-                # while                    
+                # // while                    
         else:
             raise Exception("Unknown resource: %s"%args.resource)
         
         print ""
+        
     except KeyboardInterrupt as e:
         print ""
         pass

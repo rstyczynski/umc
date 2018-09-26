@@ -2,10 +2,35 @@
 import re
 import sys
 import os
+import collections
+
+from utils import PathDef
 
 class Table:
-    def __init__(self, table_def):
-        self.table_def = table_def
+    def __init__(self, table_def, sort_cols, sort_reverse):
+        self.table_def=table_def
+        self.sort_def=self.sort_def(sort_cols, table_def)
+        self.sort_reverse=sort_reverse
+    
+    def sort_def(self, sort_cols, table_def):
+        if sort_cols is None:
+            return None
+            
+        sort_def = collections.OrderedDict.fromkeys([ s.strip().upper() for s in sort_cols.split(',') ])
+        for e in self.table_def:
+            params=PathDef(e["value"]).params(e["name"])
+            for s in sort_def.keys():
+                for k,v in params.params.items():
+                    if v.upper()==s:
+                        sort_def[s] = "{%s}"%k
+                        break
+                    # // 
+                # // for
+            # // for
+        # // for table_def
+        
+        return sort_def
+    # // sort_defs 
     
     def format_item(self, cdef, value, skipformat=False, entry=None, adjust=True):
         if cdef.get("format") and not skipformat and value is not None:
@@ -60,8 +85,14 @@ class Table:
             sys.stderr.write("Cannot determine terminal dimensions: %s/n"%(str(e)))
             pass
         return cols
-    
+            
     def display(self, data, noterm=False):
+        # sort data
+        if self.sort_def is not None:
+            data=sorted(data, 
+                key=lambda item : tuple(self.eval_value(v,item) for k,v in self.sort_def.items() if v is not None), 
+                reverse=self.sort_reverse)
+    
         # calc 
         self.data = data
         self.calc_col_sizes()
