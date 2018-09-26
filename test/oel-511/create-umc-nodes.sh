@@ -20,8 +20,8 @@ create_node() {
   ip=$2
 
   echo "* creating node umc-$name, ip=$ip..."  
-  docker kill umc-$name >/dev/null
-  docker rm umc-$name >/dev/null
+  docker kill umc-$name &>/dev/null
+  docker rm umc-$name &>/dev/null
 
   docker run -it \
 	--user oracle \
@@ -29,21 +29,25 @@ create_node() {
 	-h $name.umc.local \
 	-v $UMC_HOME:/home/oracle/umc \
 	--name umc-$name \
-	--ip $ip -d $IMAGE /bin/bash -l >/dev/null
+	--ip $ip -d $IMAGE /bin/bash -l &>/dev/null
 }
 
 create_umc_node() {
   create_node $1 $2
   if [ "$3" != "nostart" ]; then
-    docker exec umc-$1 /bin/bash -l -c "start-umcrunner --verbose"
+    echo "  - starting umcrunner daemon..."
+    docker exec umc-$1 /bin/bash -l -c "start-umcrunner --verbose" &>/dev/null
   fi
 }
 
 create_idb_node() {
   create_node $1 $2
-  docker exec umc-$1 /bin/bash -l -c "start-influxd.sh"
-  docker exec umc-$1 /bin/bash -l -c "influx -execute \"CREATE DATABASE rodmon_sample WITH DURATION INF REPLICATION 1 SHARD DURATION 7d\""
-  docker exec umc-$1 /bin/bash -l -c "start-idbpush --verbose"
+  echo "  - starting and configuring influxdb..."
+  docker exec umc-$1 /bin/bash -l -c "start-influxd.sh" &>/dev/null
+  docker exec umc-$1 /bin/bash -l -c "influx -execute \"CREATE DATABASE rodmon_sample WITH DURATION INF REPLICATION 1 SHARD DURATION 7d\"" &>/dev/null
+  
+  echo "  - starting idbpush..."
+  docker exec umc-$1 /bin/bash -l -c "start-idbpush --verbose" &>/dev/null
 }
 
 # create umcrunnerd nodes
