@@ -18,7 +18,7 @@ from (
   from (
     select a1.id, REGEXP_SUBSTR(a1.conversation_id, '.+\%(.+)',1,1,'i',1) batch_id, 
     a1.created_time, mi.component_state mediator_state, a2.composite_instance_id, a2.error_message, a2.stack_trace 
-    from composite_instance a1, composite_instance_fault a2, mediator_instance mi
+    from __SOAINFRA_SCHEMA__.composite_instance a1, __SOAINFRA_SCHEMA__.composite_instance_fault a2, __SOAINFRA_SCHEMA__.mediator_instance mi
     where a1.composite_dn like 'default/SyncAcctSiebelAggrEventConsumer%' and 
           a1.id = a2.composite_instance_id (+) and
           a1.id = mi.composite_instance_id (+) and mi.component_state is not null and 

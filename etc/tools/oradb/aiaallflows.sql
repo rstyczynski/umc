@@ -23,10 +23,10 @@ FROM (
               nvl(cui.modify_date,TO_DATE('18-01-01 00:00:00', 'YY-MM-DD HH24:MI:SS'))) end_time, 
            cui.modify_date cui_md,   
            cif.created_time faulted_time, REGEXP_SUBSTR(cif.error_message, 'ErrMsg=([a-zA-Z0-9\-\_]+)',1,1,'i',1) brm_error, cif.error_message 
-    FROM PRR22_SOAINFRA.composite_instance partition (PT_20180606) ci, 
-         PRR22_SOAINFRA.composite_instance_fault partition (PT_20180606) cif, 
-         PRR22_SOAINFRA.reference_instance partition (PT_20180606) ri, 
-         PRR22_SOAINFRA.cube_instance partition (PT_20180605) cui
+    FROM __SOAINFRA_SCHEMA__.composite_instance partition (PT_20180606) ci, 
+         __SOAINFRA_SCHEMA__.composite_instance_fault partition (PT_20180606) cif, 
+         __SOAINFRA_SCHEMA__.reference_instance partition (PT_20180606) ri, 
+         __SOAINFRA_SCHEMA__.cube_instance partition (PT_20180605) cui
     WHERE 
          ci.ecid = cif.ecid (+) AND ci.id = ri.composite_instance_id (+) AND ci.id=cui.cmpst_id(+) AND
          ci.created_time BETWEEN TO_DATE('18-06-06 12:35:00', 'YY-MM-DD HH24:MI:SS') AND

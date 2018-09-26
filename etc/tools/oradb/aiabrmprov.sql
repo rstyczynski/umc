@@ -34,7 +34,7 @@ FROM (
                     ci.ecid ecid, 
                     LISTAGG(REGEXP_SUBSTR(ci.composite_dn, 'default/(.*)!',1,1,'i',1), ', ') WITHIN GROUP (ORDER BY created_time) "CDNS"
                 FROM 
-                    PRFMX_SOAINFRA.composite_instance ci
+                    __SOAINFRA_SCHEMA__.composite_instance ci
                 WHERE 
                     (ci.composite_dn LIKE 'default/ProcessFulfillmentOrderBillingAccountListOSMCFSCommsJMSConsumer%' OR
                      ci.composite_dn LIKE 'default/SyncCustomerPartyListBRM_01CommsJMSConsumer%' OR
@@ -47,8 +47,8 @@ FROM (
             WHERE
                 instr(cdns, 'SyncCustomerPartyListBRMCommsProv') > 0 or 
                 instr(cdns, 'ProcessFulfillmentOrderBillingBRMCommsProv') > 0) a11,
-            PRFMX_SOAINFRA.composite_instance a1,
-            PRFMX_SOAINFRA.composite_instance_fault a2
+            __SOAINFRA_SCHEMA__.composite_instance a1,
+            __SOAINFRA_SCHEMA__.composite_instance_fault a2
         WHERE
             a1.ecid = a11.ecid AND
             a1.ecid = a2.ecid (+) AND
