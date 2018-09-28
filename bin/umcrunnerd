@@ -118,7 +118,7 @@ if __name__ == "__main__":
     GlobalContext.config = UmcConfig(GlobalContext.configFile) 
     
     # welcome 
-    Msg.info1_msg("umcrunner started with pid %d, the signature is %s"%(os.getpid(),Tasks.UmcRunTask.UMCRUNNER_SIGNATURE))
+    Msg.info1_msg("umcrunner version %s started with pid %d"%(VERSION, os.getpid()))
     Msg.info1_msg("umcrunner parameters are: umc_home=%s, configFile=%s, log_root=%s, hostname=%s"
         %(GlobalContext.homeDir,GlobalContext.configFile,GlobalContext.logRootDir,socket.gethostname()))
 
@@ -143,12 +143,20 @@ if __name__ == "__main__":
         
         # all task being run as part of the main loop
         tasks = Tasks.TasksDef(GlobalContext)
-        tasks.addTask(Tasks.CollectStatsTask, GlobalContext.config.umcrunner_params.stats_interval, True)
-        tasks.addTask(Tasks.OrphansCheckTask, GlobalContext.config.umcrunner_params.orphans_interval, True)
-        tasks.addTask(Tasks.MaxProcessesTask, GlobalContext.config.umcrunner_params.maxproc_interval, True)
-        tasks.addTask(Tasks.MaxZombiesTask, GlobalContext.config.umcrunner_params.maxzombies_interval, True)
-        tasks.addTask(Tasks.RefreshProcessesTask, GlobalContext.config.umcrunner_params.run_interval, True)
-        tasks.addTask(Tasks.UmcRunTask, GlobalContext.config.umcrunner_params.run_interval, False)
+        # stats
+        tasks.addTask(Tasks.CollectPrcStatsTask, GlobalContext.config.umcrunner_params.prcstats_interval, run_on_global_pause=True,
+            time_limit_pause=2, pause_for=60*5, time_limit_disable=5)
+        tasks.addTask(Tasks.CollectLogStatsTask, GlobalContext.config.umcrunner_params.logstats_interval, run_on_global_pause=False,
+            time_limit_pause=2, pause_for=60*10, time_limit_disable=5)
+        
+        # checks
+        tasks.addTask(Tasks.OrphansCheckTask, GlobalContext.config.umcrunner_params.orphans_interval, run_on_global_pause=True)
+        tasks.addTask(Tasks.MaxProcessesTask, GlobalContext.config.umcrunner_params.maxproc_interval, run_on_global_pause=True)
+        tasks.addTask(Tasks.MaxZombiesTask, GlobalContext.config.umcrunner_params.maxzombies_interval, run_on_global_pause=True)
+        
+        # run and refresh
+        tasks.addTask(Tasks.RefreshProcessesTask, GlobalContext.config.umcrunner_params.run_interval, run_on_global_pause=True)
+        tasks.addTask(Tasks.UmcRunTask, GlobalContext.config.umcrunner_params.run_interval, run_on_global_pause=False)
             
         # os error attempts
         oserror_retry_attempts = 0

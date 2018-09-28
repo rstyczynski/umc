@@ -44,6 +44,9 @@ def format_time(cdef, value, entry):
 def format_float(cdef, value, entry):
     return "%.2f"%value
 
+def format_float3(cdef, value, entry):
+    return "%.3f"%value
+
 def format_uptime(cdef, value, entry):
     sec = timedelta(seconds=int(value))
     d = datetime(1,1,1) + sec
@@ -64,17 +67,16 @@ def format_cpuload(cdef, value, entry):
 # resource table definition
 stats_umcrunner = [
     { "name" : "HOST",        "mlen" : 0,  "value" : "{hostname}",                                          "help" : "umcrunner hostname" }, 
-    { "name" : "PID",         "mlen" : 0,  "value" : "{pid}",                                               "help" : "umcrunner process ID" }, 
     { "name" : "UPT",         "mlen" : 0,  "value" : "{uptime}",             "format" : format_uptime,      "help" : "umcrunner uptime" }, 
     { "name" : "RSS",         "mlen" : 0,  "value" : "{rss}",                "format" : format_float,       "help" : "Amount of memory in MBs" }, 
-    { "name" : "CPU",         "mlen" : 0,  "value" : "{cpu}",                "format" : format_float,       "help" : "CPU time" }, 
-    { "name" : "CPU/s",       "mlen" : 0,  "value" : "",                     "format" : format_cpuload,     "help" : "CPU load" }, 
+    { "name" : "CPU",         "mlen" : 0,  "value" : "{cpu_s}",              "format" : format_float3,      "help" : "CPU load (cpu time/uptime)" }, 
     { "name" : "THR",         "mlen" : 0,  "value" : "{threads}",                                           "help" : "Number of threads" }, 
-    { "name" : "CN/EN/DI/RN/WT/ER", "mlen" : 0,  "value" : "{umc_counts.umc_count}/{umc_counts.umc_enabled}/{umc_counts.umc_disabled}/{umc_counts.umc_running}/{umc_counts.umc_waiting}/{umc_counts.umc_errors}",   
+    { "name" : "CN/EN/DI/RN/WT/ER", "mlen" : 0,  "value" : "{umc_counts.count}/{umc_counts.enabled}/{umc_counts.disabled}/{umc_counts.running}/{umc_counts.waiting}/{umc_counts.errors}",   
                                                                              "format" : format_cedrwe,      "help" : "umc instances counts, CN=total, EN=enabled, DI=disabled, RN=running, WT=waiting, ER=errors" }, 
     { "name" : "U_CHP",       "mlen" : 0,  "value" : "{umc_counts.num_children}",                           "help" : "Number of umc instances children processes" }, 
-    { "name" : "U_RSS",       "mlen" : 0,  "value" : "{umc_counts.umc_rss}", "format" : format_float,       "help" : "Total amount of memory in MBs of all umc instances." }, 
-    { "name" : "U_CPU",       "mlen" : 0,  "value" : "{umc_counts.umc_cpu}", "format" : format_float,       "help" : "Total CPU time of all umc instances." }, 
+    { "name" : "U_RSS",       "mlen" : 0,  "value" : "{umc_counts.rss}",     "format" : format_float,       "help" : "Total amount of memory in MBs of all umc instances." }, 
+    { "name" : "U_CPU",       "mlen" : 0,  "value" : "{umc_counts.cpu_s}",   "format" : format_float3,      "help" : "CPU load (cpu time/uptime) of all umc instances." }, 
+    { "name" : "BLG",         "mlen" : 0,  "value" : "{umc_counts.backlog_total}",                          "help" : "Total backlog of all umcrunner instances." }, 
     { "name" : "LAST_ERROR",  "mlen" : 0,  "value" : "{umc_counts.last_errortime}","format" : format_time , "help" : "Last time an error occurred." }
 ]
 
@@ -84,18 +86,18 @@ stats_umc = [
     { "name" : "ROT-DEL-CNT", "mlen" : 0,  "value" : "{rotation_timelimit}-{delay}-{count}",                "help" : "Log rotation time/delay/count." }, 
     { "name" : "RNS/ERS",     "mlen" : 0,  "value" : "{num_runs}/{num_errors}",                             "help" : "Number of total iterations and failed iterations." }, 
     { "name" : "STARTED",     "mlen" : 0,  "value" : "{last_started_time}",  "format" : format_time,        "help" : "Last time umc instance was started." },
-    { "name" : "P_TPID",      "mlen" : 0,  "value" : "{stats.p.top_pid}",                                   "help" : "umc instance top PID." }, 
     { "name" : "P_CHP",       "mlen" : 0,  "value" : "{stats.p.num_chproc}",                                "help" : "Number of children processes." }, 
     { "name" : "P_RSS",       "mlen" : 0,  "value" : "{stats.p.rss}",        "format" : format_float,       "help" : "Total amount of memory in MBs umc instance currently takes." }, 
-    { "name" : "P_CPU",       "mlen" : 0,  "value" : "{stats.p.cpu}",        "format" : format_float,       "help" : "Total CPU time umc instance took from its last start." }, 
+    { "name" : "P_CPU",       "mlen" : 0,  "value" : "{stats.p.cpu}",        "format" : format_float,       "help" : "CPU time of the running umc instance." }, 
     { "name" : "P_UPT",       "mlen" : 0,  "value" : "{stats.p.uptime}",     "format" : format_uptime,      "help" : "The time the current umc instance is running." },
+    { "name" : "BLG",         "mlen" : 0,  "value" : "{log_stats.backlog_total}",                           "help" : "Total backlog." }, 
     { "name" : "LRC",         "mlen" : 0,  "value" : "{returncodes}",        "format" : format_returncode , "help" : "Last return code." },
     { "name" : "LAST_ERROR",  "mlen" : 0,  "value" : "{lasterror_time}",     "format" : format_time ,       "help" : "Last time an error occurred." }
 ]
 
-# rules_umc = [
-#     { "rule" : "{stats.p.uptime} > ({delay}*{count})", "type" : "warning", "msg" : "umc instance {umc_instanceid} on {hostname} is running longer than it should!" }
-# ]
+rules_umc = [
+    { "rule" : "{stats.p.uptime} > ({delay}*{count})", "type" : "warning", "msg" : "umc instance {umc_instanceid} on {hostname} is running longer than it should!" }
+]
 
 # resource definitions
 resources = {
@@ -181,9 +183,9 @@ def send_request(method, url):
 if __name__ == "__main__":    
 
     # arguments
-    parser = argparse.ArgumentParser(description='umcrunner client', add_help=False)
+    parser = argparse.ArgumentParser(description='umcrunner client - provides access to umcrunner daemon in the cluster by using umcrunner daemon REST API.', add_help=False)
     conopts = parser.add_argument_group('optional connection arguments')    
-    conopts.add_argument('--connect', required=False, default=None, help='umcrunner daemon host nad port to connect',metavar="<host:port>")
+    conopts.add_argument('--connect', required=False, default=None, help='umcrunner daemon host nad port to connect; by default will connect to this host ip on tcp/1989',metavar="<host:port>")
     conopts.add_argument('--connect-timeout', required=False, default=0.5, help='HTTP connection timeout, default=0.5s',metavar="<timeout>")
     conopts.add_argument('--read-timeout', required=False, default=10, help='HTTP read timeout, default=10s',metavar="<timeout>")
     

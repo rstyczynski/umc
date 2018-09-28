@@ -40,13 +40,12 @@ class UmcRunTask():
 
         p = psutil.Popen(UmcRunTask.UMC_LAUNCH_CMD.format(umc_instanceid=umcdef.umc_instanceid,umc_toolid=umcdef.umc_toolid,
                 delay=umcdef.delay,count=umcdef.count,params=umcdef.params,rotation_timelimit=umcdef.rotation_timelimit,
-                signature=UmcRunTask.UMCRUNNER_SIGNATURE,umc_home=GlobalContext.homeDir,log_dir=log_dir,
-                log_file_copies=GlobalContext.config.umcrunner_params.log_file_copies),
+                umc_home=GlobalContext.homeDir,log_dir=log_dir,log_file_copies=GlobalContext.config.umcrunner_params.log_file_copies),
             shell=True, executable=UmcRunTask.DEFAULT_SHELL, preexec_fn=preexec, stdin=None, stdout=None, stderr=None)
 
         return p    
     
-    def run_task(self, GlobalContext):
+    def run_task(self, GlobalContext, tdef):
         running=[]; started=[]; waiting=[]
         for umcdef in GlobalContext.umcdefs:
             if umcdef.enabled:
@@ -123,7 +122,7 @@ class RefreshProcessesTask():
         finally:
             umcdef.lock.release()
     
-    def run_task(self, GlobalContext):
+    def run_task(self, GlobalContext, tdef):
         for umcdef in GlobalContext.umcdefs:
             self.refresh_single_instance(umcdef, GlobalContext)
         
@@ -134,70 +133,86 @@ class RefreshProcessesTask():
         
         return True
     
-# stats collection
-class CollectStatsTask():    
+# file log stats and info collection
+class CollectLogStatsTask():    
     
-    # def backlog(umc_toolid, max_files):
-    #     log_dir=get_log_dir(umc_toolid)
-    # 
-    #     count = 0
-    # 
-    #     try:
-    #         str='ls -U1 {log_dir}/ 2>/dev/null | grep "{umc_toolid}_" 2>/dev/null | head -{max_files} 2>/dev/null | wc -l'.format(log_dir=log_dir,umc_toolid=umc_toolid,max_files=max_files+1)
-    #         cmd=subprocess.Popen(str, shell=True, stdout=subprocess.PIPE)
-    #         for e in cmd.stdout:
-    #             count = int(e)
-    #             break
-    #     except Exception as e:
-    #         count = 0
-    #         print str(e)
-    #         pass
-    # 
-    #     '''    
-    #     pattern="{umc_toolid}_.+".format(umc_toolid=umc_toolid)
-    #     for f in os.listdir(log_dir):
-    #         if f.find(pattern):
-    #             count = count + 1
-    #         if count > max_files:
-    #             break
-    #     '''
-    # 
-    #     return count
-    
-    def run_task(self, GlobalContext):
-        counts=Map(umc_count=0, umc_enabled=0, umc_disabled=0, umc_running=0, umc_waiting=0, num_children=0,
-            umc_rss=0, umc_cpu=0, umc_runs=0, umc_errors=0, last_errortime=0)
+    def run_task(self, GlobalContext, tdef):    
         if GlobalContext.umcdefs is not None:
-            start_t=time.time();
+            for ud in GlobalContext.umcdefs:
+                if ud.enabled:
+                    ud.lock.acquire()
+                    try:
+                        log_stats=Map(backlog_total=0)                    
+                        log_dir=get_umc_instance_log_dir(ud.umc_instanceid, GlobalContext)                
+                        
+                        if os.path.isdir(log_dir):
+                            for file in os.listdir(log_dir):
+                                # match the log file waiting to be consumed
+                                # there is a maximum of 9 groups (1-9)
+                                m1 = re.match(r"^{umc_instanceid}_[0-9\-]+.log.([1-9])$".format(umc_instanceid=ud.umc_instanceid), file) 
+                                if m1:
+                                    fg_key="backlog_group_%s"%m1.group(1)
+                                    if log_stats.get(fg_key) is None:
+                                        log_stats[fg_key]=1
+                                    else:
+                                        log_stats[fg_key]+=1
+                                    log_stats.backlog_total += 1
+                                # // if match
+                                
+                                # match the error log
+                                # m2 = re.match(r"^{umc_instanceid}(_[0-9\-]+)?.error.out$".format(umc_instanceid=ud.umc_instanceid), file) 
+                                # if m2:
+                                #     print "*** " + log_dir + "/" + file
+                                #     print utils.tail(log_dir + "/" + file, 10)
+                            # / for listdir
+                        else:
+                            Msg.warn_msg("Directory %s does not exist!"%log_dir)
+                        
+                        # update log stats
+                        ud.log_stats = log_stats                    
+                    finally:
+                        ud.lock.release()
+                # // if enabled
+            # // for
+        # // if 
+        
+        return True           
+    # // run_task    
+# // CollectLogStatsInfoTask
+    
+# stats collection
+class CollectPrcStatsTask():        
+    def run_task(self, GlobalContext, tdef):
+        umc_counts=Map(count=0, enabled=0, disabled=0, running=0, waiting=0, num_children=0,
+            rss=0, cpu=0, cpu_s=0, runs=0, errors=0, last_errortime=0, backlog_total=0)
+        if GlobalContext.umcdefs is not None:
             for ud in GlobalContext.umcdefs:
                 ud.lock.acquire()
                 try:
-                    counts.umc_count += 1
-                    if ud.enabled: counts.umc_enabled += 1
+                    umc_counts.count += 1
+                    if ud.enabled: umc_counts.enabled += 1
                     else:
-                        counts.umc_disabled += 1
-                    counts.umc_errors += ud.num_errors
-                    counts.umc_runs += ud.num_runs
-                    if ud.lasterror_time > counts.last_errortime:
-                        counts.last_errortime = ud.lasterror_time
+                        umc_counts.disabled += 1
+                    umc_counts.errors += ud.num_errors
+                    umc_counts.runs += ud.num_runs
+                    if ud.lasterror_time > umc_counts.last_errortime:
+                        umc_counts.last_errortime = ud.lasterror_time
                     if time.time()<ud.start_after:
-                        counts.umc_waiting += 1
+                        umc_counts.waiting += 1
+                    umc_counts.backlog_total += ud.log_stats.backlog_total if ud.get("log_stats") and ud.get("log_stats").get("backlog_total") else 0 
 
+                    # umc instance statistics
                     stats = {}; 
-                    
-                    # backlog
-                    max_files=5
-                    bg = 0 #backlog(ud.umc_toolid, max_files)
-                    stats["backlog"] = ">%d"%max_files if bg > max_files else str(bg) 
                     
                     # process info
                     p = {}
                     try:
                         if ud.proc is not None:
-                            counts.umc_running += 1
+                            umc_counts.running += 1
                             
                             p["top_pid"] = ud.proc.pid
                             p["uptime"] = time.time() - ud.proc.create_time()
+                            p["cmdline"] = ud.proc.cmdline()
                             
                             kids = ud.proc.children(True)
                             rss = 0.0; cpu = 0
@@ -208,12 +223,14 @@ class CollectStatsTask():
 
                             p["rss"] = float(rss/1024/1024) # in MB
                             p["cpu"] = cpu   
-                            p["num_chproc"] = len(kids)    
+                            p["cpu_s"] = cpu/p["uptime"]   
+                            p["num_chproc"] = len(kids)
                             
-                            counts.umc_rss += p["rss"]
-                            counts.umc_cpu += p["cpu"]
-                            counts.num_children += p["num_chproc"]    
-                        # end if
+                            umc_counts.rss += p["rss"]
+                            umc_counts.cpu += p["cpu"]
+                            umc_counts.cpu_s += p["cpu_s"]                            
+                            umc_counts.num_children += p["num_chproc"]    
+                        # // end if
                     except:
                         pass
                     
@@ -221,22 +238,23 @@ class CollectStatsTask():
                     ud.stats = stats        
                 finally:
                     ud.lock.release()
-            # for            
+            # // for            
             
             # umcrunner stats
             proc=psutil.Process()
             d = proc.as_dict(attrs=['cpu_times', 'memory_info'])
+            uptime=time.time()-proc.create_time()
             GlobalContext.umcrunner_stats = Map(
                 pid=proc.pid,
                 hostname=socket.gethostname(),
-                uptime=time.time()-proc.create_time(),
+                uptime=uptime,
                 cpu=d["cpu_times"].user,
+                cpu_s=d["cpu_times"].user/uptime,
                 rss=float(d["memory_info"].rss/1024/1024),
                 threads=proc.num_threads(),
-                umc_counts=counts
+                umc_counts=umc_counts
             )
             
-            Msg.info2_msg("Stats collected in %.2f seconds"%(time.time()-start_t))
             return True
         # if umcdefs
 
@@ -263,7 +281,7 @@ class OrphansCheckTask():
         return pgids
     # get_all_pgids
     
-    def run_task(self, GlobalContext):
+    def run_task(self, GlobalContext, tdef):
         orphans = []
         pids = self.get_all_pgids()[str(os.getpgrp())]
         procs = psutil.Process().children(recursive=True)
@@ -298,20 +316,21 @@ class OrphansCheckTask():
 
 # check for the maximum number of processes that umcrunner can spawn
 class MaxProcessesTask():
-    def run_task(self, GlobalContext):
+    def run_task(self, GlobalContext, tdef):
         kids=psutil.Process().children(True)
 
         Msg.info2_msg("There are %d children processes."%(len(kids)))
             
         if len(kids) > GlobalContext.config.umcrunner_params.max_processes:
-            Msg.warn_msg("(%s) The current number of child processes %d exceeds the maximum of %d. umcrunner will be paused."%(self.__class__.__name__,len(kids),GlobalContext.config.umcrunner_params.max_processes))
+            Msg.warn_msg("The current number of child processes %d exceeds the maximum of %d; umcrunner will be paused."
+                %(len(kids),GlobalContext.config.umcrunner_params.max_processes))
             return False
         else:
             return True    
 
 # check for maximum number of zombie processes that cannot exceed the maximum number of umcrunner instances
 class MaxZombiesTask():
-    def run_task(self, GlobalContext):
+    def run_task(self, GlobalContext, tdef):
         kids=psutil.Process().children(True)
         
         nz = 0
@@ -338,24 +357,57 @@ class TasksDef():
         self.GlobalContext = global_ctx
         self.tasks = []
         
-    def addTask(self, targetClass, time_interval, run_on_pause=False):
-        taskdef=Map(last_time=0, time_interval=time_interval, target=targetClass(), run_on_pause=run_on_pause, result=True)
+    def addTask(self, targetClass, time_interval, run_on_global_pause=False, time_limit_pause=0, 
+        pause_for=0, time_limit_disable=0, disabled=False):        
+        taskdef=Map(
+            time_interval=time_interval, target=targetClass(), run_on_global_pause=run_on_global_pause, 
+            time_limit_pause=time_limit_pause, pause_for=pause_for, time_limit_disable=time_limit_disable,
+            last_run_time=0, last_run_duration=0, result=True, disabled=disabled, run_after=0)
+        taskdef.name=taskdef.target.__class__.__name__
         self.tasks.append(taskdef)
         return taskdef
         
     def run_all(self):
         paused = self.GlobalContext.paused
-        for t in self.tasks:
-            if time.time()-t.last_time > t.time_interval and (t.run_on_pause or not(paused)):
-                t.result = t.target.run_task(self.GlobalContext)
-                if not(t.result):
-                    paused = True
-                t.last_time = time.time()
+        for tdef in self.tasks:
+            if time.time()-tdef.last_run_time > tdef.time_interval and (tdef.run_on_global_pause or not(paused)):
+                if tdef.run_after==0 or time.time()>tdef.run_after:
+                    if not(tdef.disabled):                         
+                        # inform that the task is resumed if it was puased
+                        if tdef.run_after>0:
+                            tdef.run_after=0
+                            Msg.info1_msg("The task %s is resumed."%(tdef.name))
+                        
+                        # run the task    
+                        start_t=time.time()
+                        tdef.result = tdef.target.run_task(self.GlobalContext, tdef)
+                        end_t=time.time()
+                        if not(tdef.result):
+                            paused = True
+                        tdef.last_run_time = end_t
+                        tdef.last_run_duration=end_t-start_t
+                        
+                        # check to be disabled due to hard limit
+                        if tdef.time_limit_disable>0 and tdef.last_run_duration > tdef.time_limit_disable:
+                            tdef.disabled=True
+                            Msg.warn_msg("The task %s was running for %.2f seconds which is more than the hard maximum of %.2f seconds. The task will be disabled."
+                                %(tdef.name, tdef.last_run_duration, tdef.time_limit_disable))
+                        # check to be paused due to soft limit
+                        elif tdef.time_limit_pause>0 and tdef.last_run_duration > tdef.time_limit_pause:
+                            tdef.run_after=end_t+tdef.pause_for
+                            Msg.warn_msg("The task %s was running for %.2f seconds which is more than the soft maximum of %.2f seconds. The task will be paused for %.2f seconds."
+                                %(tdef.name, tdef.last_run_duration, tdef.time_limit_pause, tdef.pause_for))
+                        else:
+                            # report on task duration
+                            Msg.info2_msg("The task %s was running for %.2f seconds."%(tdef.name,tdef.last_run_duration))
+
+                    # // not disabled
+                # // locally paused
             else:
                 pass
 
         old_paused = self.GlobalContext.paused
-        self.GlobalContext.paused = not(all([ t.result for t in self.tasks if t.result is not None ]))
+        self.GlobalContext.paused = not(all([ tdef.result for tdef in self.tasks if tdef.result is not None ]))
 
         if self.GlobalContext.paused != old_paused:
             Msg.warn_msg("umcrunner state has been %s."%("PAUSED" if self.GlobalContext.paused else "RESUMED"))
