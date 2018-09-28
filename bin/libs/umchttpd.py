@@ -394,11 +394,6 @@ class Handler(BaseHTTPRequestHandler):
         # others are not found 
         self.send_response(404)
         
-        #if self.path == "/stopall":
-        #    GlobalContext.exitEvent.set()
-        #    self.send(202) # accepted
-        #    return        
- 
     def log_request(self, size):
         Msg.info2_msg('HTTP request from (%s) %s %s'%(self.address_string(), self.requestline, str(size)))
 
