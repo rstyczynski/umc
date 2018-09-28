@@ -72,7 +72,6 @@ def get_lock():
 # signal handler; terminate all child processes on exit        
 def signal_quit(singal, frame):
     Msg.warn_msg("Shutting down...")
-    putils.terminate_children()
     GlobalContext.exitEvent.set()
         
 # *** MAIN
