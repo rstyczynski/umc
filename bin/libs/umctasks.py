@@ -19,9 +19,22 @@ def get_umc_instance_log_dir(umc_instanceid, GlobalContext):
 class UmcRunTask():
     UMC_LAUNCH_CMD="source {umc_home}/umc.h &>/dev/null; set -o pipefail; umc {umc_toolid} collect {delay} {count} {params} 2>>{log_dir}/{umc_instanceid}.error.out </dev/null | logdirector.pl -name {umc_instanceid} -dir {log_dir} -detectHeader -checkHeaderDups -rotateByTime run -timeLimit {rotation_timelimit} -logFileCopies {log_file_copies} -flush -timeRotationInThread -rotateOnThreadEnd"
     DEFAULT_SHELL="/bin/bash"
+    
+    # minimum delay between two umc runs
+    # this is to prevent from failures when too frequent runs occur
+    MIN_RUN_DELAY=0.15
+
+    def __init__(self):
+        self.last_run_time=0
 
     # run umc instance
-    def run_umc(self,umcdef,GlobalContext): # umc_instanceid,umc_toolid,delay,count,params,rotation_timelimit):
+    def run_umc(self,umcdef,GlobalContext): 
+        # check minimum umc runs delay
+        slrun=time.time()-self.last_run_time
+        if slrun<UmcRunTask.MIN_RUN_DELAY:
+            Msg.info2_msg("Sleeping %.2f seoncds before running the next umc instance..."%(UmcRunTask.MIN_RUN_DELAY-slrun))
+            time.sleep(UmcRunTask.MIN_RUN_DELAY-slrun)
+        
         # create log directory for this tool if it does not exist
         log_dir=get_umc_instance_log_dir(umcdef.umc_instanceid, GlobalContext)
         if not os.path.exists(log_dir):
@@ -43,6 +56,7 @@ class UmcRunTask():
                 umc_home=GlobalContext.homeDir,log_dir=log_dir,log_file_copies=GlobalContext.config.umcrunner_params.log_file_copies),
             shell=True, executable=UmcRunTask.DEFAULT_SHELL, preexec_fn=preexec, stdin=None, stdout=None, stderr=None)
 
+        self.last_run_time=time.time()
         return p    
     
     def run_task(self, GlobalContext, tdef):
