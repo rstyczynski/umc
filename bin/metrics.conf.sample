@@ -33,14 +33,15 @@ common:
     # log file copies, a number of log file copies that will be produced by logdirector; this allows umcrunner to produce log files
     # for multiple consumers; idbpush as one of such consumers then consumes log files identified with a group number 
     # (defined in common.umcrunner.log-file-group parameter); 
-    log-file-copies: 2
+    log-file-copies: 1
     
     # the interval umcrunner will run umc commands (or check umc commands are running)   
     run-interval: 10
 
-    # collection interval of stats
+    # collection interval of stats (process and logs)
     # a value of -1 will disable stats collection  
-    stats-interval: 5
+    prcstats-interval: 5
+    logstats-interval: 30
     
     # oprhans checking interval
     # a value of -1 will disable orphans checking  

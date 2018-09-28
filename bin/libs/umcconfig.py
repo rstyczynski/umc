@@ -35,7 +35,9 @@ class UmcConfig:
                 log_file_copies     = self.value("common.umcrunner.log-file-copies", 1),
                 
                 run_interval        = self.value("common.umcrunner.run-interval", 10),
-                stats_interval      = self.value("common.umcrunner.stats-interval", 5),
+                prcstats_interval   = self.value("common.umcrunner.prcstats-interval", 5),
+                logstats_interval   = self.value("common.umcrunner.logstats-interval", 60),
+                logstats_max_duration = self.value("common.umcrunner.logstats-max-duration", 2),
                 orphans_interval    = self.value("common.umcrunner.orphans-interval", 5),
                 maxproc_interval    = self.value("common.umcrunner.maxproc-interval", 5),
                 maxzombies_interval = self.value("common.umcrunner.maxzombies-interval", 5),
