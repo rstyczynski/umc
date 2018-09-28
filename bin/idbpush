@@ -470,9 +470,6 @@ if __name__ == "__main__":
     # location of logs
     if args.logs == None:
         args.logs=os.environ.get('UMC_LOG_DIR',os.path.dirname(os.path.realpath(__file__)) + "/../logs") 
-
-    info2_msg("Using configuration file %s"%args.config)
-    info2_msg("The logs directory is in %s"%args.logs)
     
     # read configuration file
     try:
@@ -490,6 +487,9 @@ if __name__ == "__main__":
         err_msg("Error when reading the configuration file %s: %s"%(args.config,e))
         sys.exit(1)
     
+    info2_msg("Using configuration file %s"%args.config)
+    info2_msg("The logs directory is in %s"%args.logs)
+
     # configuration params
     delay_writes        = conf_value(conf, "common.idbpush.delay-between-writes", DEFAULT_DELAYBETWEENWRITES)
     delay_runs          = conf_value(conf, "common.idbpush.delay-between-runs", 10000)/1000
