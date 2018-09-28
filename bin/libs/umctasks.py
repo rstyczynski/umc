@@ -12,19 +12,18 @@ from time import sleep
 from utils import Map
 import messages as Msg
 
+def get_umc_instance_log_dir(umc_instanceid, GlobalContext):
+    return "{log_root_dir}/{hostname}/{umc_instanceid}".format(log_root_dir=GlobalContext.logRootDir,hostname=socket.gethostname(),umc_instanceid=umc_instanceid)
+
 # the main umcrunner run task that runs umc instances according to the configuration
 class UmcRunTask():
-    UMCRUNNER_SIGNATURE="umcrunner-AF453BD"
-    UMC_LAUNCH_CMD="echo \"{signature}\" &>/dev/null; source {umc_home}/umc.h &>/dev/null; set -o pipefail; umc {umc_toolid} collect {delay} {count} {params} 2>>{log_dir}/{umc_instanceid}.error.out </dev/null | logdirector.pl -name {umc_instanceid} -dir {log_dir} -detectHeader -checkHeaderDups -rotateByTime run -timeLimit {rotation_timelimit} -logFileCopies {log_file_copies} -flush -timeRotationInThread -rotateOnThreadEnd"
+    UMC_LAUNCH_CMD="source {umc_home}/umc.h &>/dev/null; set -o pipefail; umc {umc_toolid} collect {delay} {count} {params} 2>>{log_dir}/{umc_instanceid}.error.out </dev/null | logdirector.pl -name {umc_instanceid} -dir {log_dir} -detectHeader -checkHeaderDups -rotateByTime run -timeLimit {rotation_timelimit} -logFileCopies {log_file_copies} -flush -timeRotationInThread -rotateOnThreadEnd"
     DEFAULT_SHELL="/bin/bash"
-
-    def get_log_dir(self, umc_instanceid, GlobalContext):
-        return "{log_root_dir}/{hostname}/{umc_instanceid}".format(log_root_dir=GlobalContext.logRootDir,hostname=socket.gethostname(),umc_instanceid=umc_instanceid)
 
     # run umc instance
     def run_umc(self,umcdef,GlobalContext): # umc_instanceid,umc_toolid,delay,count,params,rotation_timelimit):
         # create log directory for this tool if it does not exist
-        log_dir=self.get_log_dir(umcdef.umc_instanceid, GlobalContext)
+        log_dir=get_umc_instance_log_dir(umcdef.umc_instanceid, GlobalContext)
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
 
