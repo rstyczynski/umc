@@ -46,7 +46,10 @@ class Table:
     def get_field(self, field_name, data):
         d = data
         for f in field_name.split('.'):
-            d = d.get(f)
+            try:
+                d = d.get(f)
+            except:
+                return None
         return d
         
     def eval_value(self, value, data):
