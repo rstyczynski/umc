@@ -22,7 +22,7 @@ class UmcRunTask():
     
     # minimum delay between two umc runs
     # this is to prevent from failures when too frequent runs occur
-    MIN_RUN_DELAY=0.15
+    MIN_RUN_DELAY=0.05
 
     def __init__(self):
         self.last_run_time=0
@@ -406,6 +406,7 @@ class TasksDef():
                             tdef.disabled=True
                             Msg.warn_msg("The task %s was running for %.2f seconds which is more than the hard maximum of %.2f seconds. The task will be disabled."
                                 %(tdef.name, tdef.last_run_duration, tdef.time_limit_disable))
+                                
                         # check to be paused due to soft limit
                         elif tdef.time_limit_pause>0 and tdef.last_run_duration > tdef.time_limit_pause:
                             tdef.run_after=end_t+tdef.pause_for
