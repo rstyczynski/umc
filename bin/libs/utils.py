@@ -92,6 +92,12 @@ class PathDef():
         
         return new_path
 
+# convert to float, return def (default is None) when cannot convert
+def float_ex(val, defv=None):
+    try:
+        return float(val)
+    except:
+        return defv 
 
 def unpack(dict, s):
     ns=s

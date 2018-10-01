@@ -14,156 +14,31 @@ import re
 import socket
 import time
 import argparse
+import messages as Msg
+import utils
 
 from time import gmtime, strftime
 from influxdb import InfluxDBClient
 from threading import Event
+from utils import Map
+from umcconfig import UmcConfig
 
 from requests.exceptions import *
 
-# default values
-DEFAULT_TIMEFORMAT="%Y-%m-%d %H:%M:%S"
-DEFAULT_TIMEFIELD="datetime"
-DEFAULT_TIMEZONE=0
-DEFAULT_BATCHSIZE_ROWS=50
-DEFAULT_BATCHSIZE_FILES=300
-DEFAULT_DELAYBETWEENWRITES=200
-DEFAULT_RETRYCOUNT=5
-DEFAULT_RETRYINTERVAL=10000
-DEFAULT_REMOVEFILESNODATA=True
-DEFAULT_LOG_FILE_GROUP=1
+# global variables
+epoch = datetime.datetime.utcfromtimestamp(0)
 
-# *** global variables
-conf=None               # configuration file
-lastdbcall = 0          # last time the db was accessed
-exit = Event()          # exit event to correctly terminate the process
-args=None               # input arguments
-lasterror=None          # last error text
-lasterrorcount=0        # last error count
+# global context
+class GlobalContext():
+    configFile=None
+    confing=None            # configuration file
+    lastdbcall = 0          # last time the db was accessed
+    exit = Event()          # exit event to correctly terminate the process
+    args=None               # input arguments
+    lasterror=None          # last error text
+    lasterrorcount=0        # last error count
 
-# parameters to be read from the configuration file
-delay_writes       = 0
-delay_runs         = 0
-retry_count        = 0
-retry_interval     = 0
-max_batchsize_rows = 0
-log_file_group     = 0
-
-# messages colors
-class bcolors:
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    
-# messages types
-MSG_INFO  = 0
-MSG_ERROR = 1
-MSG_WARN  = 2
-    
-# *** print info message
-def message(type, msg, forcePrint=False):
-    global lasterror; global lasterrorcount
-    
-    # count number of errors and exit if the error message is the same as the previous one
-    if type == MSG_ERROR and lasterror == msg:
-        lasterrorcount=lasterrorcount+1
-        return
-
-    # default is stdout
-    out = sys.stdout
-    
-    # error stream
-    if type == MSG_ERROR or type == MSG_WARN:
-        out = sys.stderr
-        
-    # colors
-    out_color = ''; end_color_out = ''
-    error_color=bcolors.FAIL; end_color_error = bcolors.ENDC
-    if type == MSG_ERROR and sys.stderr.isatty():
-        out_color = bcolors.FAIL; end_color_out = bcolors.ENDC
-    if type == MSG_WARN and sys.stderr.isatty():
-        out_color = bcolors.WARNING; end_color_out = bcolors.ENDC
-
-    # only write info messages in verbose mode
-    if ((args.verbose or forcePrint) and type == MSG_INFO) or type == MSG_ERROR or type == MSG_WARN:
-        # the message has changed but tell how many previous error messages there were if not only one
-        if lasterrorcount > 0:
-            if not(sys.stderr.isatty()):
-                error_color=''; end_color_error=''
-                
-            sys.stderr.write("[" + str(datetime.datetime.now()) + "]:" + error_color + 
-                " The previous error occurred %d times!"%lasterrorcount + end_color_error + "\n")
-            sys.stderr.flush()
-            lasterrorcount=0
-        
-        # write the message to respective stream
-        out.write("[" + str(datetime.datetime.now()) + "]:" + out_color + " " + msg + end_color_out + "\n")  
-        out.flush()
-        
-        # if the message type is error, remember the message and reset the counter
-        if type == MSG_ERROR:
-            lasterror=msg
-            lasterrorcount=0
-        else:
-            lasterror=None
-
-def info1_msg(msg):
-    message(MSG_INFO, msg, True)
-
-def info2_msg(msg):
-    message(MSG_INFO, msg)
-    
-def err_msg(msg):
-    message(MSG_ERROR, msg)    
-
-def warn_msg(msg):
-    message(MSG_WARN, msg)    
-
-# *** get the value of a property from yaml file defined by path and returns 
-# an empty string if it does not exist
-def conf_value(cfg, path, default='',delim='.'):
-    finalDoc = cfg
-    if finalDoc is not None:
-        for e in path.split(delim):
-        	try:
-        		finalDoc = finalDoc[e]
-        	except:
-        		finalDoc = default;
-    if finalDoc is None:
-        finalDoc = default
-    return finalDoc
-
-# *** helper Map object
-class Map(dict):
-    def __init__(self, *args, **kwargs):
-        super(Map, self).__init__(*args, **kwargs)
-        for arg in args:
-            if isinstance(arg, dict):
-                for k, v in arg.iteritems():
-                    self[k] = v
-
-        if kwargs:
-            for k, v in kwargs.iteritems():
-                self[k] = v
-
-    def __getattr__(self, attr):
-        return self.get(attr)
-
-    def __setattr__(self, key, value):
-        self.__setitem__(key, value)
-
-    def __setitem__(self, key, value):
-        super(Map, self).__setitem__(key, value)
-        self.__dict__.update({key: value})
-
-    def __delattr__(self, item):
-        self.__delitem__(item)
-
-    def __delitem__(self, key):
-        super(Map, self).__delitem__(key)
-        del self.__dict__[key]
-
-# *** gets a lock using domain sockets to prevent this script from running more than once
+# gets a lock using domain sockets to prevent this script from running more than once
 def get_lock():
     get_lock._lock_socket = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
     try:
@@ -174,84 +49,33 @@ def get_lock():
 
 # signal termination handler for graceful shutdown
 def signal_quit(signal, frame):
-    warn_msg("Shutting down...")
-    exit.set()
+    Msg.warn_msg("Shutting down...")
+    GlobalContext.exit.set()
 
-# *** unix time
-epoch = datetime.datetime.utcfromtimestamp(0)
+# unix time
 def unix_time_millis(dt):
     return int((dt - epoch).total_seconds() * 1000)
 
-# *** configure the db client
-def get_db_client():
-    # db connection params
-    db_url         = conf_value(conf, "common.idbpush.db.url", None)
-    db_user        = conf_value(conf, "common.idbpush.db.user", None) 
-    db_pass        = conf_value(conf, "common.idbpush.db.pass", None)
-    db_name        = conf_value(conf, "common.idbpush.db.dbname", None)
-        
-    # check the db was defined
-    if db_url == None or db_name == None:
-        raise ValueError("Invalid DB connection details (db_url or db_name is missing).")
+# retrieves the first batch of log files sorted by modified time
+def get_batch_logs(GlobalContext):
+    pattern = re.compile(".+_[0-9]+.*\.log.{log_file_group}$".format(log_file_group=GlobalContext.params.log_file_group))
+    search_re=GlobalContext.args.logs + "/[a-zA-Z0-9\._\-]+/([a-zA-Z0-9\-\._]+)" # + "|".join(GlobalContext.config.umc_instanceids(False)) + ")$";
+    umc_instanceids=GlobalContext.config.umc_instanceids(False)
     
-    # parse url to get host and port
-    m = re.search("http://([a-zA-Z0-9\.]+):([0-9]+)/?", db_url)    
-    if not(m):
-        raise ValueError('The DB url %s is invalid.'%db_url);
-            
-    # create the client object
-    client=InfluxDBClient(m.group(1), m.group(2), db_user, db_pass, db_name)
-    info1_msg("DB connection details are: host=%s,port=%s,user=%s,pass=xxxxx,dbname=%s"
-        %(m.group(1),m.group(2),db_user,db_name))
-    
-    return client
-
-# *** get list of enabled umc ids from the definition file
-def get_umc_ids():
-    umcids=[]
-    for key in conf:
-        if conf_value(conf, key + ":enabled", False, ":") == True:
-            m = re.match(r"^umc-(.+)",key) 
-            if m:
-                umcids.append(m.group(1))
-    return umcids
-
-# *** get umc id from the log file name
-def get_umcid_from_logfile(logfile):
-    dirname=os.path.dirname(logfile)
-    m=re.match(".+/([a-zA-Z0-9\\._]+)/?$", dirname)
-    if m:
-        return m.group(1)
-    else:
-        err_msg("Cannot retrieve umc id from logfile %s!"%logfile)
-        return None
-
-# *** retrieves the first batch of log files sorted by modified time
-def get_batch_logs(batchsize=sys.maxint):
-    pattern = re.compile(".+_[0-9]+.*\.log.{log_file_group}$".format(log_file_group=log_file_group))
-    search_re=".*/(" + "|".join(get_umc_ids()) + ")$";
-    
-    batch=[]
-    cnt=0
-    for dirname, dirnames, filenames in os.walk(args.logs):
-        if re.match(search_re, dirname):
+    batch=[]; cnt=0
+    for dirname, dirnames, filenames in os.walk(GlobalContext.args.logs):
+        m=re.match(search_re, dirname)
+        if m and m.group(1) in umc_instanceids:
             for filename in filenames:
                 if pattern.match(filename):
                     cnt=cnt+1
-                    if cnt <= batchsize: 
+                    if cnt <= GlobalContext.params.max_batchsize_files: 
                         batch.append(os.path.join(dirname, filename))
-        if cnt > batchsize:
+        if cnt > GlobalContext.params.max_batchsize_files:
             break
     return sorted(batch, key=lambda fn: os.stat(fn).st_mtime, reverse=True)
     
-# *** convert to float, return def (default is None) when cannot convert
-def float_ex(val, defv=None):
-    try:
-        return float(val)
-    except:
-        return defv 
-
-# *** evaluates filter on the row's tags and fields values        
+# evaluates filter on the row's tags and fields values        
 def eval_filter(umc_id, filter, tags, fields):
     try:
         for k,v in tags.items():
@@ -262,7 +86,7 @@ def eval_filter(umc_id, filter, tags, fields):
                 exec(k + "=" + str(v))
         return eval(filter)
     except Exception as e:
-        err_msg("Error when evaluating the filter '%s' for %s: %s!" % (filter, umc_id, str(e))) 
+        Msg.err_msg("Error when evaluating the filter '%s' for %s: %s!" % (filter, umc_id, str(e))) 
         return False      
 
 def eval_transform(umc_id, transform, tags, fields):
@@ -294,64 +118,12 @@ def eval_transform(umc_id, transform, tags, fields):
         
         return __t2,__f2
     except Exception as e:
-        err_msg("Error when evaluating transformations for %s: %s"%(umc_id, str(e)))
+        Msg.err_msg("Error when evaluating transformations for %s: %s"%(umc_id, str(e)))
         return tags,fields
 
-# *** reads and checks umc definition for a specific umc id
-def get_umc_def(umc_id):
-    # get umc definition
-    umcconf=conf_value(conf, "umc-" + umc_id, None, ":")
-    # check umc id and def were retrieved ok
-    if umcconf is None:
-        err_msg("Error when getting umc configuration for '%s'!" % (umc_id)) 
-        return None
-
-    # is enabled        
-    enabled=conf_value(umcconf,"enabled",False)
-
-    # get and check metric
-    metric=conf_value(umcconf, "idbpush.name", None)
-        
-    # tags and fields cols of this umc definition
-    tcols = [x.strip() for x in conf_value(umcconf, "idbpush.tags").split(',') if x != '' ]
-    fcols = [x.strip() for x in conf_value(umcconf, "idbpush.fields").split(',') if x != '' ]
-    
-    # combine with common tags and fields cols
-    tcols.extend(x for x in 
-        [y.strip() for y in conf_value(conf, "common.idbpush.tags").split(',') ] 
-        if x != '' and x not in tcols and '!'+x not in tcols )
-    fcols.extend(x for x in 
-        [y.strip() for y in conf_value(conf, "common.idbpush.fields").split(',') ] 
-        if x != '' and x not in fcols and '!'+x not in tcols )
-    
-    # remove all commented out fields and tags
-    tcols = [x for x in tcols if not(x.startswith('!')) ]
-    fcols = [x for x in fcols if not(x.startswith('!')) ]
-    
-    # read and check time field and its format
-    timeformat=conf_value(umcconf, "idbpush.timeformat", conf_value(conf, "common.idbpush.timeformat", DEFAULT_TIMEFORMAT))
-    try:
-        if timeformat not in ['_unix_', '_time_s_', '_time_ms_']:
-            strftime(timeformat, gmtime())
-    except Exception as e:
-        err_msg("The time format '%s' is invalid for umc '%s': %s!" % (timeformat,umc_id,e)) 
-        return None
-            
-    timefield=conf_value(umcconf, "idbpush.timefield", conf_value(conf, "common.idbpush.timefield", DEFAULT_TIMEFIELD))   
-    tzfield=conf_value(umcconf, "idbpush.tzfield", None)   
-    
-    filter=conf_value(umcconf, "idbpush.filter", None)
-    
-    # transformation expressions
-    transform=conf_value(umcconf, "idbpush.transform", None)
-    
-    return Map(umcid=umc_id,umcconf=umcconf,metric=metric,enabled=enabled,tcols=tcols,fcols=fcols,
-        timeformat=timeformat,timefield=timefield,tzfield=tzfield,filter=filter,transform=transform,datapoints=[],datafiles=[])
-
-# *** read data points from the csv log file
-def read_datapoints(logfilename, umcdef):    
+# read data points from the csv log file
+def read_datapoints(GlobalContext, logfilename, umcdef):    
     datapoints = []; notags=False; nofields=False; 
-    tzoffset=float_ex(conf_value(conf, "common.idbpush.timezone", DEFAULT_TIMEZONE), DEFAULT_TIMEZONE)
     
     if umcdef.enabled and umcdef.metric is not None: 
         # read datapoints
@@ -371,16 +143,16 @@ def read_datapoints(logfilename, umcdef):
                         timestamp = long(row[umcdef.timefield]) * 1000000               
                     else:
                         if umcdef.tzfield is not None and umcdef.tzfield in row:
-                            tzoffset = float_ex(row[umcdef.tzfield], DEFAULT_TIMEZONE)                        
+                            tzoffset = utils.float_ex(row[umcdef.tzfield], GlobalContext.params.tzoffset)                        
                         timestamp = (unix_time_millis(datetime.datetime.strptime(row[umcdef.timefield],umcdef.timeformat)) - int(tzoffset*60*60*1000)) * 1000000
                 except Exception as e:
                     # output error and skip this row
-                    err_msg("Cannot read or convert time to timestamp for %s: %s"%(umcdef.umcid,str(e)))
+                    Msg.err_msg("Cannot read or convert time to timestamp for %s: %s"%(umcdef.umcid,str(e)))
                     continue     
                 
                 # create tags and fields
                 tags   = { k:str(v)      for k, v in row.items() if k in umcdef.tcols }
-                fields = { k:float_ex(v) for k, v in row.items() if k in umcdef.fcols }                
+                fields = { k:utils.float_ex(v) for k, v in row.items() if k in umcdef.fcols }                
                 notags = (len(tags) == 0)
                 
                 # only add this row if there is at least one field with some value
@@ -398,44 +170,42 @@ def read_datapoints(logfilename, umcdef):
             
     # check for no tags
     if notags and len(datapoints) > 0:
-        warn_msg("The definition of %s contains no tags presented in the log file %s!"%(umcdef.umcid,os.path.basename(logfilename)))
+        Msg.warn_msg("The definition of %s contains no tags presented in the log file %s!"%(umcdef.umcid,os.path.basename(logfilename)))
                 
     return datapoints
 
-# *** writes the data to the DB; retries when not successful
-def db_write(client, datapoints, datafiles):    
-    global lastdbcall
-    
+# writes the data to the DB; retries when not successful
+def db_write(GlobalContext, datapoints, datafiles):    
     # wait between db writes
     millis=int(round(time.time() * 1000))
-    if lastdbcall > 0 and (millis - lastdbcall < delay_writes):
-        exit.wait((delay_writes - (millis - lastdbcall))/1000)
+    if GlobalContext.lastdbcall > 0 and (millis - GlobalContext.lastdbcall < GlobalContext.params.delay_writes):
+        GlobalContext.exit.wait((GlobalContext.params.delay_writes - (millis - GlobalContext.lastdbcall))/1000)
 
     retryCount=0
-    while not exit.is_set():
+    while not GlobalContext.exit.is_set():
         retry = False                    
         try:
             # write the points and update the last db call time
-            response = client.write_points(datapoints)
-            lastdbcall = int(round(time.time() * 1000))
+            response = GlobalContext.client.write_points(datapoints)
+            GlobalContext.lastdbcall = int(round(time.time() * 1000))
             if retryCount > 0:
-                info1_msg("Connection to the DB was successful after %d retries."%retryCount);
+                Msg.info1_msg("Connection to the DB was successful after %d retries."%retryCount);
         except (ConnectionError, Timeout) as e:
-            err_msg("Error occurred when inserting data: %s"%(e))                                                    
-            if retry_count == -1 or retryCount < retry_count:
-                err_msg("Will retry in %d seconds..."%(retry_interval))                            
-                exit.wait(retry_interval)
-                if exit.is_set():
+            Msg.err_msg("Error occurred when inserting data: %s"%(e))                                                    
+            if GlobalContext.params.retry_count == -1 or retryCount < GlobalContext.params.retry_count:
+                Msg.err_msg("Will retry in %d seconds..."%(GlobalContext.params.retry_interval))                            
+                GlobalContext.exit.wait(GlobalContext.params.retry_interval)
+                if GlobalContext.exit.is_set():
                     return False
                 retryCount=retryCount+1
                 retry = True
             else:
-                err_msg("Maximum number of %d retries reached!"%(retryCount))                          
+                Msg.err_msg("Maximum number of %d retries reached!"%(retryCount))                          
                 return False                                            
         except Exception as e:
             # TODO: check the status code and if 400, do something with the data in the buffer
             # such as dump it to a text file or try to divide it to parts and submit it
-            err_msg("Error occurred when inserting data, all records in the write buffer (%d) will be discarded!: %s"
+            Msg.err_msg("Error occurred when inserting data, all records in the write buffer (%d) will be discarded!: %s"
                 %(len(datapoints),str(e)))
             retry = False
             pass                                                    
@@ -456,7 +226,8 @@ if __name__ == "__main__":
     parser.add_argument('--config', required=False, help='push a backlog of umc metrics defined in <file>',metavar='<file>')
     parser.add_argument('--logs', required=False, help='location of umc logs directory',metavar='<dir>')
     parser.add_argument('--verbose', required=False, help='be verbose',action='store_true')
-    args=parser.parse_args()
+    GlobalContext.args=parser.parse_args()
+    Msg.verbose=GlobalContext.args.verbose
     
     # get the lock and exit when already running
     if not(get_lock()):
@@ -466,95 +237,86 @@ if __name__ == "__main__":
     for sig in ('TERM', 'HUP', 'INT'):
         signal.signal(getattr(signal, 'SIG'+sig), signal_quit);
 
-    info1_msg("idbpush started.")
+    Msg.info1_msg("idbpush started.")
 
     # location of logs
-    if args.logs == None:
-        args.logs=os.environ.get('UMC_LOG_DIR',os.path.dirname(os.path.realpath(__file__)) + "/../logs") 
+    if GlobalContext.args.logs == None:
+        GlobalContext.args.logs=os.environ.get('UMC_LOG_DIR',os.path.dirname(os.path.realpath(__file__)) + "/../logs") 
     
-    # read configuration file
-    try:
-        # configuration file
-        if args.config is None:
-            args.config=os.environ.get('UMCRUNNER_CONFIG', None)
-            if args.config is None:
-                sys.stderr.write("Configuration file must be specified on command line or in UMCRUNNER_CONFIG environment variable!\n")
-                sys.exit(1)
-        
-        with open(args.config, 'r') as confDoc:
-            conf=yaml.load(confDoc)
-        conf_mtime=os.stat(args.config).st_mtime    
-    except Exception as e:
-        err_msg("Error when reading the configuration file %s: %s"%(args.config,e))
+    # configuration file
+    GlobalContext.configFile=GlobalContext.args.config
+    if GlobalContext.configFile == None:
+        GlobalContext.configFile=os.environ.get('UMCRUNNER_CONFIG', None)
+    if GlobalContext.configFile is None:
+        sys.stderr.write("Configuration file must be specified on command line or in UMCRUNNER_CONFIG environment variable!\n")
         sys.exit(1)
     
-    info2_msg("Using configuration file %s"%args.config)
-    info2_msg("The logs directory is in %s"%args.logs)
+    GlobalContext.config=UmcConfig(GlobalContext.configFile)
+    
+    Msg.info2_msg("Using configuration file %s"%GlobalContext.configFile)
+    Msg.info2_msg("The logs directory is in %s"%GlobalContext.args.logs)
 
-    # configuration params
-    delay_writes        = conf_value(conf, "common.idbpush.delay-between-writes", DEFAULT_DELAYBETWEENWRITES)
-    delay_runs          = conf_value(conf, "common.idbpush.delay-between-runs", 10000)/1000
-    retry_count         = conf_value(conf, "common.idbpush.connection-error-retry-count", DEFAULT_RETRYCOUNT)
-    retry_interval      = conf_value(conf, "common.idbpush.connection-error-retry-interval", DEFAULT_RETRYINTERVAL)/1000
-    max_batchsize_rows  = conf_value(conf, "common.idbpush.max-batchsize-rows", DEFAULT_BATCHSIZE_ROWS)
-    max_batchsize_files = conf_value(conf, "common.idbpush.max-batchsize-files", DEFAULT_BATCHSIZE_FILES)
-    log_file_group      = conf_value(conf, "common.idbpush.log-file-group", DEFAULT_LOG_FILE_GROUP)
+    GlobalContext.params = GlobalContext.config.idbpush_params() 
 
     umcdefs = {}
 
     try:
         # get db client
-        client=get_db_client()
+        GlobalContext.client=InfluxDBClient(GlobalContext.params.host, GlobalContext.params.port, GlobalContext.params.db_user, 
+            GlobalContext.params.db_pass, GlobalContext.params.db_name)
+        Msg.info1_msg("DB connection details are: host=%s,port=%s,user=%s,pass=xxxxx,dbname=%s"
+            %(GlobalContext.params.host,GlobalContext.params.port,GlobalContext.params.db_user,GlobalContext.params.db_name))
 
-        while not exit.is_set():
+        while not GlobalContext.exit.is_set():
             # retrieve logs in a batch of maximum 500 files
-            batchlogs=get_batch_logs(max_batchsize_files)
-            countRecords=0
-            countFiles=0
-            start_time = time.time()    
-            info1_msg("There is %d files in the batch of logs."%(len(batchlogs)))
-
+            batchlogs=get_batch_logs(GlobalContext)
+            Msg.info1_msg("There is %d files in the batch of logs."%(len(batchlogs)))
+            
             # process all files in the batch
+            countRecords=0; countFiles=0; 
+            start_time = time.time()    
             while len(batchlogs) > 0:
                 logfile=batchlogs.pop()
                 
                 # check if file exists
                 if not(os.path.exists(logfile)):
-                    err_msg("The file %s does not exist, is there another process working in logs directory?"%logfile)
+                    Msg.err_msg("The file %s does not exist, is there another process working in logs directory?"%logfile)
                     continue
                 
                 # read and check umc definition for this file
-                umc_id = get_umcid_from_logfile(logfile)        
+                umc_id = GlobalContext.config.get_umcid_from_logfile(logfile)        
                 
                 # skip this file if it cannot be identified
                 if umc_id is None:
-                    err_msg("Cannot determine umc_id from the log file %s, skipping this file."%logfile)                    
+                    Msg.err_msg("Cannot determine umc_id from the log file %s, skipping this file."%logfile)                    
                     continue
                 
                 # get the umc definition for this umc_id and store it    
                 if umc_id not in umcdefs: 
-                    umcdef = get_umc_def(umc_id)
-                    if umcdef is None:
-                        err_msg("The definition for umc id %s cannot be retrieved for file %s?" % (umc_id,logfile))
-                        continue
-                    else:
-                        info1_msg("Definition retrieved for umc %s"%(umc_id))
+                    try: 
+                        umcdef = GlobalContext.config.idbpush_umcdef(umc_id)
+                        
+                        Msg.info1_msg("Definition retrieved for umc %s"%(umc_id))
                         if not(umcdef.enabled):
-                            info1_msg("umc id %s is disabled by configuration, no datapoints will be read."%(umc_id))
+                            Msg.info1_msg("umc id %s is disabled by configuration, no datapoints will be read."%(umc_id))
                         elif umcdef.metric is None:
-                            info1_msg("umc id %s has no metric defined, no datapoints will be read."%(umc_id))                        
+                            Msg.info1_msg("umc id %s has no metric defined, no datapoints will be read."%(umc_id))                        
                         umcdefs[umc_id] = umcdef
+                        
+                    except Exception as e:
+                        Msg.err_msg("The definition for umc id %s cannot be retrieved from file %s due to %s" % (umc_id,logfile,str(e)))
+                        continue
                 
                 # read datapoints from the log file and store them in the umcdef dict
-                umcdefs[umc_id].datapoints += read_datapoints(logfile, umcdefs[umc_id])
+                umcdefs[umc_id].datapoints += read_datapoints(GlobalContext,logfile, umcdefs[umc_id])
                 umcdefs[umc_id].datafiles.append(logfile)
-                info2_msg("Data points read for umc %s. There is currently %d records in %d files in the write buffer."%(umc_id, 
+                Msg.info2_msg("Data points read for umc %s. There is currently %d records in %d files in the write buffer."%(umc_id, 
                     len(umcdefs[umc_id].datapoints), len(umcdefs[umc_id].datafiles)))        
                 
                 # write points in batches 
-                if len(umcdefs[umc_id].datapoints) != 0 and len(umcdefs[umc_id].datapoints)/max_batchsize_rows >= 1:
-                    if db_write(client, umcdefs[umc_id].datapoints, umcdefs[umc_id].datafiles):
-                        info2_msg("Write buffer flushed for umc %s (%d records from %d files wirtten to the DB)."%(umc_id, 
+                if len(umcdefs[umc_id].datapoints) != 0 and len(umcdefs[umc_id].datapoints)/GlobalContext.params.max_batchsize_rows >= 1:
+                    if db_write(GlobalContext, umcdefs[umc_id].datapoints, umcdefs[umc_id].datafiles):
+                        Msg.info2_msg("Write buffer flushed for umc %s (%d records from %d files wirtten to the DB)."%(umc_id, 
                             len(umcdefs[umc_id].datapoints), len(umcdefs[umc_id].datafiles)))        
                         countRecords=countRecords+len(umcdefs[umc_id].datapoints)
                         countFiles=countFiles+len(umcdefs[umc_id].datafiles)
@@ -562,7 +324,7 @@ if __name__ == "__main__":
                         umcdefs[umc_id].datafiles = []
                     else:
                         # failed to write to the db after many attempts
-                        err_msg("Force exit due to connection errors!")                    
+                        Msg.err_msg("Force exit due to connection errors!")                    
                         sys.exit(1)
                         
             # // end log files iteration
@@ -571,16 +333,16 @@ if __name__ == "__main__":
             for umc_id in umcdefs: 
                 # check to remove files providing no data
                 if len(umcdefs[umc_id].datapoints) == 0 and len(umcdefs[umc_id].datafiles) > 0:
-                    warn_msg("All %d files in the batch of logs provide no data for %s!"%(len(umcdefs[umc_id].datafiles),umc_id))
-                    if conf_value(conf, "common.idbpush.remove-backlog-files-no-data", False) == True:
-                        warn_msg("%d files providing no data for %s will be removed!"%(len(umcdefs[umc_id].datafiles),umc_id))
+                    Msg.warn_msg("All %d files in the batch of logs provide no data for %s!"%(len(umcdefs[umc_id].datafiles),umc_id))
+                    if GlobalContext.value("common.idbpush.remove-backlog-files-no-data", False) == True:
+                        Msg.warn_msg("%d files providing no data for %s will be removed!"%(len(umcdefs[umc_id].datafiles),umc_id))
                         for file in umcdefs[umc_id].datafiles:
                             os.remove(file)
                     umcdefs[umc_id].datafiles = []             
                 elif len(umcdefs[umc_id].datapoints) > 0: 
                     # write remaining backlog from this iteration
-                    if db_write(client, umcdefs[umc_id].datapoints, umcdefs[umc_id].datafiles):
-                        info2_msg("Remaining write buffer flushed for umc %s (%d records from %d files wirtten to the DB)."%(umc_id, 
+                    if db_write(GlobalContext, umcdefs[umc_id].datapoints, umcdefs[umc_id].datafiles):
+                        Msg.info2_msg("Remaining write buffer flushed for umc %s (%d records from %d files wirtten to the DB)."%(umc_id, 
                             len(umcdefs[umc_id].datapoints), len(umcdefs[umc_id].datafiles)))        
                         countRecords=countRecords+len(umcdefs[umc_id].datapoints)
                         countFiles=countFiles+len(umcdefs[umc_id].datafiles)
@@ -588,40 +350,22 @@ if __name__ == "__main__":
                         umcdefs[umc_id].datafiles = []                
                     else:
                         # failed to write to db after many attempts
-                        err_msg("Force exit due to connection errors!")                    
+                        Msg.err_msg("Force exit due to connection errors!")                    
                         sys.exit(1)
                     
-            # check for changes of configuration file
-            if os.stat(args.config).st_mtime != conf_mtime:
-                if conf_value(conf, "common.idbpush.configuration-auto-reload", False) == True:
-                    info1_msg("Configuration file %s has changed, will try to reload it."%args.config)
-                    try:
-                        with open(args.config, 'r') as confDoc2:
-                            conf2=yaml.load(confDoc2)
-                        umcdefs = {}                    
-                        conf=conf2
-                        info1_msg("The configuration was reloaed.")
-                    except Exception as e:
-                        info1_msg("Error occurred when realoding the configuration file:\n%s."%e)
-                        info1_msg("Will use the previous configuration.")
-                else:
-                    warn_msg("Configuration file %s has changed but you need to restart idbpush manually for changes to take effect!"%args.config)
-                conf_mtime=os.stat(args.config).st_mtime
-            
-            # display info message
             if countRecords > 0:
-                info1_msg("Logs in the batch of logs cleared in %.2f seconds (%d files, %d records)"%
+                Msg.info1_msg("Logs in the batch of logs cleared in %.2f seconds (%d files, %d records)"%
                     (time.time()-start_time,countFiles,countRecords))
                     
             # wait between runs
-            info2_msg("Waiting %s seconds to start the next iteration."%(delay_runs))
-            exit.wait(delay_runs)
+            Msg.info2_msg("Waiting %s seconds to start the next iteration."%(GlobalContext.params.delay_runs))
+            GlobalContext.exit.wait(GlobalContext.params.delay_runs)
             
         # // end main loop
         
-        info2_msg("idbpush gracefully ended.")
+        Msg.info2_msg("idbpush gracefully ended.")
         
     except Exception as e:
-        err_msg("Failed due to error: %s"%e)
+        Msg.err_msg("Failed due to error: %s"%e)
         
 
