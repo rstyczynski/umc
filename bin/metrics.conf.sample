@@ -66,7 +66,7 @@ common:
     loop-interval: 1
     
     # minimum time in seconds between starting the same umc instance
-    # this prevents umc instanc from running to frequently in case it is failing due to errors
+    # this prevents umc instance from running to frequently in case it is failing due to errors
     min-starting-time: 60
   
     # automatically reload configuration during runtime when it changes
@@ -75,7 +75,7 @@ common:
     # number of runs' return codes that will be kept in history in stats
     returncodes-history: 5
     
-    # connect and read timeouts when sending http proxy requests to hosts in the environment
+    # connect and read timeouts when sending http proxy requests to hosts in the cluster
     proxy-timeout-connect: 0.4
     proxy-timeout-read: 10
     

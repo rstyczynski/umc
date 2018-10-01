@@ -26,36 +26,6 @@ class UmcConfig:
             with open(self.configFile, 'r') as confDoc:
                 self.conf=yaml.load(confDoc)
             self.conf_mtime=os.stat(self.configFile).st_mtime   
-            
-            # umcrunner parameters
-            self.umcrunner_params = Map(
-                http_enabled        = self.value("common.umcrunner.http.enabled", True),
-                tcp_port            = self.value("common.umcrunner.http.tcp-port", 1989),
-                
-                log_file_copies     = self.value("common.umcrunner.log-file-copies", 1),
-                
-                run_interval        = self.value("common.umcrunner.run-interval", 10),
-                prcstats_interval   = self.value("common.umcrunner.prcstats-interval", 5),
-                logstats_interval   = self.value("common.umcrunner.logstats-interval", 60),
-                logstats_max_duration = self.value("common.umcrunner.logstats-max-duration", 2),
-                orphans_interval    = self.value("common.umcrunner.orphans-interval", 5),
-                maxproc_interval    = self.value("common.umcrunner.maxproc-interval", 5),
-                maxzombies_interval = self.value("common.umcrunner.maxzombies-interval", 5),
-                loop_interval       = self.value("common.umcrunner.loop-interval", 10),
-                             
-                max_processes       = self.value("common.umcrunner.max-processes", 200),
-                retc_history        = self.value("common.umcrunner.returncodes-history", 10),
-
-                proxy_timeout_connect = self.value("common.umcrunner.proxy-timeout-connect", 0.5),
-                proxy_timeout_read  = self.value("common.umcrunner.proxy-timeout-read", 5),
-                proxy_run_threads   = self.value("common.umcrunner.proxy-run-threads", True),
-
-                min_starting_time   = self.value("common.umcrunner.min-starting-time", 60),
-                run_after_failure   = self.value("common.umcrunner.run-after-failure", 60),
-                
-                oserror_max_attempts = self.value("common.umcrunner.oserror-max-attempts", 5),
-                oserror_wait_time   = self.value("common.umcrunner.oserror-wait-time", 60))
-                
                              
         except Exception as e:
             raise Exception("Error when reading the configuration file %s: %s"%(self.configFile,e))
@@ -91,8 +61,38 @@ class UmcConfig:
                 umc_instanceids.append(m.group(1))
         return umc_instanceids
 
-    # retrieves umc instance id configuration for umcrunner
-    def conf_umcrunner(self):
+    # reads all umcrunner params
+    def umcrunner_params(self):
+        return Map(
+            http_enabled        = self.value("common.umcrunner.http.enabled", True),
+            tcp_port            = self.value("common.umcrunner.http.tcp-port", 1989),
+            
+            log_file_copies     = self.value("common.umcrunner.log-file-copies", 1),
+            
+            run_interval        = self.value("common.umcrunner.run-interval", 10),
+            prcstats_interval   = self.value("common.umcrunner.prcstats-interval", 5),
+            logstats_interval   = self.value("common.umcrunner.logstats-interval", 60),
+            logstats_max_duration = self.value("common.umcrunner.logstats-max-duration", 2),
+            orphans_interval    = self.value("common.umcrunner.orphans-interval", 5),
+            maxproc_interval    = self.value("common.umcrunner.maxproc-interval", 5),
+            maxzombies_interval = self.value("common.umcrunner.maxzombies-interval", 5),
+            loop_interval       = self.value("common.umcrunner.loop-interval", 10),
+                         
+            max_processes       = self.value("common.umcrunner.max-processes", 200),
+            retc_history        = self.value("common.umcrunner.returncodes-history", 10),
+
+            proxy_timeout_connect = self.value("common.umcrunner.proxy-timeout-connect", 0.5),
+            proxy_timeout_read  = self.value("common.umcrunner.proxy-timeout-read", 5),
+            proxy_run_threads   = self.value("common.umcrunner.proxy-run-threads", True),
+
+            min_starting_time   = self.value("common.umcrunner.min-starting-time", 60),
+            run_after_failure   = self.value("common.umcrunner.run-after-failure", 60),
+            
+            oserror_max_attempts = self.value("common.umcrunner.oserror-max-attempts", 5),
+            oserror_wait_time   = self.value("common.umcrunner.oserror-wait-time", 60))
+
+    # retrieves umc instance configuration for umcrunner
+    def umcrunner_umcdefs(self):
         for umc_instanceid in self.umc_instanceids():
             # yaml key where the configuration should be located
             key="umc-%s"%umc_instanceid
@@ -154,7 +154,7 @@ class UmcConfig:
     # end conf_umcrunner    
         
     # get umcrunner server list
-    def get_server_list(self):
+    def umcrunner_serverlist(self):
         # default tcp port
         tcp_port = self.value("common.umcrunner.http.tcp-port", 1989)    
 

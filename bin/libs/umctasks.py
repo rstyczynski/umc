@@ -43,7 +43,7 @@ class UmcRunTask():
         # tell what we are doing
         Msg.info1_msg("Starting umc instance id '{umc_instanceid}': umc='{umc_toolid}', delay={delay}, count={count}, params='{params}', rotation_timelimit={rotation_timelimit}, log_dir='{log_dir}, log_file_copies={log_file_copies}'".
             format(umc_instanceid=umcdef.umc_instanceid,umc_toolid=umcdef.umc_toolid,delay=umcdef.delay,count=umcdef.count,params=umcdef.params,
-                rotation_timelimit=umcdef.rotation_timelimit,log_dir=umcdef.log_dir,log_file_copies=GlobalContext.config.umcrunner_params.log_file_copies))
+                rotation_timelimit=umcdef.rotation_timelimit,log_dir=umcdef.log_dir,log_file_copies=GlobalContext.params.log_file_copies))
 
         # it is important to set setsid as there might be child processes that use tty, this should provide a dedicated tty for them
         # example of such process is sqlcl
@@ -53,7 +53,7 @@ class UmcRunTask():
 
         p = psutil.Popen(UmcRunTask.UMC_LAUNCH_CMD.format(umc_instanceid=umcdef.umc_instanceid,umc_toolid=umcdef.umc_toolid,
                 delay=umcdef.delay,count=umcdef.count,params=umcdef.params,rotation_timelimit=umcdef.rotation_timelimit,
-                umc_home=GlobalContext.homeDir,log_dir=log_dir,log_file_copies=GlobalContext.config.umcrunner_params.log_file_copies),
+                umc_home=GlobalContext.homeDir,log_dir=log_dir,log_file_copies=GlobalContext.params.log_file_copies),
             shell=True, executable=UmcRunTask.DEFAULT_SHELL, preexec_fn=preexec, stdin=None, stdout=None, stderr=None)
 
         self.last_run_time=time.time()
@@ -66,10 +66,10 @@ class UmcRunTask():
                 umcdef.lock.acquire()
                 try:
                     if umcdef.proc is None and time.time()>umcdef.start_after:
-                        if umcdef.last_started_time is not None and time.time()-umcdef.last_started_time < GlobalContext.config.umcrunner_params.min_starting_time:
+                        if umcdef.last_started_time is not None and time.time()-umcdef.last_started_time < GlobalContext.params.min_starting_time:
                             Msg.warn_msg("umc instance id '%s' starting frequency is too high (<%d seconds), will not start it now!"
-                                %(umcdef.umc_instanceid,GlobalContext.config.umcrunner_params.min_starting_time))
-                            waiting.append("%s, WT=%.2fs"%(umcdef.umc_instanceid,GlobalContext.config.umcrunner_params.min_starting_time))                        
+                                %(umcdef.umc_instanceid,GlobalContext.params.min_starting_time))
+                            waiting.append("%s, WT=%.2fs"%(umcdef.umc_instanceid,GlobalContext.params.min_starting_time))                        
                         else:
                             try:
                                 # run umcinstance as a child process
@@ -114,13 +114,13 @@ class RefreshProcessesTask():
                         rc=umcdef.proc.returncode
                         if rc != 0:
                             Msg.warn_msg("umc instance %s failed/terminated with exit code %d. Will attempt to restart it after %d seconds."
-                                %(umcdef.umc_instanceid,rc,GlobalContext.config.umcrunner_params.run_after_failure))
-                            umcdef.start_after=time.time()+GlobalContext.config.umcrunner_params.run_after_failure
+                                %(umcdef.umc_instanceid,rc,GlobalContext.params.run_after_failure))
+                            umcdef.start_after=time.time()+GlobalContext.params.run_after_failure
                             umcdef.num_errors = umcdef.num_errors + 1
                             umcdef.lasterror_time = time.time()
                         umcdef.returncodes.insert(0,(time.time(), rc))
-                        if len(umcdef.returncodes)>GlobalContext.config.umcrunner_params.retc_history:
-                            del umcdef.returncodes[-(len(umcdef.returncodes)-GlobalContext.config.umcrunner_params.retc_history):]
+                        if len(umcdef.returncodes)>GlobalContext.params.retc_history:
+                            del umcdef.returncodes[-(len(umcdef.returncodes)-GlobalContext.params.retc_history):]
         
                     # clear the process is not runnig or check the process is zombie; this happens when the process ends normally but we still hold a refernece to it
                     if not(umcdef.proc.is_running()) or (umcdef.proc.is_running() and umcdef.proc.status() == psutil.STATUS_ZOMBIE):   
@@ -335,9 +335,9 @@ class MaxProcessesTask():
 
         Msg.info2_msg("There are %d children processes."%(len(kids)))
             
-        if len(kids) > GlobalContext.config.umcrunner_params.max_processes:
+        if len(kids) > GlobalContext.params.max_processes:
             Msg.warn_msg("The current number of child processes %d exceeds the maximum of %d; umcrunner will be paused."
-                %(len(kids),GlobalContext.config.umcrunner_params.max_processes))
+                %(len(kids),GlobalContext.params.max_processes))
             return False
         else:
             return True    

@@ -39,17 +39,19 @@ VERSION="0.3"
 # global umcrunner context 
 class GlobalContext():
     args = None             # input command line arguments 
-    configFile = None       # configuration file
     homeDir = os.path.dirname(os.path.realpath(__file__))  
     logRootDir = None       # root directory for umc instance output logs        
-                            # location of umcrunner  
+    
+    configFile = None       # configuration file
     config = None           # umc configuration object
     server_list = None      # list of servers in umcrunner environment
-    exitEvent = Event()     # global exit event, set when exiting umcrunner
+    params = None           # configuration parameters
     umcdefs = None          # umc definitions read from configuration file
+
+    paused = False          # True the loop tasks should be paused    
+    exitEvent = Event()     # global exit event, set when exiting umcrunner    
     umcrunner_stats=None    # umcrunner instance statistics
     httpd = None            # httpd server, instance of UmcRunnerHTTPServer
-    paused = False          # True the loop tasks should be paused
     
 # *** helper functions
 
@@ -111,26 +113,30 @@ if __name__ == "__main__":
     
     # register atexit handler
     atexit.register(putils.terminate_children)    
+
+    # welcome 
+    Msg.info1_msg("umcrunner version %s started with pid %d"%(VERSION, os.getpid()))
     
     # *** main start
     # umc configuration
     GlobalContext.config = UmcConfig(GlobalContext.configFile) 
-    
-    # welcome 
-    Msg.info1_msg("umcrunner version %s started with pid %d"%(VERSION, os.getpid()))
-    Msg.info1_msg("umcrunner parameters are: umc_home=%s, configFile=%s, log_root=%s, hostname=%s"
+    Msg.info1_msg("home_dir=%s, configFile=%s, log_root=%s, hostname=%s"
         %(GlobalContext.homeDir,GlobalContext.configFile,GlobalContext.logRootDir,socket.gethostname()))
 
     # all servers lists
-    GlobalContext.server_list = GlobalContext.config.get_server_list()
-    Msg.info2_msg("Servers that I see: %s"%GlobalContext.server_list)
+    GlobalContext.server_list = GlobalContext.config.umcrunner_serverlist()
+    Msg.info2_msg("Servers in the cluster: %s"%GlobalContext.server_list)
+    
+    # load umcrunner params
+    GlobalContext.params=GlobalContext.config.umcrunner_params()
+    Msg.info2_msg("Parameters: %s"%GlobalContext.params)
     
     # load umc definitions
     GlobalContext.umcdefs = []
-    for umcdef in GlobalContext.config.conf_umcrunner():
+    for umcdef in GlobalContext.config.umcrunner_umcdefs():
         GlobalContext.umcdefs.append(umcdef)
     Msg.info1_msg("There are %d umc definitions."%len(GlobalContext.umcdefs))
-    
+        
     # http server to handle api requests
     GlobalContext.httpd = UmcRunnerHTTPServer(GlobalContext)
     GlobalContext.httpd.start_httpd()
@@ -143,19 +149,19 @@ if __name__ == "__main__":
         # all task being run as part of the main loop
         tasks = Tasks.TasksDef(GlobalContext)
         # stats
-        tasks.addTask(Tasks.CollectPrcStatsTask, GlobalContext.config.umcrunner_params.prcstats_interval, run_on_global_pause=True,
+        tasks.addTask(Tasks.CollectPrcStatsTask, GlobalContext.params.prcstats_interval, run_on_global_pause=True,
             time_limit_pause=2, pause_for=60*5, time_limit_disable=5)
-        tasks.addTask(Tasks.CollectLogStatsTask, GlobalContext.config.umcrunner_params.logstats_interval, run_on_global_pause=False,
+        tasks.addTask(Tasks.CollectLogStatsTask, GlobalContext.params.logstats_interval, run_on_global_pause=False,
             time_limit_pause=2, pause_for=60*10, time_limit_disable=5)
         
         # checks
-        tasks.addTask(Tasks.OrphansCheckTask, GlobalContext.config.umcrunner_params.orphans_interval, run_on_global_pause=True)
-        tasks.addTask(Tasks.MaxProcessesTask, GlobalContext.config.umcrunner_params.maxproc_interval, run_on_global_pause=True)
-        tasks.addTask(Tasks.MaxZombiesTask, GlobalContext.config.umcrunner_params.maxzombies_interval, run_on_global_pause=True)
+        tasks.addTask(Tasks.OrphansCheckTask, GlobalContext.params.orphans_interval, run_on_global_pause=True)
+        tasks.addTask(Tasks.MaxProcessesTask, GlobalContext.params.maxproc_interval, run_on_global_pause=True)
+        tasks.addTask(Tasks.MaxZombiesTask, GlobalContext.params.maxzombies_interval, run_on_global_pause=True)
         
         # run and refresh
-        tasks.addTask(Tasks.RefreshProcessesTask, GlobalContext.config.umcrunner_params.run_interval, run_on_global_pause=True)
-        tasks.addTask(Tasks.UmcRunTask, GlobalContext.config.umcrunner_params.run_interval, run_on_global_pause=False)
+        tasks.addTask(Tasks.RefreshProcessesTask, GlobalContext.params.run_interval, run_on_global_pause=True)
+        tasks.addTask(Tasks.UmcRunTask, GlobalContext.params.run_interval, run_on_global_pause=False)
             
         # os error attempts
         oserror_retry_attempts = 0
@@ -170,16 +176,16 @@ if __name__ == "__main__":
                 oserror_retry_attempts = 0
                 
                 # wait loop_interval seconds 
-                GlobalContext.exitEvent.wait(GlobalContext.config.umcrunner_params.loop_interval)
+                GlobalContext.exitEvent.wait(GlobalContext.params.loop_interval)
             except OSError as e:
                 # os error occurred
                 oserror_retry_attempts += 1
                 Msg.warn_msg("OS error occurred (errno=%d): %s"%(e.errno, str(e)))
                 
                 # , wait for X seconds if attempts allow
-                if GlobalContext.config.umcrunner_params.oserror_max_attempts == -1 or oserror_retry_attempts <= GlobalContext.config.umcrunner_params.oserror_max_attempts:
-                    Msg.warn_msg("Waiting %d seconds, attempt %d..."%(GlobalContext.config.umcrunner_params.oserror_wait_time, oserror_retry_attempts))
-                    GlobalContext.exitEvent.wait(GlobalContext.config.umcrunner_params.oserror_wait_time)
+                if GlobalContext.params.oserror_max_attempts == -1 or oserror_retry_attempts <= GlobalContext.params.oserror_max_attempts:
+                    Msg.warn_msg("Waiting %d seconds, attempt %d..."%(GlobalContext.params.oserror_wait_time, oserror_retry_attempts))
+                    GlobalContext.exitEvent.wait(GlobalContext.params.oserror_wait_time)
                 else:
                     raise
         # main loop

@@ -34,7 +34,7 @@ class UmcRunnerHTTPServer():
         self.enabled = False
         self.thread = None
         
-        if GlobalContext.config.umcrunner_params.http_enabled:
+        if GlobalContext.params.http_enabled:
             sl_def = GlobalContext.server_list.get(socket.gethostname())
             if sl_def is not None and sl_def.address is not None and sl_def.tcp_port is not None and sl_def.me:
                 self.enabled = True
@@ -99,11 +99,11 @@ class ProxyRequest():
             Msg.info2_msg("Sending proxy request %s %s"%(self.method.upper(),self.url))
             headers={ "Via" : "1.1 %s"%socket.gethostname() }
             if self.method=="get": 
-                self.response = requests.get(self.url,timeout=(GlobalContext.config.umcrunner_params.proxy_timeout_connect, 
-                    GlobalContext.config.umcrunner_params.proxy_timeout_read), headers=headers)
+                self.response = requests.get(self.url,timeout=(GlobalContext.params.proxy_timeout_connect, 
+                    GlobalContext.params.proxy_timeout_read), headers=headers)
             elif self.method=="post": 
-                self.response = requests.post(self.url,timeout=(GlobalContext.config.umcrunner_params.proxy_timeout_connect, 
-                    GlobalContext.config.umcrunner_params.proxy_timeout_read), headers=headers)
+                self.response = requests.post(self.url,timeout=(GlobalContext.params.proxy_timeout_connect, 
+                    GlobalContext.params.proxy_timeout_read), headers=headers)
             else: 
                 raise Exception("Method %s is not supported!"%self.method)
         except Exception as e:
@@ -232,7 +232,7 @@ class Handler(BaseHTTPRequestHandler):
                             prqs.append(ProxyRequest(method,'http://{address}:{tcp_port}{fw_path}'
                                 .format(address=server_def.address,tcp_port=server_def.tcp_port,
                                 fw_path=params.replace(params,Map(hostname=server_def["hostname"]))),
-                                GlobalContext.config.umcrunner_params.proxy_run_threads))
+                                GlobalContext.params.proxy_run_threads))
                             prqs[-1].send_request()
 
                         # wait for all responses
@@ -356,13 +356,13 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         # umcrunner stats
         if self.process_cluster_request("get", "/stats/hosts/{hostname}", 
-            GlobalContext.config.umcrunner_params.stats_interval, 
+            GlobalContext.params.stats_interval, 
             lambda params : Map(code=200, json=[ GlobalContext.umcrunner_stats.to_json() ] )) is not None:
             return
 
         # umc stats
         if self.process_cluster_request("get", "/stats/hosts/{hostname}/umc/{umc}", 
-            GlobalContext.config.umcrunner_params.stats_interval, 
+            GlobalContext.params.stats_interval, 
             self.callback_umcdef_content) is not None:
             return
             

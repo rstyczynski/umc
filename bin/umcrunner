@@ -227,7 +227,7 @@ if __name__ == "__main__":
         # configuration file
         configFile=os.environ.get('UMCRUNNER_CONFIG', None)        
         if configFile is not None:
-            server_list = UmcConfig(configFile).get_server_list()
+            server_list = UmcConfig(configFile).umcrunner_serverlist()
 
         # get the command to run, if any
         command_def=None
@@ -291,8 +291,8 @@ if __name__ == "__main__":
         sys.stderr.write("Connect timeout occured when sending the request.\n\n")        
     except requests.exceptions.ConnectionError as e:
         sys.stderr.write("Unable to connect: %s\n\n"%connect_str)                
-    #except Exception as e:
-    #    sys.stderr.write("%s\n\n"%str(e))
+    except Exception as e:
+        sys.stderr.write("%s\n\n"%str(e))
         
 
     
