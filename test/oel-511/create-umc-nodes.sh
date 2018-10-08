@@ -57,3 +57,14 @@ create_umc_node ukbn03hr 192.168.10.103 $1
 
 # create influxdb and idbpush node
 create_idb_node ukbn10hr 192.168.10.110
+
+# create inflixdb with rodmondb from npp
+docker run -it \
+      --user oracle \
+      --net umcnet \
+      -h ukbn20hr.umc.local \
+      -v $UMC_HOME:/home/oracle/umc \
+      --name umc-ukbn20hr \
+      -p 8086:8086 \
+      --ip 192.168.10.120 -d $IMAGE /bin/bash -l
+
