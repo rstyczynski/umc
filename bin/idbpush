@@ -124,7 +124,8 @@ def eval_transform(umc_id, transform, tags, fields):
 # read data points from the csv log file
 def read_datapoints(GlobalContext, logfilename, umcdef):    
     datapoints = []; notags=False; nofields=False; 
-    
+    tzoffset = GlobalContext.params.tzoffset   
+ 
     if umcdef.enabled and umcdef.metric is not None: 
         # read datapoints
         with open(logfilename, 'r') as csvfile:
@@ -334,7 +335,7 @@ if __name__ == "__main__":
                 # check to remove files providing no data
                 if len(umcdefs[umc_id].datapoints) == 0 and len(umcdefs[umc_id].datafiles) > 0:
                     Msg.warn_msg("All %d files in the batch of logs provide no data for %s!"%(len(umcdefs[umc_id].datafiles),umc_id))
-                    if GlobalContext.value("common.idbpush.remove-backlog-files-no-data", False) == True:
+                    if GlobalContext.config.value("common.idbpush.remove-backlog-files-no-data", False) == True:
                         Msg.warn_msg("%d files providing no data for %s will be removed!"%(len(umcdefs[umc_id].datafiles),umc_id))
                         for file in umcdefs[umc_id].datafiles:
                             os.remove(file)
