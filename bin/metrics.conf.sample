@@ -1,5 +1,5 @@
-# umc metrics configuration file, used by umc tools 'umcrunner' and 'idbpush', Tomas Vitvar, tomas@vitvar.com
-# umcrunner produces csv log files that are asynchronously writen to influxdb by idbpush
+# umc metrics configuration file, used by umc tools 'umcrunner' and 'influxdb', Tomas Vitvar, tomas@vitvar.com
+# umcrunner produces csv log files that are asynchronously writen to influxdb by influxdb
 # This file is a single configuration for all metrics that are collected and pushed 
 #
 # umcrunner
@@ -8,7 +8,7 @@
 # umcrunner will run each umc instance by using umcrunner --run command with the first argument being umc id and the 
 # remaining arguments defined by params key
 #
-# idbpush
+# influxdb
 #  
 
 # *** common settings
@@ -31,7 +31,7 @@ common:
         - hostname=ukbn03hr.umc.local, address=192.168.10.103, enabled=True
         
     # log file copies, a number of log file copies that will be produced by logdirector; this allows umcrunner to produce log files
-    # for multiple consumers; idbpush as one of such consumers then consumes log files identified with a group number 
+    # for multiple consumers; influxdb as one of such consumers then consumes log files identified with a group number 
     # (defined in common.umcrunner.log-file-group parameter); 
     log-file-copies: 1
     
@@ -109,9 +109,9 @@ common:
 
       # csv reader component parameters
       reader-params:
-        # log file group to be consumed by idbpush
+        # log file group to be consumed by influxdb
         # umcrunner may produce multiple copies of the same file for various consumers (by using common.umcrunner.log-file-copies);
-        # file gruop number identifies log files to be consumed by idbpush
+        # file gruop number identifies log files to be consumed by influxdb
         log-file-group: 1
 
         # common time field and time format used by all umc definitions
@@ -147,8 +147,8 @@ common:
         # number of milliseconds to wait between retries to write data to the DB
         connection-error-retry-interval: 30000
         
-        # maximum number of retries when DB connection fails, when reached the idbpush will exit
-        # value -1 means idbpush will never exit due to connection errors
+        # maximum number of retries when DB connection fails, when reached the influxdb will exit
+        # value -1 means influxdb will never exit due to connection errors
         connection-error-retry-count: -1
         
         # remove files from backlog if they provide no data
@@ -174,7 +174,7 @@ umc-dms.jdbc:
       - "ServerName=re.search(r'.+(SOA[0-9]+)', ServerName).group(1)"
       - "Host='test'"
   writer:
-    idbpush:
+    influxdb:
       name: dms_jdbc
 
 # aiaflows
@@ -191,7 +191,7 @@ umc-oradb.aiaflows:
     fields: "count_ok, count_err, min, max, avg"  
     filter: 
   writer:
-    idbpush:
+    influxdb:
       name: aiaflows 
 
 # iostat
@@ -204,7 +204,7 @@ umc-iostat:
     fields: "tps,kB_read/s,kB_wrtn/s,kB_read,kB_wrtn"      
     tags: device                  
   writer:
-    idbpush:
+    influxdb:
       name: iostat 
     
 # ifconfig
@@ -218,7 +218,7 @@ umc-ifconfig:
       TXoverruns,TXcarrier,collisions,txqueuelen,RXbytes,TXbytes"     
     tags: device                  
   writer:
-    idbpush:
+    influxdb:
       name: ifconfig 
     
 # netstattcp
@@ -232,7 +232,7 @@ umc-netstattcp:
       !segments_received,!segments_send_out,!segments_retransmited,!bad_segments_received,resets_sent"     
     tags:                  
   writer:
-    idbpush:
+    influxdb:
       name: netstattcp 
     
 # free
@@ -245,7 +245,7 @@ umc-free:
     fields: "total,used,free,shared,buffers,cached,usedNoBuffersCache,freePlusBuffersCache,SwapTotal,SwapUsed,SwapFree"      
     tags:                  
   writer:
-    idbpush:
+    influxdb:
       name: free 
 
 # uptime
@@ -258,6 +258,6 @@ umc-uptime:
     fields: "users,load1min,load5min,load15min"      
     tags:                  
   writer:
-    idbpush:
+    influxdb:
       name: uptime 
 

@@ -15,7 +15,7 @@ function start() {
   dir="$UMC_LOG_DIR/umcpush.$1"
   mkdir -p $dir
 
-  $scriptDir/umcpushd --id $1 &>$dir/umcpush.$1-$HOSTNAME.out &
+  $scriptDir/umcpushd --run $1 &>$dir/umcpush.$1-$HOSTNAME.out &
   if [ "$?" -eq 0 ]; then
           echo "umcpush with ID $1 started, out log is in $dir/umcpush.$1-$HOSTNAME.out"
   else
@@ -23,4 +23,4 @@ function start() {
   fi  
 }
 
-start idbpush
+start influxdb
