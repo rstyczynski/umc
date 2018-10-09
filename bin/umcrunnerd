@@ -27,6 +27,7 @@ import proc_utils as putils
 import messages as Msg
 import umctasks as Tasks
 from umcconfig import UmcConfig
+from umcrunner import UmcRunner
 from umchttpd import UmcRunnerHTTPServer
  
 # http server
@@ -42,8 +43,8 @@ class GlobalContext():
     homeDir = os.path.dirname(os.path.realpath(__file__))  
     logRootDir = None       # root directory for umc instance output logs        
     
+    umcrunner=None          # umcrunner specific configuration object
     configFile = None       # configuration file
-    config = None           # umc configuration object
     server_list = None      # list of servers in umcrunner environment
     params = None           # configuration parameters
     umcdefs = None          # umc definitions read from configuration file
@@ -119,21 +120,21 @@ if __name__ == "__main__":
     
     # *** main start
     # umc configuration
-    GlobalContext.config = UmcConfig(GlobalContext.configFile) 
+    GlobalContext.umcrunner=UmcRunner(UmcConfig(GlobalContext.configFile))
     Msg.info1_msg("home_dir=%s, configFile=%s, log_root=%s, hostname=%s"
         %(GlobalContext.homeDir,GlobalContext.configFile,GlobalContext.logRootDir,socket.gethostname()))
 
     # all servers lists
-    GlobalContext.server_list = GlobalContext.config.umcrunner_serverlist()
+    GlobalContext.server_list = GlobalContext.umcrunner.serverlist()
     Msg.info2_msg("Servers in the cluster: %s"%GlobalContext.server_list)
     
     # load umcrunner params
-    GlobalContext.params=GlobalContext.config.umcrunner_params()
+    GlobalContext.params=GlobalContext.umcrunner.params
     Msg.info2_msg("Parameters: %s"%GlobalContext.params)
     
     # load umc definitions
     GlobalContext.umcdefs = []
-    for umcdef in GlobalContext.config.umcrunner_umcdefs():
+    for umcdef in GlobalContext.umcrunner.read_umcdefs():
         GlobalContext.umcdefs.append(umcdef)
     Msg.info1_msg("There are %d umc definitions."%len(GlobalContext.umcdefs))
         

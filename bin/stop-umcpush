@@ -1,0 +1,14 @@
+#!/bin/bash
+
+stopped=0
+while [ $stopped -eq 0 ]; do
+	pid=$(ps ax | grep -v grep | grep -v stop-umcpush | grep umcpush | head -n1 | awk '{ print $1 }')
+	if [ "$pid" != "" ]; then
+		echo "Attemping to stop umcpush with pid $pid..."
+		kill $pid
+		sleep 1
+	else
+		echo "umcpush is stopped"
+		stopped=1
+	fi
+done

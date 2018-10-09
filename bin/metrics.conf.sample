@@ -94,75 +94,76 @@ common:
     oserror-max-attempts: 5
     oserror-wait-time: 60
   
-  # ** common definitions for idbpush
-  idbpush:
-    # influxdb connection details
-    db:
-      url: http://localhost:8086/  
-      dbname: rodmon_sample
-      user: 
-      pass:
+  # push instances
+  umcpush:
+    influxdb:
+      # class that implements this writer
+      class: influxdbwriter.InfluxDBWriter
       
-    # common time field and time format used by all umc definitions
-    # this can be overriden in umc definition 
-    timefield: timestamp
-    
-    # the valid values are _unix_, _time_s, _time_ms_ or a valid python time format pattern
-    timeformat: _unix_
-    
-    # default timezone = offset from UTC
-    # it is assumed that the time in log files will be in this timezone, hence the influxdb time will be
-    # transformed to UTC time  
-    timezone: 0
-    
-    # common tags and fields used by all umc definitions
-    # this will be added to tags and fields found in umc definitions     
-    tags: system, source
-    fields:
-    
-    # log file group to be consumed by idbpush
-    # umcrunner may produce multiple copies of the same file for various consumers (by using common.umcrunner.log-file-copies);
-    # file gruop number identifies log files to be consumed by idbpush
-    log-file-group: 1
-    
-    # runtime parameters
-    # number of records (lines) in a single batch that will be pushed to influxdb
-    max-batchsize-rows: 50
-    
-    # maximum number of files that will be read in a batch
-    max-batchsize-files: 500
-    
-    # number of milliseconds to wait between db writes
-    delay-between-writes: 200
-    
-    # number of milliseconds to wait between iterations 
-    delay-between-runs: 10000
-    
-    # true to skip the whole row when conversion error from string to float occurrs
-    # when the row is not skipped, then the failed value will be None 
-    conversion-error-skip-row: false
-    
-    # number of milliseconds to wait between retries to write data to the DB
-    connection-error-retry-interval: 30000
-    
-    # maximum number of retries when DB connection fails, when reached the idbpush will exit
-    # value -1 means idbpush will never exit due to connection errors
-    connection-error-retry-count: -1
-    
-    # remove files from backlog if they provide no data
-    remove-backlog-files-no-data: true 
-    
-    # automatically reload configuration during runtime when it changes
-    configuration-auto-reload: true  
+      # influxdb connection details
+      connect:
+        url: http://localhost:8086/  
+        dbname: rodmon_sample
+        user: 
+        pass: 
 
+      # csv reader component parameters
+      reader-params:
+        # log file group to be consumed by idbpush
+        # umcrunner may produce multiple copies of the same file for various consumers (by using common.umcrunner.log-file-copies);
+        # file gruop number identifies log files to be consumed by idbpush
+        log-file-group: 1
+
+        # common time field and time format used by all umc definitions
+        # this can be overriden in umc definition 
+        timefield: timestamp
+        
+        # the valid values are _unix_, _time_s, _time_ms_ or a valid python time format pattern
+        timeformat: _unix_
+        
+        # common tags and fields used by all umc csv reader definitions
+        # this will be added to tags and fields found in umc csv reader definitions     
+        tags: system, source
+        fields:
+        
+        # runtime parameters
+        # number of records (lines) in a single batch 
+        max-batchsize-rows: 50
+        
+        # maximum number of files that will be read in a batch
+        max-batchsize-files: 500
+              
+      writer-params:
+        # number of milliseconds to wait between db writes
+        delay-between-writes: 200
+        
+        # number of milliseconds to wait between iterations 
+        delay-between-runs: 10000
+        
+        # true to skip the whole row when conversion error from string to float occurrs
+        # when the row is not skipped, then the failed value will be None 
+        conversion-error-skip-row: false
+        
+        # number of milliseconds to wait between retries to write data to the DB
+        connection-error-retry-interval: 30000
+        
+        # maximum number of retries when DB connection fails, when reached the idbpush will exit
+        # value -1 means idbpush will never exit due to connection errors
+        connection-error-retry-count: -1
+        
+        # remove files from backlog if they provide no data
+        remove-backlog-files-no-data: true 
+        
+        # automatically reload configuration during runtime when it changes
+        configuration-auto-reload: true  
+      
 # dms test
 umc-dms.jdbc:
   enabled: true
   umcrunner:
     hosts: ukbn01hr.umc.local,ukbn02hr.umc.local
     params: 20 dms 10 10 JDBC_DataSource config.sample
-  idbpush:
-    name: dms_jdbc
+  reader:
     timefield: datetime
     timeformat: "%y-%m-%d %H:%M:%S"
     tags: "Host,ServerName,Name"
@@ -172,6 +173,9 @@ umc-dms.jdbc:
     transform:
       - "ServerName=re.search(r'.+(SOA[0-9]+)', ServerName).group(1)"
       - "Host='test'"
+  writer:
+    idbpush:
+      name: dms_jdbc
 
 # aiaflows
 umc-oradb.aiaflows:  
@@ -180,13 +184,15 @@ umc-oradb.aiaflows:
     hosts: ukbn01hr.umc.local
     params: 20 oradb 10 10 aiaflows.sql oradb.conf.sample
     options: setsid
-  idbpush:
-    name: aiaflows 
+  reader:
     timefield: time
     timeformat: "%y-%m-%d %H:%M"
     tags: flow
     fields: "count_ok, count_err, min, max, avg"  
     filter: 
+  writer:
+    idbpush:
+      name: aiaflows 
 
 # iostat
 umc-iostat:  
@@ -194,10 +200,12 @@ umc-iostat:
   umcrunner:    
     hosts: _ALL_
     params: 20 iostat 10 10   
-  idbpush:
-    name: iostat 
+  reader:
     fields: "tps,kB_read/s,kB_wrtn/s,kB_read,kB_wrtn"      
     tags: device                  
+  writer:
+    idbpush:
+      name: iostat 
     
 # ifconfig
 umc-ifconfig:  
@@ -205,11 +213,13 @@ umc-ifconfig:
   umcrunner:    
     hosts: _ALL_
     params: 20 ifconfig 10 10   
-  idbpush:
-    name: ifconfig 
+  reader:
     fields: "RXpackets,RXerrors,RXdropped,RXoverruns,RXframe,TXpackets,TXerrors,TXdropped,
       TXoverruns,TXcarrier,collisions,txqueuelen,RXbytes,TXbytes"     
     tags: device                  
+  writer:
+    idbpush:
+      name: ifconfig 
     
 # netstattcp
 umc-netstattcp:  
@@ -217,11 +227,13 @@ umc-netstattcp:
   umcrunner:    
     hosts: _ALL_
     params: 20 netstattcp 10 10   
-  idbpush:
-    name: netstattcp 
+  reader:
     fields: "active_connections_openings,passive_connection_openings,failed_connection_attempts,connection_resets_received,connections_established,
       !segments_received,!segments_send_out,!segments_retransmited,!bad_segments_received,resets_sent"     
     tags:                  
+  writer:
+    idbpush:
+      name: netstattcp 
     
 # free
 umc-free:  
@@ -229,10 +241,12 @@ umc-free:
   umcrunner:    
     hosts: _ALL_
     params: 20 free 10 10   
-  idbpush:
-    name: free 
+  reader:
     fields: "total,used,free,shared,buffers,cached,usedNoBuffersCache,freePlusBuffersCache,SwapTotal,SwapUsed,SwapFree"      
     tags:                  
+  writer:
+    idbpush:
+      name: free 
 
 # uptime
 umc-uptime:  
@@ -240,8 +254,10 @@ umc-uptime:
   umcrunner:    
     hosts: _ALL_
     params: 20 uptime 10 10   
-  idbpush:
-    name: uptime 
+  reader:
     fields: "users,load1min,load5min,load15min"      
     tags:                  
+  writer:
+    idbpush:
+      name: uptime 
 

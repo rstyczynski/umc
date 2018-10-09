@@ -26,8 +26,9 @@ from json2table import Table
 from utils import PathDef
 
 # local libraries
-import libs.messages as Msg
-from libs.umcconfig import UmcConfig
+import messages as Msg
+from umcconfig import UmcConfig
+from umcrunner import UmcRunner
 
 # global variables
 args=None
@@ -227,7 +228,7 @@ if __name__ == "__main__":
         # configuration file
         configFile=os.environ.get('UMCRUNNER_CONFIG', None)        
         if configFile is not None:
-            server_list = UmcConfig(configFile).umcrunner_serverlist()
+            server_list = UmcRunner(UmcConfig(configFile)).serverlist()
 
         # get the command to run, if any
         command_def=None
