@@ -76,7 +76,7 @@ def write(GlobalContext, datapoints, datafiles):
         retry = False                    
         try:
             # write the points and update the last db call time
-            response = GlobalContext.writer.write(datapoints)
+            response = GlobalContext.writer.write(datapoints, GlobalContext.exit)
             GlobalContext.lastwritecall = int(round(time.time() * 1000))
             if retryCount > 0:
                 Msg.info1_msg("Connection to the DB was successful after %d retries."%retryCount);
@@ -93,8 +93,6 @@ def write(GlobalContext, datapoints, datafiles):
                 Msg.err_msg("Maximum number of %d retries reached!"%(retryCount))                          
                 return False                                            
         except Exception as e:
-            # TODO: check the status code and if 400, do something with the data in the buffer
-            # such as dump it to a text file or try to divide it to parts and submit it
             Msg.err_msg("Error occurred when inserting data, all records in the write buffer (%d) will be discarded!: %s"
                 %(len(datapoints),str(e)))
             retry = False
@@ -140,6 +138,10 @@ if __name__ == "__main__":
 
         # storage of umc definitions from the configuration file
         umcdefs = {}
+        
+        # write buffer and processed files 
+        datapoints=[]
+        datafiles=[]
     
         # instantiate reader and writer objects
         # writer object is instantiated dynamically based on the class in the configuration file
@@ -188,55 +190,51 @@ if __name__ == "__main__":
                         
                         if not(umcdef.enabled):
                             Msg.info1_msg("umc id %s is disabled by configuration, no datapoints will be read."%(umc_id))
+                        elif umcdef.writer is None or umcdef.reader is None:
+                            Msg.info2_msg("umc id %s does not have a reader or a writer, will disable it."%(umc_id))
+                            umcdef.enabled=False
+
                         umcdefs[umc_id] = umcdef                        
                     # // else
                 # // umc_id create 
                 
-                # read datapoints from the log file and store them in the umcdef dict
-                umcdefs[umc_id].datapoints += GlobalContext.reader.read_datapoints(logfile,umcdefs[umc_id], GlobalContext.writer.createWriteItem)
-                umcdefs[umc_id].datafiles.append(logfile)
-                Msg.info2_msg("Data points read for umc %s. There is currently %d records in %d files in the write buffer."%(umc_id, 
-                    len(umcdefs[umc_id].datapoints), len(umcdefs[umc_id].datafiles)))        
-                
-                # write points in batches of max_batchsize_rows
-                if len(umcdefs[umc_id].datapoints) != 0 and len(umcdefs[umc_id].datapoints)/GlobalContext.reader.params.max_batchsize_rows >= 1:
-                    if write(GlobalContext, umcdefs[umc_id].datapoints, umcdefs[umc_id].datafiles):
-                        Msg.info2_msg("Write buffer flushed for umc %s (%d records from %d files wirtten out)."%(umc_id, 
-                            len(umcdefs[umc_id].datapoints), len(umcdefs[umc_id].datafiles)))        
-                        countRecords=countRecords+len(umcdefs[umc_id].datapoints)
-                        countFiles=countFiles+len(umcdefs[umc_id].datafiles)
-                        umcdefs[umc_id].datapoints = []
-                        umcdefs[umc_id].datafiles = []
-                    else:
-                        # failed to write to the db after many attempts
-                        raise Exception("Force exit due to connection errors!")                    
-                # // batch write
+                # process this umcdef if enabled
+                if umcdefs[umc_id].enabled: 
+                    # read datapoints from the log file and store them in the umcdef dict
+                    datapoints += GlobalContext.reader.read_datapoints(logfile,umcdefs[umc_id], GlobalContext.writer.createWriteItem)
+                    datafiles.append(logfile)
+                    Msg.info2_msg("Data points read for umc %s. There is currently %d records in %d files in the write buffer."%(umc_id, 
+                        len(datapoints), len(datafiles)))        
+                    
+                    # write points in batches of max_batchsize_rows
+                    if len(datapoints) != 0 and len(datapoints)/GlobalContext.reader.params.max_batchsize_rows >= 1:
+                        if write(GlobalContext, datapoints, datafiles):
+                            Msg.info2_msg("Write buffer flushed (%d records from %d files writen out)."%(len(datapoints),len(datafiles)))        
+                            countRecords=countRecords+len(datapoints)
+                            countFiles=countFiles+len(datafiles)
+                            datapoints = []
+                            datafiles = []
+                        else:
+                            # failed to write to the db after many attempts
+                            raise Exception("Force exit due to connection errors!")                    
+                    # // batch write
+                # // enabled
             # // end log files iteration
             
             # flush the remaining write buffer
-            for umc_id in umcdefs: 
-                # check to remove files providing no data
-                if len(umcdefs[umc_id].datapoints) == 0 and len(umcdefs[umc_id].datafiles) > 0:
-                    Msg.warn_msg("All %d files in the batch of logs provide no data for %s!"%(len(umcdefs[umc_id].datafiles),umc_id))
-                    if GlobalContext.writer.params.remove_nodata_files == True:
-                        Msg.warn_msg("%d files providing no data for %s will be removed!"%(len(umcdefs[umc_id].datafiles),umc_id))
-                        for file in umcdefs[umc_id].datafiles:
-                            os.remove(file)
-                    umcdefs[umc_id].datafiles = []             
-                elif len(umcdefs[umc_id].datapoints) > 0: 
-                    # write remaining backlog from this iteration
-                    if write(GlobalContext, umcdefs[umc_id].datapoints, umcdefs[umc_id].datafiles):
-                        Msg.info2_msg("Remaining write buffer flushed for umc %s (%d records from %d files writen out)."%(umc_id, 
-                            len(umcdefs[umc_id].datapoints), len(umcdefs[umc_id].datafiles)))        
-                        countRecords=countRecords+len(umcdefs[umc_id].datapoints)
-                        countFiles=countFiles+len(umcdefs[umc_id].datafiles)
-                        umcdefs[umc_id].datapoints = []
-                        umcdefs[umc_id].datafiles = []                
-                    else:
-                        # failed to write to db after many attempts
-                        raise Exception("Force exit due to connection errors!")  
-            # // remaining buffer                  
-                    
+            if len(datapoints) > 0: 
+                if write(GlobalContext, datapoints, datafiles):
+                    Msg.info2_msg("Remaining write buffer flushed (%d records from %d files writen out)."
+                        %(len(umcdefs[umc_id].datapoints), len(umcdefs[umc_id].datafiles)))        
+                    countRecords=countRecords+len(datapoints)
+                    countFiles=countFiles+len(datafiles)
+                    datapoints = []
+                    datafiles = []                
+                else:
+                    # failed to write to db after many attempts
+                    raise Exception("Force exit due to connection errors!")  
+            # len datapoints > 0
+            
             if countRecords > 0:
                 Msg.info1_msg("Logs in the batch of logs cleared in %.2f seconds (%d files, %d records)"%
                     (time.time()-start_time,countFiles,countRecords))
@@ -251,6 +249,5 @@ if __name__ == "__main__":
         
     except Exception as e:
         Msg.err_msg("Failed due to error: %s"%e)
-        raise
         
 
