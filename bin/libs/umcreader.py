@@ -5,11 +5,62 @@ import datetime
 import csv
 import utils
 
+from time import gmtime, strftime
 import messages as Msg
 from utils import Map
 
 # global variables
 epoch = datetime.datetime.utcfromtimestamp(0)
+
+# utility functions to evaluate python expressions defined in configuration strings
+# evaluates filter on the row's tags and fields values        
+def eval_filter(umc_id, filter, tags, fields):
+    try:
+        for k,v in tags.items():
+            if v is not None:
+                exec(k + "=\"" + v + "\"")
+        for k,v in fields.items():
+            if v is not None:
+                exec(k + "=" + str(v))
+        return eval(filter)
+    except Exception as e:
+        Msg.err_msg("Error when evaluating the filter '%s' for %s: %s!" % (filter, umc_id, str(e))) 
+        return False      
+# // eval_filter
+
+# transformation of data
+def eval_transform(umc_id, transform, tags, fields):
+    try:
+        # declare variables and assign values to them
+        for k,v in tags.items():
+            if v is not None:
+                exec(k + "=\"" + v + "\"")
+        for k,v in fields.items():
+            if v is not None:
+                exec(k + "=" + str(v))
+        
+        # transform                 
+        for e in transform:
+            try:
+                exec(e)
+            except Exception as ex:
+                pass
+                #info1_msg("Error when evaluating transformation '%s' for %s: %s"%(e,umc_id,str(ex)))
+
+        # create resulting tags and fields
+        __t2 = {}
+        for k,v in tags.items():
+            exec("__t2['%s']=%s"%(k,k))
+        
+        __f2 = {}
+        for k,v in fields.items():
+            exec("__f2['%s']=%s"%(k,k))
+        
+        return __t2,__f2
+    except Exception as e:
+        Msg.err_msg("Error when evaluating transformations for %s: %s"%(umc_id, str(e)))
+        return tags,fields
+# // eval_transform
 
 # umc configuration object for umc configuration file metrics.conf
 class UmcReader:
@@ -90,54 +141,6 @@ class UmcReader:
         return sorted(batch, key=lambda fn: os.stat(fn).st_mtime, reverse=True)
     # // get_batch_logs
         
-    # evaluates filter on the row's tags and fields values        
-    def eval_filter(self, umc_id, filter, tags, fields):
-        try:
-            for k,v in tags.items():
-                if v is not None:
-                    exec(k + "=\"" + v + "\"")
-            for k,v in fields.items():
-                if v is not None:
-                    exec(k + "=" + str(v))
-            return eval(filter)
-        except Exception as e:
-            Msg.err_msg("Error when evaluating the filter '%s' for %s: %s!" % (filter, umc_id, str(e))) 
-            return False      
-    # // eval_filter
-
-    def eval_transform(self, umc_id, transform, tags, fields):
-        try:
-            # declare variables and assign values to them
-            for k,v in tags.items():
-                if v is not None:
-                    exec(k + "=\"" + v + "\"")
-            for k,v in fields.items():
-                if v is not None:
-                    exec(k + "=" + str(v))
-            
-            # transform                 
-            for e in transform:
-                try:
-                    exec(e)
-                except Exception as ex:
-                    pass
-                    #info1_msg("Error when evaluating transformation '%s' for %s: %s"%(e,umc_id,str(ex)))
-
-            # create resulting tags and fields
-            __t2 = {}
-            for k,v in tags.items():
-                exec("__t2['%s']=%s"%(k,k))
-            
-            __f2 = {}
-            for k,v in fields.items():
-                exec("__f2['%s']=%s"%(k,k))
-            
-            return __t2,__f2
-        except Exception as e:
-            Msg.err_msg("Error when evaluating transformations for %s: %s"%(umc_id, str(e)))
-            return tags,fields
-    # // eval_transform
-
     # read data points from the csv log file
     def read_datapoints(self, logfilename, umcdef, create_writeitem_func):    
         datapoints = []; notags=False; nofields=False; 
@@ -177,10 +180,10 @@ class UmcReader:
                     if len([ v for k,v in fields.items() if v is not None ])>0:
                         # evaluate transformations
                         if umcdef.reader.transform is not None:
-                            tags,fields = self.eval_transform(umcdef.umcid, umcdef.reader.transform,tags,fields)
+                            tags,fields = eval_transform(umcdef.umcid, umcdef.reader.transform,tags,fields)
 
                         # only add this row if filter holds on this row or there is no filter
-                        if umcdef.reader.filter is None or self.eval_filter(umcdef.umcid, umcdef.reader.filter, tags, fields):
+                        if umcdef.reader.filter is None or eval_filter(umcdef.umcid, umcdef.reader.filter, tags, fields):
                             record=create_writeitem_func(umcdef, timestamp, fields, tags)
                             if record is not None:
                                 datapoints.append(record)
