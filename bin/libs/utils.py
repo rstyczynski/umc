@@ -99,6 +99,11 @@ def float_ex(val, defv=None):
     except:
         return defv 
 
+def Merge(dict1,dict2):
+    z = dict1.copy()
+    z.update(dict2)
+    return z
+
 def unpack(dict, s):
     ns=s
     for k,v in dict.items():
