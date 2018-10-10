@@ -94,7 +94,7 @@ common:
     oserror-max-attempts: 5
     oserror-wait-time: 60
   
-  # push instances
+  # umcpush influxdb instances
   umcpush:
     influxdb:
       # class that implements this writer
@@ -151,11 +151,34 @@ common:
         # value -1 means influxdb will never exit due to connection errors
         connection-error-retry-count: -1
         
-        # remove files from backlog if they provide no data
-        remove-backlog-files-no-data: true 
-        
-        # automatically reload configuration during runtime when it changes
-        configuration-auto-reload: true  
+  # umcpush influxdb instances
+  umcpush:
+    omc:
+      # class that implements this writer
+      class: omcwriter.OMCWriter
+      
+      # influxdb connection details
+      connect:
+        base-url: https://vod153408-oscemea001.eucom-north-1.oraclecloud.com
+        data-url: /serviceapi/entityModel/data/metrics
+        user: <user>
+        pass: <password>
+
+      reader-params:
+        log-file-group: 2
+        timefield: timestamp
+        timeformat: _unix_
+        tags: system, source
+        fields:
+        max-batchsize-rows: 1000
+        max-batchsize-files: 500
+              
+      writer-params:
+        delay-between-writes: 200
+        delay-between-runs: 10000
+        conversion-error-skip-row: false
+        connection-error-retry-interval: 30000
+        connection-error-retry-count: -1
       
 # dms test
 umc-dms.jdbc:
@@ -176,6 +199,33 @@ umc-dms.jdbc:
   writer:
     influxdb:
       name: dms_jdbc
+
+# aia jms queues
+umc-dms.aiajmsqueues:  
+  enabled: true
+  umcrunner:    
+    hosts: 
+    params:
+  reader:
+    timefield: datetime
+    timeformat: "%y-%m-%d %H:%M:%S"
+    tags: "ServerName,Name"
+    fields: "MessagesCurrentCount,MessagesPendingCount,MessagesReceivedCount,ConsumersCurrentCount,MessagesThresholdTime"
+    filter:
+    transform:
+      # this will extract the name of the JMS queue leaving JMS Module and JMS Server out
+      # when '@' does not exist in Name, the Name value will stay as it was
+      - "Name=Name.split('@')[-1]"
+  writer:
+    influxdb:
+       name: aiaflows 
+    omc:
+      fields: Name,ServerName,MessagesReceivedCount,MessagesCurrentCount
+      entity:
+        entityId: 66985D0E9FE0A07F62025E37D8E2D775
+        entityName: "aia_jmsqueue"
+        entityType: "JMS_QUEUES"
+        metricGroup: "JMS_QUEUES_metricgroup"
 
 # aiaflows
 umc-oradb.aiaflows:  
