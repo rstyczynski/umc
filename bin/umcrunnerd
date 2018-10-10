@@ -39,9 +39,8 @@ VERSION="0.3"
 
 # global umcrunner context 
 class GlobalContext():
-    args = None             # input command line arguments 
+    config=None             # main configuration object
     homeDir = os.path.dirname(os.path.realpath(__file__))  
-    logRootDir = None       # root directory for umc instance output logs        
     
     umcrunner=None          # umcrunner specific configuration object
     configFile = None       # configuration file
@@ -84,25 +83,10 @@ if __name__ == "__main__":
     parser.add_argument('--config', required=False, help='run all umc instances from <file>',metavar='<file>')
     parser.add_argument('--logs', required=False, help='location of umc logs directory',metavar='<dir>')
     parser.add_argument('--verbose', required=False, help='be verbose',action='store_true')
-    GlobalContext.args=parser.parse_args()
+    args=parser.parse_args()
+    Msg.verbose = args.verbose
     
-    # location of logs
-    GlobalContext.logRootDir = GlobalContext.args.logs
-    if GlobalContext.logRootDir == None:
-        GlobalContext.logRootDir=os.environ.get('UMC_LOG_DIR', GlobalContext.homeDir + "/../logs") 
-    
-    # configuration file
-    GlobalContext.configFile=GlobalContext.args.config
-    if GlobalContext.configFile == None:
-        GlobalContext.configFile=os.environ.get('UMCRUNNER_CONFIG', None)
-    if GlobalContext.configFile is None:
-        sys.stderr.write("Configuration file must be specified on command line or in UMCRUNNER_CONFIG environment variable!\n")
-        sys.exit(1)
-    
-    # set verbose param on messages
-    Msg.verbose = GlobalContext.args.verbose
-    
-    # *** exit conditions
+    # exit conditions
     # get the lock and exit when already running
     if not(get_lock()):
         sys.stderr.write("Already running!\n")
@@ -115,14 +99,17 @@ if __name__ == "__main__":
     # register atexit handler
     atexit.register(putils.terminate_children)    
 
+    # configuration object
+    GlobalContext.config=UmcConfig(args.config, args.logs)
+
     # welcome 
     Msg.info1_msg("umcrunner version %s started with pid %d"%(VERSION, os.getpid()))
     
     # *** main start
     # umc configuration
-    GlobalContext.umcrunner=UmcRunner(UmcConfig(GlobalContext.configFile))
+    GlobalContext.umcrunner=UmcRunner(GlobalContext.config)
     Msg.info1_msg("home_dir=%s, configFile=%s, log_root=%s, hostname=%s"
-        %(GlobalContext.homeDir,GlobalContext.configFile,GlobalContext.logRootDir,socket.gethostname()))
+        %(GlobalContext.homeDir,GlobalContext.config.configFile,GlobalContext.config.logDir,socket.gethostname()))
 
     # all servers lists
     GlobalContext.server_list = GlobalContext.umcrunner.serverlist()
@@ -183,7 +170,7 @@ if __name__ == "__main__":
                 oserror_retry_attempts += 1
                 Msg.warn_msg("OS error occurred (errno=%d): %s"%(e.errno, str(e)))
                 
-                # , wait for X seconds if attempts allow
+                # wait for X seconds if attempts allow
                 if GlobalContext.params.oserror_max_attempts == -1 or oserror_retry_attempts <= GlobalContext.params.oserror_max_attempts:
                     Msg.warn_msg("Waiting %d seconds, attempt %d..."%(GlobalContext.params.oserror_wait_time, oserror_retry_attempts))
                     GlobalContext.exitEvent.wait(GlobalContext.params.oserror_wait_time)

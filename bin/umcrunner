@@ -225,10 +225,8 @@ if __name__ == "__main__":
     Msg.verbose = args.verbose
 
     try:
-        # configuration file
-        configFile=os.environ.get('UMCRUNNER_CONFIG', None)        
-        if configFile is not None:
-            server_list = UmcRunner(UmcConfig(configFile)).serverlist()
+        # list of servers that umcrunner could connect to
+        server_list = UmcRunner(UmcConfig()).serverlist()
 
         # get the command to run, if any
         command_def=None

@@ -13,7 +13,7 @@ from utils import Map
 import messages as Msg
 
 def get_umc_instance_log_dir(umc_instanceid, GlobalContext):
-    return "{log_root_dir}/{hostname}/{umc_instanceid}".format(log_root_dir=GlobalContext.logRootDir,hostname=socket.gethostname(),umc_instanceid=umc_instanceid)
+    return "{log_root_dir}/{hostname}/{umc_instanceid}".format(log_root_dir=GlobalContext.config.logDir,hostname=socket.gethostname(),umc_instanceid=umc_instanceid)
 
 # the main umcrunner run task that runs umc instances according to the configuration
 class UmcRunTask():
