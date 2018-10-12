@@ -35,16 +35,15 @@ class OMCWriter(UmcWriter):
 
     # reads and checks umc definition for a specific umc id
     def read_umcdef(self, umc_id, umcconf):
+        umcdef = super(OMCWriter, self).read_umcdef(umc_id, umcconf)
         key="writer." + self.writer_id + "."
-
-        # get and check metric
-        fields=self.config.value_element(umcconf,key+"fields", None)
-        entity=self.config.value_element(umcconf,key+"entity", None)
+        umcdef.fields=self.config.value_element(umcconf,key+"fields", None)
+        umcdef.entity=self.config.value_element(umcconf,key+"entity", None)
         
-        if fields is not None:
-            return Map(fields=fields, entity=entity)
-        else:
-            return None
+        if umcdef.fields is not None:
+            umcdef.enabled=False
+        
+        return umcdef
     # // read_umcdef
         
     def run_request(self, method, url, data=None, ContentType=None):
@@ -78,6 +77,8 @@ class OMCWriter(UmcWriter):
     # // createWriteItem
         
     def write(self,datapoints,exit_event=None):
+        return 
+        
         Msg.info2_msg("Uploading %d records to OMC..."%len(datapoints))        
         response = self.run_request('POST',self.omc_params.data_url, datapoints, 'application/octet-stream')
         if response.status_code<300:

@@ -40,12 +40,14 @@ class InfluxDBWriter(UmcWriter):
 
     # *** reads and checks umc definition for a specific umc id
     def read_umcdef(self, umc_id, umcconf):
+        umcdef=super(InfluxDBWriter, self).read_umcdef(umc_id, umcconf)
+        
         # TODO: rewrite any idbpush specific csv reader params here
 
         # get and check metric
-        metric=self.config.value_element(umcconf, "writer." + self.writer_id + ".name", None)
+        umcdef.metric=self.config.value_element(umcconf, "writer." + self.writer_id + ".name", None)
         
-        return Map(metric=metric)
+        return umcdef
     # // idbpush_umcdef
         
     # creates an object to be later writen by this writer

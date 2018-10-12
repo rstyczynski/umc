@@ -196,7 +196,12 @@ if __name__ == "__main__":
                         elif umcdef.writer is None or umcdef.reader is None:
                             Msg.info2_msg("umc id %s does not have reader or writer definitions, will disable it."%(umc_id))
                             umcdef.enabled=False
-
+    
+                        # disable if the writer is not enabled
+                        if not(umcdef.writer.enabled):
+                            Msg.info2_msg("umc id %s writer is disabled."%(umc_id))                            
+                            umcdef.enabled = False
+                        
                         umcdefs[umc_id] = umcdef                        
                     # // else
                 # // umc_id create 
@@ -219,25 +224,27 @@ if __name__ == "__main__":
                 # // enabled
             # // end log files iteration
             
-            # flush the remaining write buffer
-            if len(buffer.datapoints) > 0: 
-                write(GlobalContext, buffer.datapoints, buffer.datafiles)
-                Msg.info2_msg("Remaining write buffer flushed (%d records from %d files writen out)."
-                    %(len(buffer.datapoints), len(buffer.datafiles)))  
-                buffer.reset()      
-            # len datapoints > 0
-            
-            if buffer.countRecords > 0:
-                Msg.info1_msg("Logs in the batch of logs cleared in %.2f seconds (%d files, %d records)"%
-                    (time.time()-start_time,buffer.countFiles,buffer.countRecords))
-                    
-            # wait between runs
-            Msg.info2_msg("Waiting %s seconds to start the next iteration."%(GlobalContext.writer.params.delay_runs))
-            GlobalContext.exit.wait(GlobalContext.writer.params.delay_runs)
+            if not GlobalContext.exit.is_set():
+                # flush the remaining write buffer
+                if len(buffer.datapoints) > 0: 
+                    write(GlobalContext, buffer.datapoints, buffer.datafiles)
+                    Msg.info2_msg("Remaining write buffer flushed (%d records from %d files writen out)."
+                        %(len(buffer.datapoints), len(buffer.datafiles)))  
+                    buffer.reset()      
+                # len datapoints > 0
+                
+                if buffer.countRecords > 0:
+                    Msg.info1_msg("Logs in the batch of logs cleared in %.2f seconds (%d files, %d records)"%
+                        (time.time()-start_time,buffer.countFiles,buffer.countRecords))
+                        
+                # wait between runs
+                Msg.info2_msg("Waiting %s seconds to start the next iteration."%(GlobalContext.writer.params.delay_runs))
+                GlobalContext.exit.wait(GlobalContext.writer.params.delay_runs)
+            # // if not exit
             
         # // end main loop
         
-        Msg.info2_msg("umcpush gracefully ended.")
+        Msg.info1_msg("umcpush gracefully ended.")
         
     except Exception as e:
         Msg.err_msg("Failed due to error: %s"%e)

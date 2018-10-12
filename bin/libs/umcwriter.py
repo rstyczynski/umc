@@ -57,4 +57,7 @@ class UmcWriter(object):
     
     def param(self, param_name, default=None):
          return self.config.value(self.param_key(param_name), default)
+            
+    def read_umcdef(self, umc_id, umcconf):
+        return Map(enabled=self.config.value_element(umcconf, "writer." + self.writer_id + ".enabled", True))
                 
