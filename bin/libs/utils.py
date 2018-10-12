@@ -49,6 +49,9 @@ class Map(dict):
         d = { k:v for k,v in self.__dict__.items() if k not in exclude }        
         return json.dumps(d, skipkeys=True,cls=encoder)
 
+    def update(map):
+        self.__dict__.update(map.__dict__)
+
 class PathDef():
     def __init__(self, path_def):
         self.path_def=path_def
