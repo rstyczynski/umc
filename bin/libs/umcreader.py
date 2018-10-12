@@ -64,20 +64,32 @@ def eval_transform(umc_id, transform, tags, fields):
 
 # umc configuration object for umc configuration file metrics.conf
 class UmcReader:
-    def __init__(self, config, tool):
+    def __init__(self, config, writer_id):
         self.config=config
         
-        section="common.umcpush.{tool}.reader-params.".format(tool=tool)
+        # read common reader's params
+        base_key="common.umcpush.reader-params"
         self.params=Map(
-            max_batchsize_rows  = self.config.value(section + "max-batchsize-rows", 50),
-            max_batchsize_files = self.config.value(section + "max-batchsize-files", 300),
-            log_file_group      = self.config.value(section + "log-file-group", 1),
-            common_tags         = self.config.value(section + "tags").split(','),
-            common_fields       = self.config.value(section + "fields").split(','),
-            default_timefield   = self.config.value(section + "timefield", "datetime"),
-            default_timeformat  = self.config.value(section + "timeformat", "%Y-%m-%d %H:%M:%S"),
-            tzoffset            = utils.float_ex(self.config.value(section + "timezone", 0), 0)
+            max_batchsize_rows  = self.config.value(base_key + ".max-batchsize-rows", 50),
+            max_batchsize_files = self.config.value(base_key + ".max-batchsize-files", 300),
+            log_file_group      = self.config.value(base_key + ".log-file-group", 1),
+            common_tags         = self.config.value(base_key + ".common-tags").split(','),
+            common_fields       = self.config.value(base_key + ".common-fields").split(','),
+            default_timefield   = self.config.value(base_key + ".default-timefield", "datetime"),
+            default_timeformat  = self.config.value(base_key + ".default-timeformat", "%Y-%m-%d %H:%M:%S"),
+            tzoffset            = utils.float_ex(self.config.value(base_key + ".tzoffset", 0), 0)
         )
+        
+        # update any value that may be overriden in writer's specific parameters
+        key="common.umcpush.{writer_id}.reader-params".format(writer_id=writer_id)
+        rparams=self.config.value(key, default=None)
+        if rparams is not None:
+            for k,v in rparams.items():
+                k=k.replace("-", "_")
+                if self.params.get(k):
+                    self.params[k]=v
+                else:
+                    Msg.warn_msg("The reader param %s is invalid in %s"%(k,key))
         
     # *** reads and checks umc definition for a specific umc id
     def read_umcdef(self, umc_id, umcconf): 
