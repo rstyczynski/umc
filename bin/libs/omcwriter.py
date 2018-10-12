@@ -8,50 +8,39 @@ import time
 import messages as Msg
 
 from requests.auth import HTTPBasicAuth
-from influxdb import InfluxDBClient
 from utils import Map 
 from datetime import datetime as dt
 from time import sleep
+from umcwriter import UmcWriter
 
-from pprint import pprint
-
-
-class OMCWriter:
+class OMCWriter(UmcWriter):
     
-    def __init__(self, config, tool):
-        self.tool=tool
-        self.config=config
+    def __init__(self, config):
+        super(OMCWriter, self).__init__(config, "omc")
         
         # read params
-        base_key="common.umcpush.{tool}.".format(tool=self.tool)
-        self.params=Map(
-            base_url            = self.config.value(base_key + "connect.base-url", None),
-            data_url            = self.config.value(base_key + "connect.data-url", None),
-            proxies             = self.config.value(base_key + "connect.proxies", None),
-            user                = self.config.value(base_key + "connect.user", None), 
-            upass               = self.config.value(base_key + "connect.pass", ""),
-            connect_timeout     = self.config.value(base_key + "connect.connect_timeout", 5),
-            read_timeout        = self.config.value(base_key + "connect.read_timeout", 10),
-            
-            delay_writes        = self.config.value(base_key + "writer-params.delay-between-writes", 200),
-            delay_runs          = self.config.value(base_key + "writer-params.delay-between-runs", 10000)/1000,
-            retry_count         = self.config.value(base_key + "writer-params.connection-error-retry-count", 5),
-            retry_interval      = self.config.value(base_key + "writer-params.connection-error-retry-interval", 10000)/1000,
-            remove_nodata_files = self.config.value(base_key + "writer-params.remove-backlog-files-no-data", False)
-        )
+        self.omc_params=Map(
+            base_url=self.param("connect.base-url"), 
+            data_url=self.param("connect.data-url"),
+            proxies=self.param("connect.proxies"),
+            user=self.param("connect.user"), 
+            upass=self.param("connect.pass", ""),
+            connect_timeout=self.param("connect.connect-timeout", 5),
+            read_timeout=self.param("connect.read-timeout", 10))
         
         # check the db was defined
-        if self.params.data_url == None:
+        if self.omc_params.data_url == None:
             raise Exception("Invalid connection details (data_url is missing).")
     # // init
 
-    # *** reads and checks umc definition for a specific umc id
+    # reads and checks umc definition for a specific umc id
     def read_umcdef(self, umc_id, umcconf):
-        key="writer." + self.tool + "."
+        key="writer." + self.writer_id + "."
 
         # get and check metric
-        fields=self.config.value_element(umcconf, key + "fields", None)
-        entity=self.config.value_element(umcconf, key + "entity", None)
+        fields=self.config.value_element(umcconf,key+"fields", None)
+        entity=self.config.value_element(umcconf,key+"entity", None)
+        
         if fields is not None:
             return Map(fields=fields, entity=entity)
         else:
@@ -59,10 +48,10 @@ class OMCWriter:
     # // read_umcdef
         
     def run_request(self, method, url, data=None, ContentType=None):
-        return requests.request(method, self.params.base_url+url, 
-            proxies=self.params.proxies,
-            timeout=(self.params.connect_timeout, self.params.read_timeout), 
-            auth=HTTPBasicAuth(self.params.user, self.params.upass) if self.params.user is not None else None,
+        return requests.request(method, self.omc_params.base_url+url, 
+            proxies=self.omc_params.proxies,
+            timeout=(self.omc_params.connect_timeout, self.omc_params.read_timeout), 
+            auth=HTTPBasicAuth(self.omc_params.user, self.omc_params.upass) if self.omc_params.user is not None else None,
             allow_redirects=True,
             headers={'Content-Type': ContentType } if ContentType is not None else None,
             data=json.dumps(data) if data is not None else None)
@@ -90,7 +79,7 @@ class OMCWriter:
         
     def write(self,datapoints,exit_event=None):
         Msg.info2_msg("Uploading %d records to OMC..."%len(datapoints))        
-        response = self.run_request('POST',self.params.data_url, datapoints, 'application/octet-stream')
+        response = self.run_request('POST',self.omc_params.data_url, datapoints, 'application/octet-stream')
         if response.status_code<300:
             resp=json.loads(response.text)
             status_uri=resp["statusUri"]
