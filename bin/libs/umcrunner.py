@@ -106,7 +106,11 @@ class UmcRunner:
                     else:
                         raise Exception("umcrunner.params is not valid for '%s'"%key)    
                 
+                # options to run the command
                 options = [ o.strip() for o in self.config.value_element(umcconf, "umcrunner.options", "").split(',') ]
+                
+                # overide the global log_file_copies parameter
+                log_file_copies=self.config.value_element(umcconf, "umcrunner.log-file-copies", self.params.log_file_copies)
                                 
                 yield Map(
                     hostname=hostname,
@@ -118,6 +122,7 @@ class UmcRunner:
                     count=count,
                     params=params,
                     options=options,
+                    log_file_copies=log_file_copies,
                     num_runs=0,
                     num_errors=0,
                     first_started_time=0,
