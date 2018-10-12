@@ -1,9 +1,11 @@
 
+import sys
 import os
 import re
 import datetime
 import csv
 import utils
+import transform
 
 from time import gmtime, strftime
 import messages as Msg
@@ -14,7 +16,7 @@ epoch = datetime.datetime.utcfromtimestamp(0)
 
 # utility functions to evaluate python expressions defined in configuration strings
 # evaluates filter on the row's tags and fields values        
-def eval_filter(umc_id, filter, tags, fields):
+def eval_filter(umc_id, filter, timestamp, tags, fields):
     try:
         for k,v in tags.items():
             if v is not None:
@@ -29,7 +31,7 @@ def eval_filter(umc_id, filter, tags, fields):
 # // eval_filter
 
 # transformation of data
-def eval_transform(umc_id, transform, tags, fields):
+def eval_transform(umc_id, transform_exprs, timestamp, tags, fields):
     try:
         # declare variables and assign values to them
         for k,v in tags.items():
@@ -38,24 +40,34 @@ def eval_transform(umc_id, transform, tags, fields):
         for k,v in fields.items():
             if v is not None:
                 exec(k + "=" + str(v))
-        
+
         # transform                 
-        for e in transform:
+        for expr in transform_exprs:
             try:
-                exec(e)
+                exec(expr)
             except Exception as ex:
                 pass
-                #info1_msg("Error when evaluating transformation '%s' for %s: %s"%(e,umc_id,str(ex)))
+                Msg.info2_msg("Error when evaluating transformation '%s' for %s: %s"%(expr,umc_id,str(ex)))
 
-        # create resulting tags and fields
-        __t2 = {}
-        for k,v in tags.items():
-            exec("__t2['%s']=%s"%(k,k))
+        # get only variables that come from tags and fiedls, remove all local ones
+        # the list in the below expression must contain all local variables in this function prior to this call!
+        nf = { k:v for k,v in locals().items() if k not in ["k","v","umc_id","transform_exprs","timestamp","tags","fields","expr","ex"] } 
         
-        __f2 = {}
-        for k,v in fields.items():
-            exec("__f2['%s']=%s"%(k,k))
-        
+        __t2 = {}; __f2 = {}
+        for k,v in nf.items():
+            if k in tags.keys():
+                exec("__t2['%s']=%s"%(k,k))
+            elif k in fields.keys():
+                exec("__f2['%s']=%s"%(k,k))
+            else:
+                exec("value=%s"%(k))
+                if isinstance(value,int) or isinstance(value,float):
+                    exec("__f2['%s']=%s"%(k,k))
+                else:
+                    exec("__t2['%s']=%s"%(k,k))
+            # new tag or field that resulted from transformation
+        # // for
+
         return __t2,__f2
     except Exception as e:
         Msg.err_msg("Error when evaluating transformations for %s: %s"%(umc_id, str(e)))
@@ -192,10 +204,10 @@ class UmcReader:
                     if len([ v for k,v in fields.items() if v is not None ])>0:
                         # evaluate transformations
                         if umcdef.reader.transform is not None:
-                            tags,fields = eval_transform(umcdef.umcid, umcdef.reader.transform,tags,fields)
+                            tags,fields = eval_transform(umcdef.umcid, umcdef.reader.transform,timestamp,tags,fields)
 
                         # only add this row if filter holds on this row or there is no filter
-                        if umcdef.reader.filter is None or eval_filter(umcdef.umcid, umcdef.reader.filter, tags, fields):
+                        if umcdef.reader.filter is None or eval_filter(umcdef.umcid, umcdef.reader.filter, timestamp,tags, fields):
                             record=create_writeitem_func(umcdef, timestamp, fields, tags)
                             if record is not None:
                                 datapoints.append(record)

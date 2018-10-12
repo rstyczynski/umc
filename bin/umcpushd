@@ -108,7 +108,7 @@ def write(GlobalContext, datapoints, datafiles):
             
         if not(retry):
             for file in datafiles:
-                os.remove(file)
+                pass #os.remove(file)
             break # break the retry loop
     # // end retry loop
     
@@ -162,7 +162,7 @@ if __name__ == "__main__":
             # process all files in the batch
             start_time = time.time()    
             buffer.reset(counters=True)
-            while len(batchlogs) > 0:
+            while len(batchlogs) > 0 and not GlobalContext.exit.is_set():
                 logfile=batchlogs.pop()
                 
                 # check if the file exists

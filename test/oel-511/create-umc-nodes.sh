@@ -5,7 +5,8 @@
 # the script directory
 scriptDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 UMC_HOME=$(cd $scriptDir && cd ../../../umc && pwd -P)   
-IMAGE="tomvit/umc-oel511:1.7"
+IMAGE_OEL511="tomvit/umc-oel511:1.7"
+IMAGE_OEL7="tomvit/umc-oel7:1.4"
 
 # create umc network
 docker network ls | grep umcnet >/dev/null

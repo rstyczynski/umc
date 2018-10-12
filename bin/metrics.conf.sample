@@ -96,89 +96,81 @@ common:
   
   # umcpush influxdb instances
   umcpush:
-    influxdb:
-      # class that implements this writer
-      class: influxdbwriter.InfluxDBWriter
+    # common reader component parameters
+    reader-params:
+      # log file group to be consumed by umcpushd instance
+      # umcrunner may produce multiple copies of the same file for various consumers (by using common.umcrunner.log-file-copies);
+      # file gruop number identifies log files to be consumed by influxdb
+      # this must be specific for every umcpush instance
+      # log-file-group: 1
+
+      # common time field and time format used by all umc definitions
+      # this can be overriden in umc definition 
+      default-timefield: timestamp
       
+      # the valid values are _unix_, _time_s, _time_ms_ or a valid python time format pattern
+      default-timeformat: _unix_
+      
+      # common tags and fields used by all umc csv reader definitions
+      # this will be added to tags and fields found in umc csv reader definitions     
+      common-tags: system, source
+      common-fields:
+      
+      # true to skip the whole row when conversion error from string to float occurrs
+      # when the row is not skipped, then the failed value will be None 
+      conversion-error-skip-row: false
+      
+      # runtime parameters
+      # number of records (lines) in a single batch 
+      max-batchsize-rows: 50
+      
+      # maximum number of files that will be read in a batch
+      max-batchsize-files: 500
+    
+    # common writer params for all umcpush instances
+    writer-params:
+      # number of milliseconds to wait between db writes
+      delay-writes: 200
+      
+      # number of milliseconds to wait between iterations 
+      delay-runs: 10000
+            
+      # number of milliseconds to wait between retries to write data to the DB
+      connection-retry-interval: 30000
+      
+      # maximum number of retries when DB connection fails, when reached the influxdb will exit
+      # value -1 means influxdb will never exit due to connection errors
+      connection-retry-count: -1
+    
+    # influxdb umcpush instance
+    # implemented in influxdbwriter.InfluxDBWriter
+    influxdb:
       # influxdb connection details
-      connect:
+      connect: 
         url: http://localhost:8086/  
         dbname: rodmon_sample
         user: 
         pass: 
-
-      # csv reader component parameters
-      reader-params:
-        # log file group to be consumed by influxdb
-        # umcrunner may produce multiple copies of the same file for various consumers (by using common.umcrunner.log-file-copies);
-        # file gruop number identifies log files to be consumed by influxdb
-        log-file-group: 1
-
-        # common time field and time format used by all umc definitions
-        # this can be overriden in umc definition 
-        timefield: timestamp
-        
-        # the valid values are _unix_, _time_s, _time_ms_ or a valid python time format pattern
-        timeformat: _unix_
-        
-        # common tags and fields used by all umc csv reader definitions
-        # this will be added to tags and fields found in umc csv reader definitions     
-        tags: system, source
-        fields:
-        
-        # runtime parameters
-        # number of records (lines) in a single batch 
-        max-batchsize-rows: 50
-        
-        # maximum number of files that will be read in a batch
-        max-batchsize-files: 500
               
-      writer-params:
-        # number of milliseconds to wait between db writes
-        delay-between-writes: 200
+      reader-params:
+        log-file-group: 1
         
-        # number of milliseconds to wait between iterations 
-        delay-between-runs: 10000
-        
-        # true to skip the whole row when conversion error from string to float occurrs
-        # when the row is not skipped, then the failed value will be None 
-        conversion-error-skip-row: false
-        
-        # number of milliseconds to wait between retries to write data to the DB
-        connection-error-retry-interval: 30000
-        
-        # maximum number of retries when DB connection fails, when reached the influxdb will exit
-        # value -1 means influxdb will never exit due to connection errors
-        connection-error-retry-count: -1
-        
-  # umcpush influxdb instances
-  umcpush:
+    # umcpush umcpush instance
+    # implemented in omcwriter.OMCWriter  
     omc:
-      # class that implements this writer
-      class: omcwriter.OMCWriter
-      
-      # influxdb connection details
+      # omc connection details
       connect:
         base-url: https://vod153408-oscemea001.eucom-north-1.oraclecloud.com
         data-url: /serviceapi/entityModel/data/metrics
-        user: <user>
-        pass: <password>
+        user: <ask>
+        pass: <ask>
 
       reader-params:
         log-file-group: 2
-        timefield: timestamp
-        timeformat: _unix_
-        tags: system, source
-        fields:
         max-batchsize-rows: 1000
-        max-batchsize-files: 500
-              
+        
       writer-params:
-        delay-between-writes: 200
-        delay-between-runs: 10000
-        conversion-error-skip-row: false
-        connection-error-retry-interval: 30000
-        connection-error-retry-count: -1
+        connection-retry-interval: 10000
       
 # dms test
 umc-dms.jdbc:
@@ -216,9 +208,10 @@ umc-dms.aiajmsqueues:
       # this will extract the name of the JMS queue leaving JMS Module and JMS Server out
       # when '@' does not exist in Name, the Name value will stay as it was
       - "Name=Name.split('@')[-1]"
+      - "DifferenceValue=transform.difference_positive(timestamp,ServerName+Name,MessagesReceivedCount)"
   writer:
     influxdb:
-       name: aiaflows 
+       name: aia_jmsqueue
     omc:
       fields: Name,ServerName,MessagesReceivedCount,MessagesCurrentCount
       entity:
