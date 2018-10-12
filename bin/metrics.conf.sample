@@ -212,6 +212,7 @@ umc-dms.aiajmsqueues:
   writer:
     influxdb:
        name: aia_jmsqueue
+       exclude: DifferenceValue
     omc:
       fields: Name,ServerName,MessagesReceivedCount,MessagesCurrentCount
       entity:

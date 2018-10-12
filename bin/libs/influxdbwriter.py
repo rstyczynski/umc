@@ -44,15 +44,24 @@ class InfluxDBWriter(UmcWriter):
         
         # TODO: rewrite any idbpush specific csv reader params here
 
-        # get and check metric
         umcdef.metric=self.config.value_element(umcconf, "writer." + self.writer_id + ".name", None)
+        include=self.config.value_element(umcconf, "writer." + self.writer_id + ".include", None)
+        exclude=self.config.value_element(umcconf, "writer." + self.writer_id + ".exclude", None)
+        
+        if include is not None:
+            umcdef.include = [ x.strip() for x in include.split(',') ]
+        if exclude is not None:
+            umcdef.exclude = [ x.strip() for x in exclude.split(',') ]
         
         return umcdef
     # // idbpush_umcdef
         
     # creates an object to be later writen by this writer
     def createWriteItem(self,umcdef,timestamp,fields,tags):
-        return  { "measurement" : umcdef.writer.metric, "time" : timestamp, "fields" : fields, "tags": tags }
+        t = { k:v for k,v in tags.items()   if (umcdef.writer.include is None or k in umcdef.writer.include) and (umcdef.writer.exclude is None or k not in umcdef.writer.exclude) }
+        f = { k:v for k,v in fields.items() if (umcdef.writer.include is None or k in umcdef.writer.include) and (umcdef.writer.exclude is None or k not in umcdef.writer.exclude) }
+        
+        return  { "measurement" : umcdef.writer.metric, "time" : timestamp, "fields" : f, "tags": t }
     # // createWriteItem
         
     def write(self,datapoints,exit_event):

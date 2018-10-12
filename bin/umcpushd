@@ -108,7 +108,7 @@ def write(GlobalContext, datapoints, datafiles):
             
         if not(retry):
             for file in datafiles:
-                pass #os.remove(file)
+                os.remove(file)
             break # break the retry loop
     # // end retry loop
     

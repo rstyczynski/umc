@@ -77,8 +77,6 @@ class OMCWriter(UmcWriter):
     # // createWriteItem
         
     def write(self,datapoints,exit_event=None):
-        return 
-        
         Msg.info2_msg("Uploading %d records to OMC..."%len(datapoints))        
         response = self.run_request('POST',self.omc_params.data_url, datapoints, 'application/octet-stream')
         if response.status_code<300:
