@@ -36,7 +36,7 @@ class GlobalContext():
     id=None                 # id of the push tool
     configFile=None         # configuration file
     confing=None            # UmcConfig object
-    lastwritecall = 0          # last time the db was accessed
+    lastwritecall = time.time() # last time the db was accessed
     exit = Event()          # exit event to correctly terminate the process
     lasterror=None          # last error text
     lasterrorcount=0        # last error count
@@ -116,7 +116,7 @@ def write(GlobalContext, datapoints, datafiles,try_once=False):
         if not(retry):
             for file in datafiles:
                 try:
-                    pass #os.remove(file)
+                    os.remove(file)
                 except Exception as e:
                     Msg.err_msg("Cannot remove file due to %s"%str(e))
             break # break the retry loop
@@ -166,7 +166,7 @@ if __name__ == "__main__":
         # main umcpush tool
         while not GlobalContext.exit.is_set():
             # retrieve logs in a batch of maximum NUM files
-            batchlogs=GlobalContext.reader.get_batch_logs(GlobalContext.config.logDir)
+            batchlogs=GlobalContext.reader.get_batch_logs(GlobalContext.config.logDir,buffer.datafiles)
             Msg.info1_msg("A batch of %d log files loaded."%(len(batchlogs)))
             
             # process all files in the batch
