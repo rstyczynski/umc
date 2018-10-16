@@ -30,10 +30,10 @@ common:
         - hostname=ukbn02hr.umc.local, address=192.168.10.102, enabled=True
         - hostname=ukbn03hr.umc.local, address=192.168.10.103, enabled=True
         
-    # log file copies, a number of log file copies that will be produced by logdirector; this allows umcrunner to produce log files
-    # for multiple consumers; influxdb as one of such consumers then consumes log files identified with a group number 
+    # log file groups, a list of group IDs that will be used to create copies of log files; this allows umcrunner to produce log files
+    # for multiple consumers; influxdb as one of such consumers then consumes log files identified with a group number 1 
     # (defined in common.umcrunner.log-file-group parameter); 
-    log-file-copies: 1
+    log-file-groups: 1,2 
     
     # the interval umcrunner will run umc commands (or check umc commands are running)   
     run-interval: 10
@@ -99,9 +99,7 @@ common:
     # common reader component parameters
     reader-params:
       # log file group to be consumed by umcpushd instance
-      # umcrunner may produce multiple copies of the same file for various consumers (by using common.umcrunner.log-file-copies);
-      # file gruop number identifies log files to be consumed by influxdb
-      # this must be specific for every umcpush instance
+      # umcrunner may produce multiple copies of the same file for various consumers (by using common.umcrunner.log-file-groups);
       # log-file-group: 1
 
       # common time field and time format used by all umc definitions
@@ -121,26 +119,36 @@ common:
       conversion-error-skip-row: false
       
       # runtime parameters
-      # number of records (lines) in a single batch 
+      # number of records (lines) in a single batch (this is the size of the write buffer)
       max-batchsize-rows: 50
       
       # maximum number of files that will be read in a batch
       max-batchsize-files: 500
+
+      # comma separated list of modules providing transformation functions
+      # the functions can then be used in transform configuration of umc reader definitions
+      # transform module is a default module providing basic transformation functions such as difference_positive
+      transform-modules: transform 
     
     # common writer params for all umcpush instances
     writer-params:
-      # number of milliseconds to wait between db writes
-      delay-writes: 200
+      # number of milliseconds to wait between write operations
+      delay-writes: 0.2
       
-      # number of milliseconds to wait between iterations 
-      delay-runs: 10000
+      # number of milliseconds to wait between iterations in the main loop 
+      delay-runs: 10
             
-      # number of milliseconds to wait between retries to write data to the DB
-      connection-retry-interval: 30000
+      # number of milliseconds to wait between retries to write data to the destination
+      connection-retry-interval: 30
       
-      # maximum number of retries when DB connection fails, when reached the influxdb will exit
-      # value -1 means influxdb will never exit due to connection errors
+      # maximum number of retries when write operation fails, when reached the omcpush will exit
+      # value -1 means omcpush will never exit due to connection errors
       connection-retry-count: -1
+      
+      # write interval in seconds; the writer will will only write items to the destination when
+      # this interval elapses or when the write buffer is full (reader-params.max-batchsize-rows)
+      # when this value is 0, writer will write items immediatelly or at most at the end of every iteration
+      write-interval: 0
     
     # influxdb umcpush instance
     # implemented in influxdbwriter.InfluxDBWriter
@@ -170,7 +178,8 @@ common:
         max-batchsize-rows: 1000
         
       writer-params:
-        connection-retry-interval: 10000
+        connection-retry-interval: 10
+        write-interval: 120
       
 # dms test
 umc-dms.jdbc:
@@ -208,18 +217,25 @@ umc-dms.aiajmsqueues:
       # this will extract the name of the JMS queue leaving JMS Module and JMS Server out
       # when '@' does not exist in Name, the Name value will stay as it was
       - "Name=Name.split('@')[-1]"
-      - "DifferenceValue=transform.difference_positive(timestamp,ServerName+Name,MessagesReceivedCount)"
+      - "DifferenceValue=transform.difference_positive(timestamp, 'aia_jmsqueue_' + ServerName + '_' + Name, MessagesReceivedCount)"
   writer:
     influxdb:
        name: aia_jmsqueue
        exclude: DifferenceValue
     omc:
-      fields: Name,ServerName,MessagesReceivedCount,MessagesCurrentCount
-      entity:
-        entityId: 66985D0E9FE0A07F62025E37D8E2D775
-        entityName: "aia_jmsqueue"
-        entityType: "JMS_QUEUES"
-        metricGroup: "JMS_QUEUES_metricgroup"
+      fields: Name,ServerName,MessagesReceivedCount,MessagesCurrentCount,DifferenceValue
+      common-properties:
+        entityType: JMS_QUEUES 
+        metricGroup: JMS_QUEUES_metricgroup 
+      entities:
+        - filter: Name=="AIA_SALESORDERJMSQUEUE"
+          properties: 
+            entityId: 66985D0E9FE0A07F62025E37D8E2D775
+            entityName: aia_salesorderjmsqueue
+        - filter: Name=="AIA_CRTFO_OUT_JMSQ"
+          properties: 
+            entityId: 66985D0E9FE0A07F62025E37D8E2D775
+            entityName: aia_crtfo_out_jmsq
 
 # aiaflows
 umc-oradb.aiaflows:  

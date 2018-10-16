@@ -61,7 +61,7 @@ class InfluxDBWriter(UmcWriter):
         t = { k:v for k,v in tags.items()   if (umcdef.writer.include is None or k in umcdef.writer.include) and (umcdef.writer.exclude is None or k not in umcdef.writer.exclude) }
         f = { k:v for k,v in fields.items() if (umcdef.writer.include is None or k in umcdef.writer.include) and (umcdef.writer.exclude is None or k not in umcdef.writer.exclude) }
         
-        return  { "measurement" : umcdef.writer.metric, "time" : timestamp, "fields" : f, "tags": t }
+        return  [ { "measurement" : umcdef.writer.metric, "time" : timestamp, "fields" : f, "tags": t } ]
     # // createWriteItem
         
     def write(self,datapoints,exit_event):

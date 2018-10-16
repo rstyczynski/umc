@@ -6,6 +6,7 @@ import requests
 import time
 
 import messages as Msg
+import umcreader
 
 from requests.auth import HTTPBasicAuth
 from utils import Map 
@@ -38,9 +39,10 @@ class OMCWriter(UmcWriter):
         umcdef = super(OMCWriter, self).read_umcdef(umc_id, umcconf)
         key="writer." + self.writer_id + "."
         umcdef.fields=self.config.value_element(umcconf,key+"fields", None)
-        umcdef.entity=self.config.value_element(umcconf,key+"entity", None)
+        umcdef.common_properties=self.config.value_element(umcconf,key+"common-properties", None)
+        umcdef.entities=self.config.value_element(umcconf,key+"entities", None)
         
-        if umcdef.fields is not None:
+        if umcdef.fields is None or umcdef.entities is None:
             umcdef.enabled=False
         
         return umcdef
@@ -59,21 +61,45 @@ class OMCWriter(UmcWriter):
     # creates an object to be later writen by this writer
     def createWriteItem(self,umcdef,timestamp,fields,tags):
         # values from the reader are in float; this will convert them all to int
-        # TODO: define explicit function to convert based on a defined type
-        f = { k:int(v) for k,v in fields.items() }
-        f.update(tags)
+        f = { k:v for k,v in fields.items() if v is not None }; f.update(tags)
         
-        # create the payload
-        data = { k:v for k,v in umcdef.writer.entity.items() }
-                     
-        # the timestamp from the reader is in UTC time already 
-        # (note that it could have been converted by using timezone parameter)
-        # will send timestamp in UTC; if other timezone is required, this will need to be implemented here
-        data["collectionTs"]=dt.utcfromtimestamp(timestamp/1000000000).isoformat() + "Z"  
-        data["metricNames"]=[ metric for metric in umcdef.writer.fields.split(",") ]        
-        data["metricValues"] = [ [ "%s"%f.get(k) for k in data["metricNames"] ] ]
+        # metrcis that should be writen out
+        metrics=[ metric.strip() for metric in umcdef.writer.fields.split(",") ]
         
-        return data #"measurement" : umcdef.writer.metric, "time" : timestamp, "fields" : fields, "tags": tags }
+        # records
+        records = []
+        
+        for entity in umcdef.writer.entities:
+            # evaluate the filter for this entity
+            if entity.get("filter") is not None and umcreader.eval_filter(entity["filter"],timestamp,tags,fields):
+                # properties
+                data={}
+                if umcdef.writer.common_properties is not None:
+                    data = { k:v for k,v in umcdef.writer.common_properties.items() }
+                for k,v in entity["properties"].items():
+                    data[k]=v
+
+                # the timestamp from the reader is in UTC time already 
+                # (note that it could have been converted by using timezone parameter)
+                # will send timestamp in UTC; if other timezone is required, this will need to be implemented here
+                data["collectionTs"]=dt.utcfromtimestamp(timestamp/1000000000).isoformat() + "Z"  
+                
+                metricNames=[]; metricValues=[]        
+                for metric in metrics:
+                    if f.get(metric) is not None:
+                        metricNames.append(metric)
+                        metricValues.append("%s"%f.get(metric))
+                # // for metric in metrics
+                
+                data["metricNames"]=metricNames
+                data["metricValues"]= [ metricValues ]
+                
+                # append to resulting records
+                records.append(data)
+            # // if filter holds
+        # // for entity filter
+
+        return records
     # // createWriteItem
         
     def write(self,datapoints,exit_event=None):

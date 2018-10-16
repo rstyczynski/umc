@@ -29,12 +29,13 @@ class UmcWriter(object):
         # read common writer's params
         base_key="common.umcpush.writer-params"
         self.params=Map(
-            delay_writes = self.config.value(base_key + ".delay-writes", 200),
-            delay_runs = self.config.value(base_key + ".delay-runs", 10000)/1000,
+            delay_writes = self.config.value(base_key + ".delay-writes", 0.2),
+            delay_runs = self.config.value(base_key + ".delay-runs", 10),
             connection_retry_count = self.config.value(base_key + ".connection-retry-count", 5),
-            connection_retry_interval = self.config.value(base_key + ".connection-retry-interval", 10000)/1000,
+            connection_retry_interval = self.config.value(base_key + ".connection-retry-interval", 10),
+            write_interval = self.config.value(base_key + ".write-interval", 0),
         )
-
+        
         # base key for this writer's configuration
         self.base_key="common.umcpush.{writer_id}.".format(writer_id=self.writer_id)
 
@@ -45,7 +46,7 @@ class UmcWriter(object):
             for k,v in wparams.items():
                 k=k.replace("-", "_")
                 # update only params that exist in common params
-                if self.params.get(k):
+                if self.params.get(k) is not None:
                     self.params[k]=v
                 else:
                     # this param may be used in child's configuration

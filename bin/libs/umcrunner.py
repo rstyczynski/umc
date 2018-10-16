@@ -20,7 +20,7 @@ class UmcRunner:
             http_enabled        = self.config.value("common.umcrunner.http.enabled", True),
             tcp_port            = self.config.value("common.umcrunner.http.tcp-port", 1989),
             
-            log_file_copies     = self.config.value("common.umcrunner.log-file-copies", 1),
+            log_file_groups     = self.config.value("common.umcrunner.log-file-groups", "-"),
             
             run_interval        = self.config.value("common.umcrunner.run-interval", 10),
             prcstats_interval   = self.config.value("common.umcrunner.prcstats-interval", 5),
@@ -110,7 +110,7 @@ class UmcRunner:
                 options = [ o.strip() for o in self.config.value_element(umcconf, "umcrunner.options", "").split(',') ]
                 
                 # overide the global log_file_copies parameter
-                log_file_copies=self.config.value_element(umcconf, "umcrunner.log-file-copies", self.params.log_file_copies)
+                log_file_groups=self.config.value_element(umcconf, "umcrunner.log-file-groups", self.params.log_file_groups)
                                 
                 yield Map(
                     hostname=hostname,
@@ -122,7 +122,7 @@ class UmcRunner:
                     count=count,
                     params=params,
                     options=options,
-                    log_file_copies=log_file_copies,
+                    log_file_groups=log_file_groups,
                     num_runs=0,
                     num_errors=0,
                     first_started_time=0,
