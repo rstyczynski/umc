@@ -57,7 +57,7 @@ my $linesUntilRotation :shared = 0; # number of lines writen to th current file 
 my $rotateOnThreadEnd = 0; # true to rotate the file on thread end/exit of the log director
 
 # log file copies
-my $logFileCopies = 0; # number of log file copies on rotaion; when this number of greater than 1, the number will be appended to the filename at the end
+my $logFileGroups = "-"; # a comma separated list of groups (string IDs); there will be a number of log file copies created on rotaion each with postfix of the group ID; when this value is "-", no copies will be created
 
 #other
 my $exit = 0;			#flag to exit main loop, set by INT signal handler
@@ -85,7 +85,7 @@ GetOptions ('dir=s'   	    => \$dstDir,      	# string
             'timeRotationInThread' => \$timeRotationInThread,  # flag
             'rotateOnThreadEnd' => \$rotateOnThreadEnd, # flag
             'checkHeaderDups' => \$checkHeaderDups,  # flag
-            'logFileCopies=i' => \$logFileCopies,  # integer
+            'logFileGroups=s' => \$logFileGroups,  # string
 		    'help|?'	    => \$help, 		    # flag
 		    'man'		    => \$man)		    # flag
 or $optError=1;
@@ -104,6 +104,21 @@ if ($logName eq ""){
 	exit;
 } else {
 	$logNameExt = "$logName.$logExt";
+}
+
+# check log file groups 
+if ($logFileGroups != "-") { 
+  # check for the correct group ids
+  if ($logFileGroups !~ /^[a-zA-Z0-9]+(,[a-zA-Z0-9]+){0,}$/) {
+    die "logdirector.pl: invalid logFileGroups parameter definition; it must be a comma delimited string of IDs ([a-zA-Z0-9]+)!";  
+  }
+  
+  # check for duplicate IDs
+  my %seen;
+  foreach my $gid (split ',', $logFileGroups) {
+      next unless $seen{$gid}++;
+      die "logdirector.pl: invalid logFileGroups parameter definition; the log file group with id=$gid is duplicated!\n";
+  }
 }
 
 if ($logIdentifier eq ""){
@@ -367,9 +382,10 @@ sub moveLogFile {
         }
         
         if ( -e "$dstEffectiveDir/$logNameExt" ) {
-               if ($logFileCopies > 0) {
-                 for (my $i=1; $i <= $logFileCopies; $i++) {
-                    copy("$dstEffectiveDir/$logNameExt", "$dstEffectiveDir/$rotatedLogNameExt" . "." . $i); 
+               if ($logFileGroups ne "-" && length $logFileGroups > 0) {
+                 for my $gid (split ',', $logFileGroups) {
+                    $gid =~ s/^\s+|\s+$//g;
+                    copy("$dstEffectiveDir/$logNameExt", "$dstEffectiveDir/$rotatedLogNameExt" . "." . $gid); 
                  }
                } else {
                     copy("$dstEffectiveDir/$logNameExt", "$dstEffectiveDir/$rotatedLogNameExt");                 
@@ -518,7 +534,7 @@ logdirector.pl - stdout log director and rotation script.
  -rotateOnThreadEnd 
                 when rotating in thread, then this flag will rotate the file on the thread end, 
 
- -logFileCopies number of log file copies when rotating the file, 
+ -logFileGroups a comma separated list of group IDs to create and identify copies of the log file when rotating the file, 
  
  -identifier 	log process identifier to be used by administrator/scripts to locate log director running in background,
  -flush 	do not buffer output. flush each line. Default is to use buffering,
