@@ -227,7 +227,7 @@ if __name__ == "__main__":
                     if len(buffer.datapoints) > 0 and (len(buffer.datapoints)/GlobalContext.reader.params.max_batchsize_rows >= 1 \
                      or (GlobalContext.writer.params.write_interval>0 and GlobalContext.lastwritecall>0 and time.time()-GlobalContext.lastwritecall>GlobalContext.writer.params.write_interval)):
                         write(GlobalContext, buffer.datapoints, buffer.datafiles)
-                        Msg.info1_msg("Write buffer flushed (%d records from %d files writen out)."
+                        Msg.info1_msg("Write buffer flushed (%d records from %d files)."
                             %(len(buffer.datapoints),len(buffer.datafiles)))  
                         buffer.reset()      
                     # // batch write
@@ -239,7 +239,7 @@ if __name__ == "__main__":
                 if GlobalContext.writer.params.write_interval==0 or (GlobalContext.lastwritecall>0 and time.time()-GlobalContext.lastwritecall>GlobalContext.writer.params.write_interval) \
                  or len(buffer.datapoints)/GlobalContext.reader.params.max_batchsize_rows >= 1: 
                     write(GlobalContext, buffer.datapoints, buffer.datafiles)
-                    Msg.info1_msg("Remaining write buffer flushed (%d records from %d files writen out)."
+                    Msg.info1_msg("Remaining write buffer flushed (%d records from %d files)."
                         %(len(buffer.datapoints), len(buffer.datafiles)))  
                     buffer.reset(counters=True)
                 # remaining batch write
@@ -256,7 +256,7 @@ if __name__ == "__main__":
         if len(buffer.datapoints) > 0: 
             GlobalContext.exit.clear()
             if write(GlobalContext, buffer.datapoints, buffer.datafiles, try_once=True):
-                Msg.info1_msg("Remaining write buffer flushed on exit (%d records from %d files writen out)."
+                Msg.info1_msg("Remaining write buffer flushed on exit (%d records from %d files)."
                     %(len(buffer.datapoints), len(buffer.datafiles)))  
             else:
                 Msg.err_msg("Flushing of the buffer failed; all %d records from %d files will be discarded!"
