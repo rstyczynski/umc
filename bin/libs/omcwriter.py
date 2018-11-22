@@ -71,7 +71,7 @@ class OMCWriter(UmcWriter):
         
         for entity in umcdef.writer.entities:
             # evaluate the filter for this entity
-            if entity.get("filter") is not None and umcreader.eval_filter(entity["filter"],timestamp,tags,fields):
+            if (entity.get("filter") is None) or (entity.get("filter") is not None and umcreader.eval_filter(entity["filter"],timestamp,tags,fields)):
                 # properties
                 data={}
                 if umcdef.writer.common_properties is not None:
