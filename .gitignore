@@ -18,3 +18,4 @@ db-backup
 *.pyc
 *.test
 *.out
+stage
