@@ -28,7 +28,7 @@ wakeup_secs_in_minute=20
 
 # check config file exists
 if [ ! -f "$configDir/$config" ]; then
-	echo >&2 "$(date): The configuration file '$confgiDir/$config' does not exist!" 
+	echo >&2 "$(date): The configuration file '$configDir/$config' does not exist!" 
 	exit 1
 fi
 
