@@ -68,10 +68,14 @@ class OMCWriter(UmcWriter):
         
         # records
         records = []
-        
+        #debug_records = []
+
+        #if umcdef.writer.common_properties.get("entityType")=="aia_bpel":
+        #    print tags
+ 
         for entity in umcdef.writer.entities:
             # evaluate the filter for this entity
-            if (entity.get("filter") is None) or (entity.get("filter") is not None and umcreader.eval_filter(entity["filter"],timestamp,tags,fields)):
+            if (entity.get("filter") is None) or (entity.get("filter") is not None and umcreader.eval_filter(entity["filter"],timestamp,tags,fields)):            
                 # properties
                 data={}
                 if umcdef.writer.common_properties is not None:
@@ -93,17 +97,29 @@ class OMCWriter(UmcWriter):
                 
                 data["metricNames"]=metricNames
                 data["metricValues"]= [ metricValues ]
-                
+      
+                #if umcdef.writer.common_properties.get("entityType")=="aia_bpel":
+                #    debug_records.append(data)
+ 
                 # append to resulting records
                 records.append(data)
             # // if filter holds
         # // for entity filter
+
+        #if len(debug_records)>0:
+        #    print records
 
         return records
     # // createWriteItem
         
     def write(self,datapoints,exit_event=None):
         Msg.info2_msg("Uploading %d records to OMC..."%len(datapoints))        
+        
+        #if datapoints is not None:
+        #    print "========= BATCH OUTPUT START"
+        #    print json.dumps(datapoints)
+        #    print "========= BATCH OUTPUT END" 
+
         response = self.run_request('POST',self.omc_params.data_url, datapoints, 'application/octet-stream')
         if response.status_code<300:
             resp=json.loads(response.text)
@@ -121,11 +137,11 @@ class OMCWriter(UmcWriter):
             # // while
 
             if resp["status"]=="FAILED":
-                raise Exception("OMC upload reuqest failed. %s."
-                    %(resp["errorMessage"]))
+                raise Exception("OMC upload reuqest failed. %s. Response payload: %s"
+                    %(resp["errorMessage"],resp))
             elif exit_event is None or not(exit_event.is_set()):
-                Msg.info2_msg("OMC upload reuqest processed in %d seconds. %s: %s."
-                    %(time.time()-start_t,resp["status"],resp["errorMessage"]))
+                Msg.info2_msg("OMC upload reuqest processed in %d seconds. %s: %s. Response payload: %s"
+                    %(time.time()-start_t,resp["status"],resp["errorMessage"],resp))
         else:
-            raise Exception("OMC data upload request failed with status code %d"%response.status_code)    
+            raise Exception("OMC data upload request failed with status code %d. Response payload: %s"%(response.status_code,response.text))    
         
