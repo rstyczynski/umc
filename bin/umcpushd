@@ -163,10 +163,15 @@ if __name__ == "__main__":
         # welcome message
         Msg.info1_msg("umcpush started with writer id '%s'."%(GlobalContext.writer.writer_id))
 
+        # read all umcdefs from the config file
+        umcdefs=GlobalContext.config.read_umcdefs(GlobalContext.reader, GlobalContext.writer)
+        umc_instanceids=[ k for k,v in umcdefs.items() if v.enabled ]
+        Msg.info1_msg("The following umc instances are enabled: %s"%umc_instanceids )
+
         # main umcpush tool
         while not GlobalContext.exit.is_set():
             # retrieve logs in a batch of maximum NUM files
-            batchlogs=GlobalContext.reader.get_batch_logs(GlobalContext.config.logDir,buffer.datafiles)
+            batchlogs=GlobalContext.reader.get_batch_logs(GlobalContext.config.logDir,umc_instanceids,buffer.datafiles)
             Msg.info1_msg("A batch of %d log files loaded."%(len(batchlogs)))
             
             # process all files in the batch
@@ -184,36 +189,6 @@ if __name__ == "__main__":
                 if umc_id is None:
                     Msg.err_msg("Cannot determine umc_id from the log file %s, skipping this file."%logfile)                    
                     continue
-                
-                # get the umc definition for this umc_id and store it    
-                if umc_id not in umcdefs: 
-                    # get umc configuration
-                    umcconf=GlobalContext.config.read_umcdef(umc_id)
-                    if umcconf is None:
-                        Msg.err_msg("The umc definition with id %s file %s does not exist in the configuration file, skipping the file"
-                            %(umc_id,logfile))
-                        continue
-                    else:
-                        umcdef=Map(umcid=umc_id,enabled=False,writer=None,reader=None)
-                        umcdef.enabled = GlobalContext.config.value_element(umcconf,"enabled",False)                        
-                        umcdef.writer=GlobalContext.writer.read_umcdef(umc_id,umcconf)
-                        umcdef.reader=GlobalContext.reader.read_umcdef(umc_id,umcconf)
-                        Msg.info1_msg("Definition retrieved for umc %s"%(umc_id))
-                        
-                        if not(umcdef.enabled):
-                            Msg.info1_msg("umc id %s is disabled by configuration, no datapoints will be read."%(umc_id))
-                        elif umcdef.writer is None or umcdef.reader is None:
-                            Msg.info2_msg("umc id %s does not have reader or writer definitions, will disable it."%(umc_id))
-                            umcdef.enabled=False
-    
-                        # disable if the writer is not enabled
-                        if not(umcdef.writer.enabled):
-                            Msg.info2_msg("umc id %s is disabled as its writer is disabled. No data will be read for this umc id."%(umc_id))                            
-                            umcdef.enabled = False
-                        
-                        umcdefs[umc_id] = umcdef                        
-                    # // else
-                # // umc_id create 
                 
                 # process this umcdef if enabled
                 if umcdefs[umc_id].enabled: 

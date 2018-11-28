@@ -70,15 +70,7 @@ class UmcRunner:
 
     # umcrunner umc instance specific parameters 
     def read_umcdefs(self):
-        for umc_instanceid in self.config.umc_instanceids():
-            # yaml key where the configuration should be located
-            key="umc-%s"%umc_instanceid
-            
-            # get umc definition
-            umcconf=self.config.value(key, None, ":")
-            if umcconf is None:
-                raise Exception("umc configuration for '%s' does not exist (YAML key %s not found)!" % (umc_id, key)) 
-
+        for umcconf in self.config.value("umc-instances", []):
             # is this entry for this host?
             hostname=socket.gethostname().lower()
             hosts = [ h.strip().lower() for h in self.config.value_element(umcconf, "umcrunner.hosts", '').split(',') ]                
@@ -114,7 +106,7 @@ class UmcRunner:
                                 
                 yield Map(
                     hostname=hostname,
-                    umc_instanceid=umc_instanceid,
+                    umc_instanceid=umcconf["umc-id"],
                     enabled=enabled,
                     rotation_timelimit=rotation_timelimit,
                     umc_toolid=umc_toolid,

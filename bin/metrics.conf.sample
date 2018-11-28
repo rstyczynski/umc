@@ -171,15 +171,15 @@ common:
           log-file-group: 1
     
       # influxdb writer 'influxdb'
-      - writer-id: influxdb2
+      - writer-id: influxdb-brm
         
         # class name of this writer
         classname: influxdbwriter.InfluxDBWriter
         
         # connection details
         connect: 
-          url: http://localhost:8086/  
-          dbname: rodmon_sample2
+          url: http://192.168.10.120:8086/  
+          dbname: rodmon_vfuk_npp_brm
           user: 
           pass: 
                 
@@ -208,144 +208,161 @@ common:
           connection-retry-interval: 10
           write-interval: 120
     # writers
+    
+# configuration for sample umc instances
+umc-instances:  
+  # dms test
+  - umc-id: dms.jdbc
+    enabled: true
+    umcrunner:
+      hosts: ukbn01hr.umc.local,ukbn02hr.umc.local
+      params: 20 dms 10 10 JDBC_DataSource config.sample
+    reader:
+      timefield: datetime
+      timeformat: "%y-%m-%d %H:%M:%S"
+      tags: "Host,ServerName,Name"
+      fields: "ConnectionCreate_maxTime,ConnectionCreate_completed,ConnectionCreate_time,ConnectionCreate_active,ConnectionCreate_maxActive,
+        ConnectionCreate_minTime,ConnectionOpenCount_count,ConnectionCreate_avg,ConnectionCloseCount_count"
+      filter: 
+      transform:
+        - "ServerName=re.search(r'.+(SOA[0-9]+)', ServerName).group(1)"
+        - "Host='test'"
+    writers:
+      - writer-id: influxdb
+        name: dms_jdbc
+
+  # aia jms queues
+  - umc-id: dms.aiajmsqueues  
+    enabled: true
+    umcrunner:    
+      hosts: 
+      params:
+    reader:
+      timefield: datetime
+      timeformat: "%y-%m-%d %H:%M:%S"
+      tags: "ServerName,Name"
+      fields: "MessagesCurrentCount,MessagesPendingCount,MessagesReceivedCount,ConsumersCurrentCount,MessagesThresholdTime"
+      filter:
+      transform:
+        # this will extract the name of the JMS queue leaving JMS Module and JMS Server out
+        # when '@' does not exist in Name, the Name value will stay as it was
+        - "Name=Name.split('@')[-1]"
+        - "DifferenceValue=transform.difference_positive(timestamp, 'aia_jmsqueue_' + ServerName + '_' + Name, MessagesReceivedCount)"
+    writers:
+      - writer-id: influxdb
+        name: aia_jmsqueue
+        exclude: DifferenceValue
+      - writer-id: omc
+        fields: Name,ServerName,MessagesReceivedCount,MessagesCurrentCount,DifferenceValue
+        common-properties:
+          entityType: JMS_QUEUES 
+          metricGroup: JMS_QUEUES_metricgroup 
+        entities:
+          - filter: Name=="AIA_SALESORDERJMSQUEUE"
+            properties: 
+              entityId: 66985D0E9FE0A07F62025E37D8E2D775
+              entityName: aia_salesorderjmsqueue
+          - filter: Name=="AIA_CRTFO_OUT_JMSQ"
+            properties: 
+              entityId: 66985D0E9FE0A07F62025E37D8E2D775
+              entityName: aia_crtfo_out_jmsq
+
+  # BRM perflib 
+  - umc-id: perflib
+    enabled: true
+    umcrunner:
+      hosts: ukbn01hr.umc.local
+      params: 20 perflib 60 60 perflib.conf.sample 
+    reader:
+      timefield: Time
+      timeformat: "%Y-%m-%d %H:%M:%S"
+      tags: Parent,Opcode
+      fields: "Total,Percentage,Calls,Errors,Average,Minimum,Maximum,Records"
+    writers:
+      - writer-id: influxdb-brm
+        name: perflib
       
-# dms test
-umc-dms.jdbc:
-  enabled: true
-  umcrunner:
-    hosts: ukbn01hr.umc.local,ukbn02hr.umc.local
-    params: 20 dms 10 10 JDBC_DataSource config.sample
-  reader:
-    timefield: datetime
-    timeformat: "%y-%m-%d %H:%M:%S"
-    tags: "Host,ServerName,Name"
-    fields: "ConnectionCreate_maxTime,ConnectionCreate_completed,ConnectionCreate_time,ConnectionCreate_active,ConnectionCreate_maxActive,
-      ConnectionCreate_minTime,ConnectionOpenCount_count,ConnectionCreate_avg,ConnectionCloseCount_count"
-    filter: 
-    transform:
-      - "ServerName=re.search(r'.+(SOA[0-9]+)', ServerName).group(1)"
-      - "Host='test'"
-  writers:
-    - writer-id: influxdb
-      name: dms_jdbc
+  # aiaflows
+  - umc-id: oradb.aiaflows  
+    enabled: true
+    umcrunner:    
+      hosts: ukbn01hr.umc.local
+      params: 20 oradb 10 10 aiaflows.sql oradb.conf.sample
+      options: setsid
+    reader:
+      timefield: time
+      timeformat: "%y-%m-%d %H:%M"
+      tags: flow
+      fields: "count_ok, count_err, min, max, avg"  
+      filter: 
+    writers:
+      - writer-id: influxdb
+        name: aiaflows 
 
-# aia jms queues
-umc-dms.aiajmsqueues:  
-  enabled: true
-  umcrunner:    
-    hosts: 
-    params:
-  reader:
-    timefield: datetime
-    timeformat: "%y-%m-%d %H:%M:%S"
-    tags: "ServerName,Name"
-    fields: "MessagesCurrentCount,MessagesPendingCount,MessagesReceivedCount,ConsumersCurrentCount,MessagesThresholdTime"
-    filter:
-    transform:
-      # this will extract the name of the JMS queue leaving JMS Module and JMS Server out
-      # when '@' does not exist in Name, the Name value will stay as it was
-      - "Name=Name.split('@')[-1]"
-      - "DifferenceValue=transform.difference_positive(timestamp, 'aia_jmsqueue_' + ServerName + '_' + Name, MessagesReceivedCount)"
-  writers:
-    - writer-id: influxdb
-      name: aia_jmsqueue
-      exclude: DifferenceValue
-    - writer-id: omc
-      fields: Name,ServerName,MessagesReceivedCount,MessagesCurrentCount,DifferenceValue
-      common-properties:
-        entityType: JMS_QUEUES 
-        metricGroup: JMS_QUEUES_metricgroup 
-      entities:
-        - filter: Name=="AIA_SALESORDERJMSQUEUE"
-          properties: 
-            entityId: 66985D0E9FE0A07F62025E37D8E2D775
-            entityName: aia_salesorderjmsqueue
-        - filter: Name=="AIA_CRTFO_OUT_JMSQ"
-          properties: 
-            entityId: 66985D0E9FE0A07F62025E37D8E2D775
-            entityName: aia_crtfo_out_jmsq
-
-# aiaflows
-umc-oradb.aiaflows:  
-  enabled: true
-  umcrunner:    
-    hosts: ukbn01hr.umc.local
-    params: 20 oradb 10 10 aiaflows.sql oradb.conf.sample
-    options: setsid
-  reader:
-    timefield: time
-    timeformat: "%y-%m-%d %H:%M"
-    tags: flow
-    fields: "count_ok, count_err, min, max, avg"  
-    filter: 
-  writers:
-    - writer-id: influxdb
-      name: aiaflows 
-
-# iostat
-umc-iostat:  
-  enabled: false
-  umcrunner:    
-    hosts: _ALL_
-    params: 20 iostat 10 10   
-  reader:
-    fields: "tps,kB_read/s,kB_wrtn/s,kB_read,kB_wrtn"      
-    tags: device                  
-  writers:
-    - writer-id: influxdb
-      name: iostat 
+  # iostat
+  - umc-id: iostat  
+    enabled: false
+    umcrunner:    
+      hosts: _ALL_
+      params: 20 iostat 10 10   
+    reader:
+      fields: "tps,kB_read/s,kB_wrtn/s,kB_read,kB_wrtn"      
+      tags: device                  
+    writers:
+      - writer-id: influxdb
+        name: iostat 
     
-# ifconfig
-umc-ifconfig:  
-  enabled: true
-  umcrunner:    
-    hosts: _ALL_
-    params: 20 ifconfig 10 10   
-  reader:
-    fields: "RXpackets,RXerrors,RXdropped,RXoverruns,RXframe,TXpackets,TXerrors,TXdropped,
-      TXoverruns,TXcarrier,collisions,txqueuelen,RXbytes,TXbytes"     
-    tags: device                  
-  writers:
-    - writer-id: influxdb2
-      name: ifconfig 
+  # ifconfig
+  - umc-id: ifconfig  
+    enabled: true
+    umcrunner:    
+      hosts: _ALL_
+      params: 20 ifconfig 10 10   
+    reader:
+      fields: "RXpackets,RXerrors,RXdropped,RXoverruns,RXframe,TXpackets,TXerrors,TXdropped,
+        TXoverruns,TXcarrier,collisions,txqueuelen,RXbytes,TXbytes"     
+      tags: device                  
+    writers:
+      - writer-id: influxdb2
+        name: ifconfig 
     
-# netstattcp
-umc-netstattcp:  
-  enabled: true
-  umcrunner:    
-    hosts: _ALL_
-    params: 20 netstattcp 10 10   
-  reader:
-    fields: "active_connections_openings,passive_connection_openings,failed_connection_attempts,connection_resets_received,connections_established,
-      !segments_received,!segments_send_out,!segments_retransmited,!bad_segments_received,resets_sent"     
-    tags:                  
-  writers:
-    - writer-id: influxdb
-      name: netstattcp 
+  # netstattcp
+  - umc-id: netstattcp  
+    enabled: true
+    umcrunner:    
+      hosts: _ALL_
+      params: 20 netstattcp 10 10   
+    reader:
+      fields: "active_connections_openings,passive_connection_openings,failed_connection_attempts,connection_resets_received,connections_established,
+        !segments_received,!segments_send_out,!segments_retransmited,!bad_segments_received,resets_sent"     
+      tags:                  
+    writers:
+      - writer-id: influxdb
+        name: netstattcp 
     
-# free
-umc-free:  
-  enabled: true
-  umcrunner:    
-    hosts: _ALL_
-    params: 20 free 10 10   
-  reader:
-    fields: "total,used,free,shared,buffers,cached,usedNoBuffersCache,freePlusBuffersCache,SwapTotal,SwapUsed,SwapFree"      
-    tags:                  
-  writers:
-    - writer-id: influxdb
-      name: free 
+  # free
+  - umc-id: free  
+    enabled: true
+    umcrunner:    
+      hosts: _ALL_
+      params: 20 free 10 10   
+    reader:
+      fields: "total,used,free,shared,buffers,cached,usedNoBuffersCache,freePlusBuffersCache,SwapTotal,SwapUsed,SwapFree"      
+      tags:                  
+    writers:
+      - writer-id: influxdb
+        name: free 
 
-# uptime
-umc-uptime:  
-  enabled: true
-  umcrunner:    
-    hosts: _ALL_
-    params: 20 uptime 10 10   
-  reader:
-    fields: "users,load1min,load5min,load15min"      
-    tags:                  
-  writers:
-    - writer-id: influxdb
-      name: uptime 
+  # uptime
+  - umc-id: uptime  
+    enabled: true
+    umcrunner:    
+      hosts: _ALL_
+      params: 20 uptime 10 10   
+    reader:
+      fields: "users,load1min,load5min,load15min"      
+      tags:                  
+    writers:
+      - writer-id: influxdb
+        name: uptime 
 

@@ -146,10 +146,9 @@ class UmcReader:
         return int((dt - epoch).total_seconds() * 1000)
 
     # retrieves the first batch of log files sorted by modified time
-    def get_batch_logs(self, logDir, files_in_buffer=[]):
+    def get_batch_logs(self, logDir, umc_instanceids, files_in_buffer=[]):
         pattern = re.compile(".+_[0-9]+.*\.log.{log_file_group}$".format(log_file_group=self.params.log_file_group))
         search_re=logDir + "/[a-zA-Z0-9\._\-]+/([a-zA-Z0-9\-\._]+)" # + "|".join(GlobalContext.config.umc_instanceids(False)) + ")$";
-        umc_instanceids=self.config.umc_instanceids(False)
         
         batch=[]; cnt=0
         for dirname, dirnames, filenames in os.walk(logDir):
