@@ -16,8 +16,8 @@ from umcwriter import UmcWriter
 
 class OMCWriter(UmcWriter):
     
-    def __init__(self, config):
-        super(OMCWriter, self).__init__(config, "omc")
+    def __init__(self, config, writerDef):
+        super(OMCWriter, self).__init__(config, writerDef)
         
         # read params
         self.omc_params=Map(
@@ -37,13 +37,14 @@ class OMCWriter(UmcWriter):
     # reads and checks umc definition for a specific umc id
     def read_umcdef(self, umc_id, umcconf):
         umcdef = super(OMCWriter, self).read_umcdef(umc_id, umcconf)
-        key="writer." + self.writer_id + "."
-        umcdef.fields=self.config.value_element(umcconf,key+"fields", None)
-        umcdef.common_properties=self.config.value_element(umcconf,key+"common-properties", None)
-        umcdef.entities=self.config.value_element(umcconf,key+"entities", None)
-        
-        if umcdef.fields is None or umcdef.entities is None:
-            umcdef.enabled=False
+        if umcdef.enabled:
+            umcdef.fields=self.config.value_element(umcdef.writerDef,"fields", None)
+            umcdef.common_properties=self.config.value_element(umcdef.writerDef,"common-properties", None)
+            umcdef.entities=self.config.value_element(umcdef.writerDef,"entities", None)
+            
+            if umcdef.fields is None or umcdef.entities is None:
+                umcdef.enabled=False
+        # umcdef enabled
         
         return umcdef
     # // read_umcdef

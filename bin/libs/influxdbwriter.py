@@ -9,8 +9,8 @@ from umcwriter import UmcWriter
 
 class InfluxDBWriter(UmcWriter):
     
-    def __init__(self, config):
-        super(InfluxDBWriter, self).__init__(config, "influxdb")
+    def __init__(self, config, writerDef):
+        super(InfluxDBWriter, self).__init__(config, writerDef)
         
         # read params
         self.idb_params=Map(
@@ -41,17 +41,18 @@ class InfluxDBWriter(UmcWriter):
     # *** reads and checks umc definition for a specific umc id
     def read_umcdef(self, umc_id, umcconf):
         umcdef=super(InfluxDBWriter, self).read_umcdef(umc_id, umcconf)
-        
-        # TODO: rewrite any idbpush specific csv reader params here
+        if umcdef.enabled:
+            # TODO: rewrite any idbpush specific csv reader params here
 
-        umcdef.metric=self.config.value_element(umcconf, "writer." + self.writer_id + ".name", None)
-        include=self.config.value_element(umcconf, "writer." + self.writer_id + ".include", None)
-        exclude=self.config.value_element(umcconf, "writer." + self.writer_id + ".exclude", None)
-        
-        if include is not None:
-            umcdef.include = [ x.strip() for x in include.split(',') ]
-        if exclude is not None:
-            umcdef.exclude = [ x.strip() for x in exclude.split(',') ]
+            umcdef.metric=self.config.value_element(umcdef.writerDef, "name", None)
+            include=self.config.value_element(umcdef.writerDef, "include", None)
+            exclude=self.config.value_element(umcdef.writerDef, "exclude", None)
+            
+            if include is not None:
+                umcdef.include = [ x.strip() for x in include.split(',') ]
+            if exclude is not None:
+                umcdef.exclude = [ x.strip() for x in exclude.split(',') ]
+        # umcdef enabled
         
         return umcdef
     # // idbpush_umcdef

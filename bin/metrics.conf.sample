@@ -94,7 +94,7 @@ common:
     oserror-max-attempts: 5
     oserror-wait-time: 60
   
-  # umcpush influxdb instances
+  # umcpush configuration
   umcpush:
     # common reader component parameters
     reader-params:
@@ -130,7 +130,7 @@ common:
       # transform module is a default module providing basic transformation functions such as difference_positive
       transform-modules: transform 
     
-    # common writer params for all umcpush instances
+    # common writer params
     writer-params:
       # number of milliseconds to wait between write operations
       delay-writes: 0.2
@@ -149,37 +149,65 @@ common:
       # this interval elapses or when the write buffer is full (reader-params.max-batchsize-rows)
       # when this value is 0, writer will write items immediatelly or at most at the end of every iteration
       write-interval: 0
-    
-    # influxdb umcpush instance
-    # implemented in influxdbwriter.InfluxDBWriter
-    influxdb:
-      # influxdb connection details
-      connect: 
-        url: http://localhost:8086/  
-        dbname: rodmon_sample
-        user: 
-        pass: 
-              
-      reader-params:
-        log-file-group: 1
-        
-    # umcpush umcpush instance
-    # implemented in omcwriter.OMCWriter  
-    omc:
-      # omc connection details
-      connect:
-        base-url: https://vod153408-oscemea001.eucom-north-1.oraclecloud.com
-        data-url: /serviceapi/entityModel/data/metrics
-        user: <ask>
-        pass: <ask>
 
-      reader-params:
-        log-file-group: 2
-        max-batchsize-rows: 1000
+    # available umcpush writers
+    # umcpush instance only runs a single writer; there can be multiple umcpush instances running in the environment
+    writers:
+      # default influxdb writer 'influxdb'
+      - writer-id: influxdb
         
-      writer-params:
-        connection-retry-interval: 10
-        write-interval: 120
+        # class name of this writer
+        classname: influxdbwriter.InfluxDBWriter
+        
+        # connection details
+        connect: 
+          url: http://localhost:8086/  
+          dbname: rodmon_sample
+          user: 
+          pass: 
+                
+        # specific reader params of this writer
+        reader-params:
+          log-file-group: 1
+    
+      # influxdb writer 'influxdb'
+      - writer-id: influxdb2
+        
+        # class name of this writer
+        classname: influxdbwriter.InfluxDBWriter
+        
+        # connection details
+        connect: 
+          url: http://localhost:8086/  
+          dbname: rodmon_sample2
+          user: 
+          pass: 
+                
+        # specific reader params of this writer
+        reader-params:
+          log-file-group: 1
+  
+      # default omc writer
+      - writer-id: omc
+        
+        # class name of this writer
+        classname: omcwriter.OMCWriter
+        
+        # omc connection details
+        connect:
+          base-url: https://vod153408-oscemea001.eucom-north-1.oraclecloud.com
+          data-url: /serviceapi/entityModel/data/metrics
+          user: <ask>
+          pass: <ask>
+
+        reader-params:
+          log-file-group: 2
+          max-batchsize-rows: 1000
+          
+        writer-params:
+          connection-retry-interval: 10
+          write-interval: 120
+    # writers
       
 # dms test
 umc-dms.jdbc:
@@ -197,8 +225,8 @@ umc-dms.jdbc:
     transform:
       - "ServerName=re.search(r'.+(SOA[0-9]+)', ServerName).group(1)"
       - "Host='test'"
-  writer:
-    influxdb:
+  writers:
+    - writer-id: influxdb
       name: dms_jdbc
 
 # aia jms queues
@@ -218,11 +246,11 @@ umc-dms.aiajmsqueues:
       # when '@' does not exist in Name, the Name value will stay as it was
       - "Name=Name.split('@')[-1]"
       - "DifferenceValue=transform.difference_positive(timestamp, 'aia_jmsqueue_' + ServerName + '_' + Name, MessagesReceivedCount)"
-  writer:
-    influxdb:
-       name: aia_jmsqueue
-       exclude: DifferenceValue
-    omc:
+  writers:
+    - writer-id: influxdb
+      name: aia_jmsqueue
+      exclude: DifferenceValue
+    - writer-id: omc
       fields: Name,ServerName,MessagesReceivedCount,MessagesCurrentCount,DifferenceValue
       common-properties:
         entityType: JMS_QUEUES 
@@ -250,8 +278,8 @@ umc-oradb.aiaflows:
     tags: flow
     fields: "count_ok, count_err, min, max, avg"  
     filter: 
-  writer:
-    influxdb:
+  writers:
+    - writer-id: influxdb
       name: aiaflows 
 
 # iostat
@@ -263,8 +291,8 @@ umc-iostat:
   reader:
     fields: "tps,kB_read/s,kB_wrtn/s,kB_read,kB_wrtn"      
     tags: device                  
-  writer:
-    influxdb:
+  writers:
+    - writer-id: influxdb
       name: iostat 
     
 # ifconfig
@@ -277,8 +305,8 @@ umc-ifconfig:
     fields: "RXpackets,RXerrors,RXdropped,RXoverruns,RXframe,TXpackets,TXerrors,TXdropped,
       TXoverruns,TXcarrier,collisions,txqueuelen,RXbytes,TXbytes"     
     tags: device                  
-  writer:
-    influxdb:
+  writers:
+    - writer-id: influxdb2
       name: ifconfig 
     
 # netstattcp
@@ -291,8 +319,8 @@ umc-netstattcp:
     fields: "active_connections_openings,passive_connection_openings,failed_connection_attempts,connection_resets_received,connections_established,
       !segments_received,!segments_send_out,!segments_retransmited,!bad_segments_received,resets_sent"     
     tags:                  
-  writer:
-    influxdb:
+  writers:
+    - writer-id: influxdb
       name: netstattcp 
     
 # free
@@ -304,8 +332,8 @@ umc-free:
   reader:
     fields: "total,used,free,shared,buffers,cached,usedNoBuffersCache,freePlusBuffersCache,SwapTotal,SwapUsed,SwapFree"      
     tags:                  
-  writer:
-    influxdb:
+  writers:
+    - writer-id: influxdb
       name: free 
 
 # uptime
@@ -317,7 +345,7 @@ umc-uptime:
   reader:
     fields: "users,load1min,load5min,load15min"      
     tags:                  
-  writer:
-    influxdb:
+  writers:
+    - writer-id: influxdb
       name: uptime 
 
