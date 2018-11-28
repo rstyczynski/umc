@@ -7,6 +7,7 @@ scriptDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 UMC_HOME=$(cd $scriptDir && cd ../../../umc && pwd -P)   
 IMAGE_OEL511="tomvit/umc-oel511:1.7"
 IMAGE_OEL7="tomvit/umc-oel7:1.4"
+IMAGE=$IMAGE_OEL511
 
 # create umc network
 docker network ls | grep umcnet >/dev/null
@@ -20,7 +21,7 @@ create_node() {
   name=$1
   ip=$2
 
-  echo "* creating node umc-$name, ip=$ip..."  
+  echo "* creating node umc-$name, ip=$ip, UMC_HOME=$UMC_HOME, image=$IMAGE..."  
   docker kill umc-$name &>/dev/null
   docker rm umc-$name &>/dev/null
 
@@ -30,7 +31,7 @@ create_node() {
 	-h $name.umc.local \
 	-v $UMC_HOME:/home/oracle/umc \
 	--name umc-$name \
-	--ip $ip -d $IMAGE /bin/bash -l &>/dev/null
+	--ip $ip -d $IMAGE /bin/bash -l
 }
 
 create_umc_node() {
@@ -59,13 +60,13 @@ create_umc_node ukbn03hr 192.168.10.103 $1
 # create influxdb and idbpush node
 create_idb_node ukbn10hr 192.168.10.110
 
-# create inflixdb with rodmondb from npp
-docker run -it \
-      --user oracle \
-      --net umcnet \
-      -h ukbn20hr.umc.local \
-      -v $UMC_HOME:/home/oracle/umc \
-      --name umc-ukbn20hr \
-      -p 8086:8086 \
-      --ip 192.168.10.120 -d $IMAGE /bin/bash -l
+# create influxdb with rodmondb from npp
+#docker run -it \
+#      --user oracle \
+#      --net umcnet \
+#      -h ukbn20hr.umc.local \
+#      -v $UMC_HOME:/home/oracle/umc \
+#      --name umc-ukbn20hr \
+#      -p 8086:8086 \
+#      --ip 192.168.10.120 -d $IMAGE /bin/bash -l
 
