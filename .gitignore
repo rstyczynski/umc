@@ -19,3 +19,4 @@ db-backup
 *.test
 *.out
 stage
+varia/perflib
