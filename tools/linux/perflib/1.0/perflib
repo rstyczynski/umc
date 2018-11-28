@@ -17,8 +17,8 @@ function get_dirids {
   # regexp to parse directory ID
   dirid_regex=".+-([0-9]+).out$"
   
-  # search all log files
-	find "$DATA_DIRECTORY" -name "files-*.out" 2>/dev/null | \
+  # search all log files; get only logs within the last 4 hours and ignore the test
+	find "$DATA_DIRECTORY" -name "files-*.out" -mmin +240 2>/dev/null | \
 	while read f; do
     echo $(parse_str ".+-([0-9]+).out$" $f)
   done  
@@ -45,6 +45,10 @@ delay=$1 && shift
 count=$1 && shift
 config=$1 && shift
 
+# seconds in a minute when the script will wake up to collect data in every iteration
+# this is only used when delay=-1
+wakeup_secs_in_minute=20
+
 # configuration directory
 configDir="$umcRoot/etc/tools/perflib"
 
@@ -68,7 +72,6 @@ fi
 
 # temp filename
 tmpfile=$getSensorData_bin/data-tmp.csv
-rm -f $tmpfile
 
 # print header
 echo "Time,Parent,Opcode,Total,Percentage,Calls,Errors,Average,Minimum,Maximum,Records"
@@ -105,6 +108,7 @@ while [ $current_count -lt $count ]; do
         
         if [ "$pin" != "" ] && [ "$chain" != "" ] && [ "$timestamp" != "" ]; then
           # parse perflib data using perflib parse utility
+          rm -f $tmpfile
           perl $getSensorData_bin/perf_parse.pl -x$tmpfile -s$MAX_LEVELS $DATA_DIRECTORY/$dirid/$fname &>/dev/null
           if [ -f $tmpfile ]; then
             allcsv="$(cat $tmpfile)"
@@ -132,5 +136,16 @@ while [ $current_count -lt $count ]; do
     rm -fr "$DATA_DIRECTORY/$dirid" 
   
   done # all dir ids
+  
+  # when delay = -1, then calc the next iteration wake up time
+	# otherwise sleep delay seconds
+	if [ $current_count -lt $count ]; then
+		if [ $delay -eq -1 ]; then
+			n=$(expr $currenttime / 60); ni=$(expr $n \* 60 + 60 + $wakeup_secs_in_minute); e=$(date +%s);
+			sleep $(expr $ni - $e)
+		else
+			sleep $delay
+		fi
+	fi  
   
 done # main loop
