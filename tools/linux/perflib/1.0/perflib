@@ -1,0 +1,136 @@
+#!/bin/bash
+# perflib tool to parse BRM perflib data using utilities provided by perflib and convert them to umc format
+# Tomas Vitvar, tomas@vitvar.com
+
+# helper functions
+# parse a string by using regular expression
+# $1 - regex, $2 - str
+function parse_str {
+  regex=$1; str=$2
+  if [[ $str =~ $regex ]]; then
+    echo ${BASH_REMATCH[1]}
+  fi
+} 
+
+# get all directory IDs
+function get_dirids {
+  # regexp to parse directory ID
+  dirid_regex=".+-([0-9]+).out$"
+  
+  # search all log files
+	find "$DATA_DIRECTORY" -name "files-*.out" 2>/dev/null | \
+	while read f; do
+    echo $(parse_str ".+-([0-9]+).out$" $f)
+  done  
+}
+
+# global variable
+# BRM chain information
+chain_o="online"
+chain_b="batch"
+chain_gb="global batch"
+chain_fo="failover"
+
+# MAIN
+# this script directory
+getSensorData_bin=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+
+# the first parameter is timestamp directive
+# since we do not use it, we skip it (the value is None)
+shift
+
+# the next arguments are delay, count and metric
+# metric argument is oradb probe specific
+delay=$1 && shift
+count=$1 && shift
+config=$1 && shift
+
+# configuration directory
+configDir="$umcRoot/etc/tools/perflib"
+
+# check config file exists
+if [ "$config" = "" ]; then
+  config="perflib.conf.$UMC_ENVIRONMENT"
+fi
+  
+if [ ! -f "$configDir/$config" ]; then
+	echo >&2 "$(date): The configuration file '$configDir/$config' does not exist!" 
+	exit 1
+fi
+
+# load configuration
+source $configDir/$config
+
+# check params
+if [ "$PERFLIBFILE_FILTER" = "" ]; then
+  PERFLIBFILE_FILTER=".*"
+fi
+
+# temp filename
+tmpfile=$getSensorData_bin/data-tmp.csv
+rm -f $tmpfile
+
+# print header
+echo "Time,Parent,Opcode,Total,Percentage,Calls,Errors,Average,Minimum,Maximum,Records"
+
+# main loop
+current_count=0
+while [ $current_count -lt $count ]; do
+	current_count=$[$current_count+1]
+
+	# current time since epoch
+	currenttime=$(date +%s); 
+	  
+	# search all files log files
+	get_dirids | sort | uniq | while read dirid; do
+    # get filename from the directory having all raw perflib files
+    f=$(find "$DATA_DIRECTORY/$dirid" -name "files-$dirid.out" | head -1)
+    
+    # get all perflib files from the directory
+    # - plf is the original path and filename where the BRM file was located; this will be used to parse BRM pin information
+    # - fname is the current filename containing the actual perflib data
+    cat $f | grep "$PERFLIBFILE_FILTER" | while read plf; do
+      fname=$(basename $plf)
+      if [ -f "$DATA_DIRECTORY/$dirid/$fname" ]; then
+        # parse BRM pin information from plf
+        # example plf: /opt/brm/common1/pin01/7.5/var/perflib/perf_log_o_00.15971.20181116_200000.20181116_201500.plog.txt
+        pin=$(parse_str ".+/common[0-9]+/(pin[0-9]+)/.+" $plf)
+        chain=$(eval "echo \$$(echo chain_$(echo $(parse_str ".+/perf_log_([o|b|gb|fo])_[0-9]+\..+" $plf) ))")
+        
+        # parse timestamp from the filename, this is the end of the period the perflib data was captured in this file
+        timestamp=""
+        if [[ $plf =~ ".+\.([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})([0-9]{2})\.plog.txt" ]]; then
+          timestamp=$(echo ${BASH_REMATCH[1]}-${BASH_REMATCH[2]}-${BASH_REMATCH[3]} ${BASH_REMATCH[4]}:${BASH_REMATCH[5]}:${BASH_REMATCH[6]})
+        fi
+        
+        if [ "$pin" != "" ] && [ "$chain" != "" ] && [ "$timestamp" != "" ]; then
+          # parse perflib data using perflib parse utility
+          perl $getSensorData_bin/perf_parse.pl -x$tmpfile -s$MAX_LEVELS $DATA_DIRECTORY/$dirid/$fname &>/dev/null
+          if [ -f $tmpfile ]; then
+            allcsv="$(cat $tmpfile)"
+            
+            # print each line in the new csv format
+            echo "$allcsv" | egrep "^FP" | \
+            while read line; do
+              # opcode path is the 3rd field
+              opcode=$(echo $line | cut -d, -f3)
+              opcitem=$(echo $opcode | awk -F. '{ if (NF) print $NF; else print "None" }')
+              parent=$(echo $opcode | awk -F. '{ if (NF && NF-1) print ( $(NF-1) ); else print "None" }')
+              
+              echo $timestamp,$parent,$opcitem,$(echo $line | cut -d, -f4-20)
+            done
+
+            # remove the temp file
+            rm -f $tmpfile
+          fi
+        fi
+        
+      fi  
+    done
+    
+    # remove data directory
+    rm -fr "$DATA_DIRECTORY/$dirid" 
+  
+  done # all dir ids
+  
+done # main loop

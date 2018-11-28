@@ -1,0 +1,21 @@
+perflib:
+     version:    1.0
+     layer:      Middleware
+     system:     BRM
+     subsystem:  Perflib
+     header:
+         method: internal
+     rawheader:
+         method:   
+         directive: 
+     availability:
+         method:     command
+         directive:  type curl &>/dev/null; if [ $? -gt 0 ]; then (exit 127); fi
+     loop:
+         method:      
+         directive:  
+     timestamp:
+         method: 
+         directive:
+     metrics:
+

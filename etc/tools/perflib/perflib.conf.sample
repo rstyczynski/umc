@@ -1,0 +1,9 @@
+# perflib configuration file
+
+# directory with raw perflib files
+export DATA_DIRECTORY="/home/oracle/umc/varia/perflib/testing-data" 
+
+# filter to filter out raw perflib files
+export PERFLIBFILE_FILTER="perf_log_o_00"
+
+export MAX_LEVELS=5
