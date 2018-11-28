@@ -6,4 +6,7 @@ export DATA_DIRECTORY="/home/oracle/umc/varia/perflib/testing-data"
 # filter to filter out raw perflib files
 export PERFLIBFILE_FILTER="perf_log_o_00"
 
+# the maximum number of opcode levels to analyze/include in the output
 export MAX_LEVELS=5
+
+
