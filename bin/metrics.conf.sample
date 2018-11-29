@@ -276,7 +276,7 @@ umc-instances:
     reader:
       timefield: Time
       timeformat: "%Y-%m-%d %H:%M:%S"
-      tags: Parent,Opcode
+      tags: Path,Opcode
       fields: "Total,Percentage,Calls,Errors,Average,Minimum,Maximum,Records"
     writers:
       - writer-id: influxdb-brm

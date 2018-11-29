@@ -18,7 +18,7 @@ function get_dirids {
   dirid_regex=".+-([0-9]+).out$"
   
   # search all log files; get only logs within the last 4 hours and ignore the test
-	find "$DATA_DIRECTORY" -name "files-*.out" -mmin +240 2>/dev/null | \
+	find "$DATA_DIRECTORY" -name "files-*.out" $MAXAGE 2>/dev/null | \
 	while read f; do
     echo $(parse_str ".+-([0-9]+).out$" $f)
   done  
@@ -70,11 +70,18 @@ if [ "$PERFLIBFILE_FILTER" = "" ]; then
   PERFLIBFILE_FILTER=".*"
 fi
 
+# max age of perflib files to be read
+if [ "$MAXAGE_MINUTES" != "" ]; then
+  MAXAGE="mmin +$MAXAGE_MINUTES"
+else
+  MAXAGE=""
+fi 
+
 # temp filename
 tmpfile=$getSensorData_bin/data-tmp.csv
 
 # print header
-echo "Time,Parent,Opcode,Total,Percentage,Calls,Errors,Average,Minimum,Maximum,Records"
+echo "Time,Path,Opcode,Total,Percentage,Calls,Errors,Average,Minimum,Maximum,Records"
 
 # main loop
 current_count=0
@@ -119,9 +126,18 @@ while [ $current_count -lt $count ]; do
               # opcode path is the 3rd field
               opcode=$(echo $line | cut -d, -f3)
               opcitem=$(echo $opcode | awk -F. '{ if (NF) print $NF; else print "None" }')
-              parent=$(echo $opcode | awk -F. '{ if (NF && NF-1) print ( $(NF-1) ); else print "None" }')
               
-              echo $timestamp,$parent,$opcitem,$(echo $line | cut -d, -f4-20)
+              # create a path hash
+              path=""
+              for i in $(echo $opcode | awk -F. '{ if (NF && NF-1) { OFS=" "; $NF=""; print substr($0,1,length($0)-1) } else print "" }'); do 
+                path="$(echo "$path$i" | sha1sum | egrep -o "[a-zA-Z0-9]+")" 
+              done
+              if [ "$path" = "" ]; then path="None"; fi
+              
+              # original path
+              #path=$(echo $opcode | awk -F. '{ if (NF && NF-1) { OFS="."; $NF=""; print substr($0,1,length($0)-1) } else print "None" }')
+              
+              echo $timestamp,$path,$opcitem,$(echo $line | cut -d, -f4-20)
             done
 
             # remove the temp file
