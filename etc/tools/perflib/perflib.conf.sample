@@ -9,4 +9,5 @@ export PERFLIBFILE_FILTER="perf_log_o_00"
 # the maximum number of opcode levels to analyze/include in the output
 export MAX_LEVELS=5
 
-
+# maximum age of the perflib files in minutes; older files will not be read 
+export MAXAGE_MINUTES="240"
