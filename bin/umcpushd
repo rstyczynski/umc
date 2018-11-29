@@ -114,15 +114,21 @@ def write(GlobalContext, datapoints, datafiles,try_once=False):
             pass                                                    
             
         if not(retry):
-            for file in datafiles:
-                try:
-                    os.remove(file)
-                except Exception as e:
-                    Msg.err_msg("Cannot remove file due to %s"%str(e))
+            removeFiles(datafiles)
             break # break the retry loop
     # // end retry loop
     
-    return True            
+    return True   
+# // write
+
+# remove all files from the list datafiles
+def removeFiles(datafiles):
+    for file in datafiles:
+        try:
+            os.remove(file)
+        except Exception as e:
+            Msg.err_msg("Cannot remove file due to %s"%str(e))
+# // removeFiles             
     
 # *** MAIN
 if __name__ == "__main__":    
@@ -219,6 +225,14 @@ if __name__ == "__main__":
                     buffer.reset(counters=True)
                 # remaining batch write
             # len datapoints > 0
+            
+            # clear the buffer
+            if len(buffer.datafiles) > 0:
+                Msg.info1_msg("There is still %d datafiles in the write buffer that apparently do not provide any data; removing them all..."
+                    %len(buffer.datafiles))                
+                removeFiles(buffer.datafiles)
+                buffer.reset(counters=True)
+            # // if datafiles exist
                     
             # wait between runs
             if not GlobalContext.exit.is_set(): 
