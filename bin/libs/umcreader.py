@@ -11,6 +11,8 @@ from time import gmtime, strftime
 import messages as Msg
 from utils import Map
 
+from scandir import scandir, walk
+
 # global variables
 epoch = datetime.datetime.utcfromtimestamp(0)
 
@@ -151,7 +153,8 @@ class UmcReader:
         search_re=logDir + "/[a-zA-Z0-9\._\-]+/([a-zA-Z0-9\-\._]+)" # + "|".join(GlobalContext.config.umc_instanceids(False)) + ")$";
         
         batch=[]; cnt=0
-        for dirname, dirnames, filenames in os.walk(logDir):
+        for dirname, dirnames, filenames in walk(logDir):
+            Msg.info1_msg("walk: %s, filenames=%d"%(dirname,len(filenames)))
             m=re.match(search_re, dirname)
             if m and m.group(1) in umc_instanceids:
                 for filename in filenames:

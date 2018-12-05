@@ -383,6 +383,7 @@ install_influxdb_python () {
 	install_pythonlib "influxdb" "5.0.0"
 	install_pythonlib "psutil" "5.4.6"	
 	install_pythonlib "PyYAML" "3.12"	
+	install_pythonlib "scandir" "1.9"	
 }
 
 # parse arguments

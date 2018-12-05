@@ -11,6 +11,7 @@ from time import sleep
 
 from utils import Map
 import messages as Msg
+from scandir import scandir
 
 def get_umc_instance_log_dir(umc_instanceid, GlobalContext):
     return "{log_root_dir}/{hostname}/{umc_instanceid}".format(log_root_dir=GlobalContext.config.logDir,hostname=socket.gethostname(),umc_instanceid=umc_instanceid)
@@ -160,7 +161,7 @@ class CollectLogStatsTask():
                         log_dir=get_umc_instance_log_dir(ud.umc_instanceid, GlobalContext)                
                         
                         if os.path.isdir(log_dir):
-                            for file in os.listdir(log_dir):
+                            for file in [f.path for f in scandir(log_dir)]:
                                 # match the log file waiting to be consumed
                                 # there is a maximum of 9 groups (1-9)
                                 m1 = re.match(r"^{umc_instanceid}_[0-9\-]+.log.([1-9])$".format(umc_instanceid=ud.umc_instanceid), file) 
@@ -178,7 +179,7 @@ class CollectLogStatsTask():
                                 # if m2:
                                 #     print "*** " + log_dir + "/" + file
                                 #     print utils.tail(log_dir + "/" + file, 10)
-                            # / for listdir
+                            # // for 
                         else:
                             Msg.warn_msg("Directory %s does not exist!"%log_dir)
                         
