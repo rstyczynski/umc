@@ -1,0 +1,9 @@
+#!/bin/bash
+
+if [ "$1" = "" ]; then
+  echo "service name required!"
+  exit 1
+fi
+
+docker-compose exec $1 /bin/bash -l
+
