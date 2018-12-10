@@ -15,13 +15,13 @@ function start() {
   dir="$UMC_LOG_DIR/umcpush.$1"
   mkdir -p $dir
 
-  $scriptDir/umcpushd --writerclass $1 --writerid $2 &>$dir/umcpush.$1.$2-$HOSTNAME.out &
+  $scriptDir/umcpushd --writer $1 &>$dir/umcpush.$1-$HOSTNAME.out &
   if [ "$?" -eq 0 ]; then
-          echo "umcpush with writer class '$1' and ID '$2' started, out log is in $dir/umcpush.$1.$2-$HOSTNAME.out"
+          echo "umcpush with writer id '$1' started, out log is in $dir/umcpush.$1-$HOSTNAME.out"
   else
   	echo "error occurred when starting umcpush!"
   fi  
 }
 
-start influxdbwriter.InfluxDBWriter influxdb
+start influxdb
 #start omcwriter.OMCWriter
