@@ -49,9 +49,12 @@ def format_float3(cdef, value, entry):
     return "%.3f"%value
 
 def format_uptime(cdef, value, entry):
-    sec = timedelta(seconds=int(value))
-    d = datetime(1,1,1) + sec
-    return "%.2d:%.2d:%.2d:%.2d" % (d.day-1, d.hour, d.minute, d.second)    
+    t=int(value)
+    day=t//86400
+    hour=(t-(day*86400))//3600
+    minute=(t - ((day*86400) + (hour*3600)))//60
+    second=t - ((day*86400) + (hour*3600) + (minute*60))    
+    return "%.2d:%.2d:%.2d:%.2d" % (day, hour, minute, second)
     
 def format_runs(cdef, value, entry):
     return "%s/%s"%(entry["num_runs"],entry["num_errors"])
