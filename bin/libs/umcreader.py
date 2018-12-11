@@ -154,7 +154,7 @@ class UmcReader:
         
         batch=[]; cnt=0
         for dirname, dirnames, filenames in walk(logDir):
-            Msg.info1_msg("walk: %s, filenames=%d"%(dirname,len(filenames)))
+            #Msg.info1_msg("walk: %s, filenames=%d"%(dirname,len(filenames)))
             m=re.match(search_re, dirname)
             if m and m.group(1) in umc_instanceids:
                 for filename in filenames:
