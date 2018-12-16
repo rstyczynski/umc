@@ -19,6 +19,8 @@ import re
 import fileinput
 import subprocess
 
+import numpy as np
+
 output = sys.stdout
 
 mpl.rcParams['agg.path.chunksize'] = 10000
@@ -70,6 +72,7 @@ rowsFrom = ''
 rowsTo = ''
 
 imgZoom = 1
+maxResponses = '250,500'
 
 renderPlantUML = True
 
@@ -92,6 +95,7 @@ usage: jMeterLogSummary.py """)
     
     Optional:
     --test.............test name. default: log name
+    --maxResponses.....maximum response time considered as success. default: 250,500
     --allResults.......compute all results. defualt: only max threads
     --dstDir...........directory to write html report. default: .
     --from.............select rows starting at from. Format: yyyy-mm-dd hh:mm:ss. default: 1
@@ -111,7 +115,7 @@ usage: jMeterLogSummary.py """)
 # PARAMETER PARSING
 #
 try:
-    opts, args = getopt.getopt( sys.argv[1:], 't', ['test=', 'log=', 'dstDir=', 'probeDir=', 'from=', 'to=', 'imgZoom=','datetime', 'allResults'])
+    opts, args = getopt.getopt( sys.argv[1:], 't', ['test=', 'log=', 'dstDir=', 'probeDir=', 'from=', 'to=', 'imgZoom=','datetime', 'allResults', 'maxResponses='])
 except getopt.GetoptError, err:
     print str(err)
     usage()
@@ -140,6 +144,8 @@ for opt, arg in opts:
         allResultsFileExt = 'all'
     elif opt in ('--imgZoom'):
         imgZoom = int(arg)
+    elif opt in ('--maxResponses'):
+        maxResponses = arg
     else:
         usage()
         sys.exit(2) 
@@ -170,9 +176,16 @@ if not os.path.exists(imagesDir):
 # read jMeter log
 # 
 alldf = pd.read_csv(fullName, error_bad_lines=True, skipfooter=0, low_memory=False)
+
+
+alldf['timeSeconds'] = alldf['timeStamp'].astype(str).str[:10]
+print alldf
+
+
 #convert timestamp to date format
 if not datetime:
     alldf['timeStamp'] = pd.to_datetime(alldf['timeStamp'], unit='ms')
+    
 #set index in time column
 alldf.index = alldf['timeStamp']
 #alldf = alldf.set_index(alldf['timeStamp'])
@@ -200,7 +213,7 @@ else:
 # row count
 dataCnt = majordf.count()
     
-
+        
 #
 # Open HTML file for writing
 #
@@ -329,6 +342,73 @@ htmlStr = htmlStr + htmlBreak
 
 
 #
+# Change font size
+#
+mpl.rcParams.update({'font.size': 10*imgZoom})
+      
+
+#
+# Speed
+#
+for maxResponse in maxResponses.split(','):
+    htmlStr = htmlStr + ( htmlHeader % (2, 'speed', 'Requests per second (' + maxResponse + 'ms)' , 2))
+    column = 'speed'
+    
+    sucessdf = majordf[(majordf.success == True) & (majordf.elapsed <= int(maxResponse))]
+    speed = sucessdf.groupby(['timeSeconds']).agg('count')
+    print speed
+    
+    allthreads = sucessdf.groupby(['timeSeconds'])['allThreads'].max()
+    print allthreads
+    
+    fig, ax = plt.subplots(1, figsize=(10 * imgZoom, 4 * imgZoom))
+    ax.title.set_text('Requests per second')
+    ax.plot(speed['timeStamp'], label = 'speed', linewidth=1)
+    ax.plot(allthreads, label = 'threads', linewidth=1)
+    
+    pngFileName = 'jmeter_series_' + allResultsFileExt + '_' + column + '_' + str(maxResponse) + '.png'
+    fullFileName = imagesDir + '/' + pngFileName
+    fig.savefig(fullFileName)
+    
+    htmlStr = htmlStr + (htmlImg % ('images/' +     pngFileName))
+    htmlStr = htmlStr + htmlBreak
+    
+    
+    htmlStr = htmlStr + "Speed of messages with responses limited to " + str(maxResponse) + 'ms'
+    htmlStr = htmlStr + htmlBreak
+
+#
+#  Errors
+#
+htmlStr = htmlStr + ( htmlHeader % (2, 'speed', 'Errors per second' , 2))
+column = 'errorRate'
+
+errordf = majordf[(majordf.success == False)]
+
+
+errorRate = errordf.groupby(['timeSeconds']).agg('count')
+
+allthreads = errordf.groupby(['timeSeconds'])['allThreads'].max()
+
+fig, ax = plt.subplots(1, figsize=(10 * imgZoom, 4 * imgZoom))
+ax.title.set_text('Errors per second')
+ax.plot(errorRate['timeStamp'], label = 'errorRate', linewidth=1)
+ax.plot(allthreads, label = 'threads', linewidth=1)
+
+pngFileName = 'jmeter_series_' + allResultsFileExt + '_' + column + '.png'
+fullFileName = imagesDir + '/' + pngFileName
+fig.savefig(fullFileName)
+
+htmlStr = htmlStr + (htmlImg % ('images/' +     pngFileName))
+htmlStr = htmlStr + htmlBreak
+
+htmlStr = htmlStr + htmlBreak
+
+
+
+
+# 
+#
 # threads
 #
 htmlStr = htmlStr + ( htmlHeader % (2, 'threads', 'Thread count', 2))
@@ -340,7 +420,7 @@ column='allThreads'
 ax.plot(majordf[column], linewidth=1)
 ax.legend(loc='upper left', fontsize=8) 
 
-pngFileName = 'jmeter_series_' + allResultsFileExt + '_' + column + '.png'
+pngFileName = 'jmeter_series_' + allResultsFileExt + '_' + column +  '.png'
 fullFileName = imagesDir + '/' + pngFileName
 fig.savefig(fullFileName)
 
@@ -364,7 +444,7 @@ ax.plot(majordf[column], linewidth=0.1)
 
 ax.legend(loc='upper left', fontsize=8) 
 
-pngFileName = 'jmeter_series_' + allResultsFileExt + '_' + column + '.png'
+pngFileName = 'jmeter_series_' + allResultsFileExt + '_' + column +  '.png'
 fullFileName = imagesDir + '/' + pngFileName
 fig.savefig(fullFileName)
 
@@ -394,7 +474,7 @@ ax.plot(subsetdf[column], linewidth=0.1)
 
 ax.legend(loc='upper left', fontsize=8) 
 
-pngFileName = 'jmeter_series_95q_' + allResultsFileExt + '_' + column + '.png'
+pngFileName = 'jmeter_series_95q_' + allResultsFileExt + '_' + column +  '.png'
 fullFileName = imagesDir + '/' + pngFileName
 fig.savefig(fullFileName)
 
@@ -457,7 +537,7 @@ ax.plot(majordf[column+'_hi'], label = 'hi', linewidth=1)
 #ax.plot(x, majordf[column+'_max'])
 ax.legend(loc='upper left', fontsize=8) 
 
-pngFileName = 'jmeter_series_mean' + allResultsFileExt + '_' + column + '.png'
+pngFileName = 'jmeter_series_mean' + allResultsFileExt + '_' + column +  '.png'
 fullFileName = imagesDir + '/' + pngFileName
 fig.savefig(fullFileName)
 
@@ -502,7 +582,7 @@ for code in majordf['responseCode'].unique():
 
 ax.legend(loc='upper left', fontsize=8) 
     
-pngFileName = 'jmeter_series_code2' + allResultsFileExt + '_' + column + '_' + str(code) + '.png'
+pngFileName = 'jmeter_series_code2' + allResultsFileExt + '_' + column + '_' + str(code) + '_' + str(maxResponse) + '.png'
 fullFileName = imagesDir + '/' + pngFileName
 fig.savefig(fullFileName)
 htmlStr = htmlStr + (htmlImg % ('images/' + pngFileName))
@@ -525,7 +605,7 @@ majordf['el:'+ code] = majordf['elapsed'] * ( majordf['responseCode'] == code )
 ax.plot(majordf['el:' + code], linewidth=0.1)
 ax.legend(loc='upper left', fontsize=8) 
     
-pngFileName = 'jmeter_series_codeOK' + allResultsFileExt + '_' + column + '_' + str(code) + '.png'
+pngFileName = 'jmeter_series_codeOK' + allResultsFileExt + '_' + column + '_' + str(code)  + '.png'
 fullFileName = imagesDir + '/' + pngFileName
 fig.savefig(fullFileName)
 htmlStr = htmlStr + (htmlImg % ('images/' + pngFileName))

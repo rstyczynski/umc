@@ -19,13 +19,16 @@ netstattcp:
         method:     
         directive:  
     metrics:
-        Connections:
+        Oppenings:
             active_connections_openings:
             passive_connection_openings:
-            failed_connection_attempts:
+        Connections_est:
             connections_established:
-        Resets:
+        Connections_failed:
+            failed_connection_attempts:
+        Resets_recv:
             connection_resets_received:
+        Resets_sent:
             resets_sent:
         Segments:
             segments_received:

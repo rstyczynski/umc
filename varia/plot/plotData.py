@@ -163,8 +163,25 @@ def changesPerSecond(dataset, column):
     columnDelta=column + '_dvdt'
     dataset[columnDelta] = dataset[column + '_dv'] /   dataset['timestamp_dt']
 
-        
-#
+#retuens size of data row
+def getDataSize(csvFile):
+    colCount=0;
+    with open(csvFile) as csv_file:
+        for i, line in enumerate(csv_file):
+            if i == 0:
+                headerCount = line.count(",") + 1
+                colCount = headerCount
+            elif i == 1:
+                dataCount = line.count(",") + 1
+            elif i > 1:
+                break
+    if (headerCount < dataCount):
+        print("Warning: Header and data size mismatch. Columns beyond header size will be removed.")
+        colCount=headerCount
+
+    return(colCount)
+
+
 # PARAMETER PARSING
 #
 try:
@@ -253,7 +270,7 @@ for dirRoot,dirList,fileList in os.walk(srcDir):
                 print fullName, os.path.getsize(fullName)
                 
                 fileDate = file.split('_')[0]
-                print fileDate
+                print fileDate, rowsFrom, rowsTo
                 
                 #filter rows by date rowsFrom, rowsTo. Step 2of3 on file level.
                 try:
@@ -268,7 +285,8 @@ for dirRoot,dirList,fileList in os.walk(srcDir):
                 
                 if os.path.getsize(fullName) > 0:
                     if firstFile:
-                        df = pandas.read_csv(fullName, error_bad_lines=True, skipfooter=0)
+                        df = pandas.read_csv(fullName, error_bad_lines=True, skipfooter=0, usecols=range(getDataSize(fullName)))
+                        print ">>>READ CSV:" + fullName
                         #print df
                         
                         firstFileColumns = str(df.columns)
@@ -287,7 +305,7 @@ for dirRoot,dirList,fileList in os.walk(srcDir):
                         #print df.head
                     else:
                         #skipfooter is to remove lat line as potnetially bad
-                        df2 = pandas.read_csv(fullName, error_bad_lines=True, skipfooter=0)
+                        df2 = pandas.read_csv(fullName, error_bad_lines=True, skipfooter=0, usecols=range(getDataSize(fullName)))
                         if str(df2.columns) != firstFileColumns:
                             errorMsg = 'different columns! Ignoring file:' + fullName
                             #raise Exception(errorMsg)
@@ -332,7 +350,7 @@ df = df.loc[ (str(rowsFrom) <= df['date_time']) & (df['date_time']<= str(rowsTo)
 #
 #print identifierColumns.split(',')
 if identifierColumns != '':
-    print identifierColumns.split(',')
+    #print identifierColumns.split(',')
     for idCol in identifierColumns.split(','):
         #print idCol
         #print df[idCol]
@@ -365,7 +383,7 @@ probe=probeName
 #https://pandas.pydata.org/pandas-docs/stable/10min.html
 #print df.head
 #print df.index
-print df.columns
+#print df.columns
 
 
 # formatter 
@@ -389,6 +407,7 @@ plt.close('all')
 #
 getData= probeName + '.metrics'
 probeDef= os.path.join(probeDir, 'info', probeName + '.info')
+print ">>>Probe definition:" + probeDef
 
 htmlStr = htmlStr + ( htmlHeader % (1, probeName + "_" + computerName, probeName + "@" + computerName, 1))
 htmlStr = htmlStr + htmlToC #placeholder
@@ -430,12 +449,12 @@ for subsystem in finalDoc:
         for seriesPK in df['identifier'].unique():
             if isinstance(seriesPK, basestring):
                 #select rows for given identifier
-                print seriesPK
+                #print seriesPK
                 htmlStr = htmlStr + ( htmlHeader % (3, subsystem + '_' + seriesPK, seriesPK, 3))
                 ToC = ToC + htmlLocalHref % (subsystem + '_' + seriesPK, seriesPK) + ' | '
                     
                 plotdf = df.loc[df['identifier'] == seriesPK]
-                print plotdf.columns
+                #print plotdf.columns
                 
                 #df.to_csv('/tmp/1a.csv')
                 #plotdf.to_csv('/tmp/1b.csv')
@@ -468,15 +487,16 @@ for subsystem in finalDoc:
                 fig, ax = plt.subplots(1)
                 fig.autofmt_xdate()
                 ax.fmt_xdata = mdates.DateFormatter('%Y-%m-%d %H:%M:%S')
+                title = seriesPK + "@" + computerName + ':' + probe + ':' + subsystem
+                ax.set_title(title)
+
                 #direvartive
                 figD, axD = plt.subplots(1)
                 figD.autofmt_xdate()
                 axD.fmt_xdata = mdates.DateFormatter('%Y-%m-%d %H:%M:%S')
-                
                 print probe, subsystem, seriesPK
-                title = probe + ':' + subsystem + ':' + seriesPK
-                #htmlStr = htmlStr + (htmlHeaderStart + title + htmlHeaderStop)
-                #ax.set_title(title)
+                title = seriesPK + "@" + computerName + ':' + probe + ':' + subsystem + ' [/s]'
+                axD.set_title(title)
                 
                 #            
                 emptyPlot=True
@@ -494,10 +514,14 @@ for subsystem in finalDoc:
                     if dataChanges: #is data changing obver time?
                         emptyPlot=False
                         try:
-                            ax.plot(x, plotdf[column])
-                            
+                            ax.plot(x, plotdf[column], label=column)
+                            ax.legend()
+                            #add test name
+                            #ax.text(right, top, 'right bottom' ,horizontalalignment='right', verticalalignment='bottom', transform=ax.transAxes)
+
                             changesPerSecond(plotdf, column)
-                            axD.plot(x, plotdf[column + '_dvdt'])
+                            axD.plot(x, plotdf[column + '_dvdt'], label=column + '/s')
+                            axD.legend()
                         except:
                             print plotdf[column]
                             plotdf.to_csv('/tmp/1c.csv')
@@ -568,13 +592,18 @@ for subsystem in finalDoc:
         fig, ax = plt.subplots(1)
         fig.autofmt_xdate()
         ax.fmt_xdata = mdates.DateFormatter('%Y-%m-%d %H:%M:%S')
+        title = computerName + ':' + probe + ':' + subsystem
+        ax.set_title(title)
+
+
         #direvartive
         figD, axD = plt.subplots(1)
         figD.autofmt_xdate()
         axD.fmt_xdata = mdates.DateFormatter('%Y-%m-%d %H:%M:%S')
                 
-        title = probe + ':' + subsystem
-        #ax.set_title(title)
+        title = computerName + ':' + probe + ':' + subsystem + ' [/s]'
+        axD.set_title(title)
+
         #  
         emptyPlot=True                     
         for column in columns:
@@ -589,10 +618,12 @@ for subsystem in finalDoc:
             
             if dataChanges: #is data changing obver time?
                 emptyPlot=False
-                ax.plot(x, df[column])
+                ax.plot(x, df[column], label=column)
+                ax.legend()
                 # direvative
                 changesPerSecond(df, column)
-                axD.plot(x, df[column + '_dvdt'])
+                axD.plot(x, df[column + '_dvdt'], label=column + '/s')
+                axD.legend()
         #
         if (not emptyPlot) or (not plotOnlyChanges):
             #
