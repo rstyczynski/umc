@@ -128,14 +128,14 @@ while [ $current_count -lt $count ]; do
               opcitem=$(echo $opcode | awk -F. '{ if (NF) print $NF; else print "None" }')
               
               # create a path hash
-              path=""
-              for i in $(echo $opcode | awk -F. '{ if (NF && NF-1) { OFS=" "; $NF=""; print substr($0,1,length($0)-1) } else print "" }'); do 
-                path="$(echo "$path$i" | sha1sum | egrep -o "[a-zA-Z0-9]+")" 
-              done
-              if [ "$path" = "" ]; then path="None"; fi
+              #path=""
+              #for i in $(echo $opcode | awk -F. '{ if (NF && NF-1) { OFS=" "; $NF=""; print substr($0,1,length($0)-1) } else print "" }'); do 
+              #  path="$(echo "$path$i" | sha1sum | egrep -o "[a-zA-Z0-9]+")" 
+              #done
+              #if [ "$path" = "" ]; then path="None"; fi
               
               # original path
-              #path=$(echo $opcode | awk -F. '{ if (NF && NF-1) { OFS="."; $NF=""; print substr($0,1,length($0)-1) } else print "None" }')
+              path=$(echo $opcode | awk -F. '{ if (NF && NF-1) { OFS="."; $NF=""; print substr($0,1,length($0)-1) } else print "None" }')
               
               echo $timestamp,$path,$opcitem,$(echo $line | cut -d, -f4-20)
             done
