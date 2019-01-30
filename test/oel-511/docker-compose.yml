@@ -66,7 +66,7 @@ services:
     hostname: ukbn20hr.umc.local
     stdin_open: true
     tty: true
-    command: /bin/bash -l -c "start-influxd.sh && sleep 5 && umc/varia/bin/import-db.sh && /bin/bash -l"
+    command: /bin/bash -l -c "start-influxd.sh && /bin/bash -l"
     volumes:
       - ../../:/home/oracle/umc
     ports:
@@ -74,6 +74,15 @@ services:
     networks:
       umcnet:
         ipv4_address: 192.168.10.120
+
+  grafana:
+    image: tomvit/grafana:1.0
+    container_name: umc-grafana
+    ports:
+      - "3000:3000"
+    networks:
+      umcnet:
+        ipv4_address: 192.168.10.220
 
 networks:
   umcnet:
