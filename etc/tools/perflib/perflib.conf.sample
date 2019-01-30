@@ -10,4 +10,4 @@ export PERFLIBFILE_FILTER="perf_log_o_00"
 export MAX_LEVELS=5
 
 # maximum age of the perflib files in minutes; older files will not be read 
-export MAXAGE_MINUTES="240"
+#export MAXAGE_MINUTES="240"
