@@ -166,12 +166,12 @@ if __name__ == "__main__":
         GlobalContext.writer=umcwriter.create_instance(GlobalContext.config, GlobalContext.writer_id)        
         GlobalContext.reader=UmcReader(GlobalContext.config, GlobalContext.writer.writer_id)
         
+        # welcome message
+        Msg.info1_msg("umcpush started with writer id '%s'."%(GlobalContext.writer.writer_id))
+
         # show writer and reader params
         Msg.info2_msg("reader params: %s"%(GlobalContext.reader.params))
         Msg.info2_msg("writer params: %s"%(GlobalContext.writer.params))
-
-        # welcome message
-        Msg.info1_msg("umcpush started with writer id '%s'."%(GlobalContext.writer.writer_id))
 
         # read all umcdefs from the config file
         umcdefs=GlobalContext.config.read_umcdefs(GlobalContext.reader, GlobalContext.writer)
