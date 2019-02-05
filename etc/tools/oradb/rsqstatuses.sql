@@ -13,7 +13,7 @@ FROM
 WHERE 
 	m.owner_id = gs.id and m.group_id = gs.group_id and gs.status <= 3 and m.status <= 3
 GROUP BY 
-	gs.component_dn, gs.status, m.status
+	gs.component_dn, gs.status, m.status, gs.container_id
 ORDER BY 
-	gs.component_dn, gs.status;
+	gs.component_dn, gs.status, gs.container_id;
 
