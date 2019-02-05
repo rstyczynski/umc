@@ -1,15 +1,7 @@
-# umc metrics configuration file, used by umc tools 'umcrunner' and 'influxdb', Tomas Vitvar, tomas@vitvar.com
+# umc metrics configuration file, structure version 1.0-190205
+# it is used by umc tools 'umcrunner' and 'influxdb', Tomas Vitvar, tomas@vitvar.com
 # umcrunner produces csv log files that are asynchronously writen to influxdb by influxdb
 # This file is a single configuration for all metrics that are collected and pushed 
-#
-# umcrunner
-# use this file as --runall argument of umcrunner. It will search for all umc definitions, i.e. keys umc-{umc_id}
-# and makes sure they are running (or not running when disabled or not present) as per definitions on specified hosts. 
-# umcrunner will run each umc instance by using umcrunner --run command with the first argument being umc id and the 
-# remaining arguments defined by params key
-#
-# influxdb
-#  
 
 # *** common settings
 common:
