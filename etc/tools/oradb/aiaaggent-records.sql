@@ -4,7 +4,7 @@
 -- the script selects all instances that were supposed to finished by JTA timeout, i.e. at most 6 minutes ago
 -- it should be run every 2 minutes (see time condition on sysdate for details)
 select 
-  to_char(first_time, 'YY-MM-DD HH24:MI:SS.FF') as "Time", 
+  to_char(first_time, 'YY-MM-DD HH24:MI') as "Time", 
   to_char(first_time, 'TZR') as "Timezone",
   case 
     when mediator_state = 8 then 'STUCK' 
