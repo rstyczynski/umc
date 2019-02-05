@@ -95,15 +95,17 @@ class UmcReader:
         )
         
         # update any value that may be overriden in writer's specific parameters
-        key="common.umcpush.{writer_id}.reader-params".format(writer_id=writer_id)
-        rparams=self.config.value(key, default=None)
-        if rparams is not None:
-            for k,v in rparams.items():
-                k=k.replace("-", "_")
-                if self.params.get(k):
-                    self.params[k]=v
-                else:
-                    Msg.warn_msg("The reader param %s is invalid in %s"%(k,key))
+        writers=config.value("common.umcpush.writers")
+        for writer in writers:
+            if writer["writer-id"]==writer_id:
+                rparams=writer["reader-params"]
+                if rparams is not None:
+                    for k,v in rparams.items():
+                        k=k.replace("-", "_")
+                        if self.params.get(k):
+                            self.params[k]=v
+                        else:
+                            Msg.warn_msg("The reader param %s is invalid in %s"%(k,key))
         
     # *** reads and checks umc definition for a specific umc id
     def read_umcdef(self, umc_id, umcconf): 

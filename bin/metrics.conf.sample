@@ -160,7 +160,7 @@ common:
                 
         # specific reader params of this writer
         reader-params:
-          log-file-group: 1
+          log-file-group: 1 
     
       # influxdb writer 'influxdb'
       - writer-id: influxdb-brm
