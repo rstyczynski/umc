@@ -15,12 +15,8 @@ common:
       # tcp port the server should be listening on all servers
       tcp-port: 1989
       
-      # The following configuration defines hostnames and their ip address umcrunnerd will bind to on respective hosts
-      # when tcp_port is omitted, the default tcp-port will be used
-      server-binding:
-        - hostname=ukbn01hr.umc.local, address=192.168.10.101, enabled=True 
-        - hostname=ukbn02hr.umc.local, address=192.168.10.102, enabled=True
-        - hostname=ukbn03hr.umc.local, address=192.168.10.103, enabled=True
+      # The following configuration defines list of hostnames where umcrunnerd will listen on
+      server-binding: ${ALL_HOSTS}
         
     # log file groups, a list of group IDs that will be used to create copies of log files; this allows umcrunner to produce log files
     # for multiple consumers; influxdb as one of such consumers then consumes log files identified with a group number 1 

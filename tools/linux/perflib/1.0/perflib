@@ -54,7 +54,7 @@ configDir="$umcRoot/etc/tools/perflib"
 
 # check config file exists
 if [ "$config" = "" ]; then
-  config="perflib.conf.$UMC_ENVIRONMENT"
+  config="perflib.conf.$UMC_ORG.$UMC_ENV"
 fi
   
 if [ ! -f "$configDir/$config" ]; then

@@ -5,7 +5,7 @@ services:
     image: ${IMAGE_OEL511} 
     container_name: umc-ukbn01hr
     user: oracle 
-    hostname: ukbn01hr.umc.local 
+    hostname: ukbn01hr 
     stdin_open: true
     tty: true
     command: /bin/bash -l
@@ -19,7 +19,7 @@ services:
     image: ${IMAGE_OEL511}
     container_name: umc-ukbn02hr
     user: oracle
-    hostname: ukbn02hr.umc.local
+    hostname: ukbn02hr
     stdin_open: true
     tty: true
     command: /bin/bash -l
@@ -33,7 +33,7 @@ services:
     image: ${IMAGE_OEL511}
     container_name: umc-ukbn03hr
     user: oracle
-    hostname: ukbn03hr.umc.local
+    hostname: ukbn03hr
     stdin_open: true
     tty: true
     command: /bin/bash -l
@@ -48,7 +48,7 @@ services:
     image: ${IMAGE_OEL511}
     container_name: umc-ukbn10hr
     user: oracle
-    hostname: ukbn10hr.umc.local
+    hostname: ukbn10hr
     stdin_open: true
     tty: true
     command: /bin/bash -l -c "start-influxd.sh && start-umcpush && /bin/bash -l"
@@ -63,7 +63,7 @@ services:
     image: ${IMAGE_OEL511}
     container_name: umc-ukbn20hr
     user: oracle
-    hostname: ukbn20hr.umc.local
+    hostname: ukbn20hr
     stdin_open: true
     tty: true
     command: /bin/bash -l -c "start-influxd.sh && /bin/bash -l"

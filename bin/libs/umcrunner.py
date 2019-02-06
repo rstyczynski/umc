@@ -5,6 +5,7 @@ import psutil
 import time
 import socket
 import utils
+import messages as Msg
 
 from threading import RLock
 from time import gmtime, strftime
@@ -52,19 +53,23 @@ class UmcRunner:
         # create dict object
         server_list = {}
         server_binding = self.config.value("common.umcrunner.http.server-binding")
-        for sb in server_binding:
-            sb_def = { k:v.strip('",\'') for k,v in re.findall(r'(\S+)=(".*?"|\S+)', sb) }
-            if sb_def.get("hostname") is not None:
-                sb_def["hostname"]=sb_def["hostname"]
-                df = Map(
-                    hostname=sb_def["hostname"],
-                    address=sb_def["address"],
-                    tcp_port=sb_def["tcp_port"] if sb_def.get("tcp_port") else tcp_port,
-                    enabled=(True if sb_def.get("enabled") is not None and sb_def["enabled"].lower() == 'true' else False),
-                    me=(True if sb_def.get("hostname").lower()==socket.gethostname().lower() else False)
-                    # TODO: check that address is on this host = better "me"
-                )
-                server_list[sb_def["hostname"]] = df
+        if server_binding is not None:
+            for hostname in server_binding.split(","):
+                hostname=hostname.strip();
+                try:
+                    df = Map(
+                        hostname=hostname,
+                        address=socket.gethostbyname(hostname),
+                        tcp_port=tcp_port,
+                        enabled=True,
+                        me=(True if hostname.lower()==socket.gethostname().lower() else False)
+                        # TODO: check that address is on this host = better "me"
+                    )
+                    server_list[hostname] = df
+                except Exception as e:
+                    Msg.err_msg("Error occured when obtaining configuration for server's hostname '%s': %s!"%(hostname,e))
+                    pass
+        # // server_binding
         
         return server_list
     # // serverlist
