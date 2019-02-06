@@ -110,9 +110,6 @@ if __name__ == "__main__":
     Msg.info1_msg("home_dir=%s, configFile=%s, log_root=%s, hostname=%s"
         %(GlobalContext.homeDir,GlobalContext.config.configFile,GlobalContext.config.logDir,socket.gethostname()))
 
-    # hostname mappings
-    Msg.info2_msg("Hostname mapping: %s"%GlobalContext.umcrunner.params.hostname_mapping)
-    
     # all servers lists
     GlobalContext.server_list = GlobalContext.umcrunner.serverlist()
     Msg.info2_msg("Servers in the cluster: %s"%GlobalContext.server_list)

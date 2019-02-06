@@ -42,19 +42,7 @@ class UmcRunner:
             
             oserror_max_attempts = self.config.value("common.umcrunner.oserror-max-attempts", 5),
             oserror_wait_time   = self.config.value("common.umcrunner.oserror-wait-time", 60))
-            
-        # read hostname mapping
-        mappings=self.config.value("common.umcrunner.hostname-mapping", [])
-        self.params.hostname_mapping = { k.split("=")[0].strip().lower():k.split("=")[-1].strip().lower() for k in mappings }
     # // init
-
-    # get hostname based on mapping rules
-    def getHostname(self, hostname):
-        if self.params.hostname_mapping is not None and self.params.hostname_mapping.get(hostname.lower()) is not None:
-            return self.params.hostname_mapping[hostname.lower()]
-        else:
-            return hostname            
-    # // getHostname
 
     # get umcrunner server list
     def serverlist(self):
@@ -67,7 +55,7 @@ class UmcRunner:
         for sb in server_binding:
             sb_def = { k:v.strip('",\'') for k,v in re.findall(r'(\S+)=(".*?"|\S+)', sb) }
             if sb_def.get("hostname") is not None:
-                sb_def["hostname"]=self.getHostname(sb_def["hostname"])
+                sb_def["hostname"]=sb_def["hostname"]
                 df = Map(
                     hostname=sb_def["hostname"],
                     address=sb_def["address"],
@@ -86,7 +74,7 @@ class UmcRunner:
         for umcconf in self.config.value("umc-instances", []):
             # is this entry for this host?
             hostname=socket.gethostname().lower()
-            hosts = [ self.getHostname(h.strip().lower()) for h in self.config.value_element(umcconf, "umcrunner.hosts", '').split(',') ]                
+            hosts = [ h.strip().lower() for h in self.config.value_element(umcconf, "umcrunner.hosts", '').split(',') ]                
                 
             if "_all_" in hosts or hostname in hosts:
                 # enabled        
