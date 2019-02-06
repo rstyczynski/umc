@@ -207,7 +207,7 @@ umc-instances:
   - umc-id: dms.jdbc
     enabled: true
     umcrunner:
-      hosts: ukbn01hr.umc.local,ukbn02hr.umc.local
+      hosts: ${HOST1},${HOST2}
       params: 20 dms 10 10 JDBC_DataSource config.sample
     reader:
       timefield: datetime
@@ -263,7 +263,7 @@ umc-instances:
   - umc-id: perflib
     enabled: true
     umcrunner:
-      hosts: ukbn01hr.umc.local
+      hosts: ${HOST1}
       params: 20 perflib 60 60 perflib.conf.sample 
     reader:
       timefield: Time
@@ -278,7 +278,7 @@ umc-instances:
   - umc-id: oradb.aiaflows  
     enabled: true
     umcrunner:    
-      hosts: ukbn01hr.umc.local
+      hosts: ${HOST1}
       params: 20 oradb 10 10 aiaflows.sql oradb.conf.sample
       options: setsid
     reader:
@@ -295,7 +295,7 @@ umc-instances:
   - umc-id: iostat  
     enabled: false
     umcrunner:    
-      hosts: ukbn01hr.umc.local
+      hosts: ${HOST1}
       params: 20 iostat 10 10   
     reader:
       fields: "tps,kB_read/s,kB_wrtn/s,kB_read,kB_wrtn"      
@@ -322,7 +322,7 @@ umc-instances:
   - umc-id: netstattcp  
     enabled: true
     umcrunner:    
-      hosts: _ALL_
+      hosts: ${ALL_HOSTS}
       params: 20 netstattcp 10 10   
     reader:
       fields: "active_connections_openings,passive_connection_openings,failed_connection_attempts,connection_resets_received,connections_established,
