@@ -7,11 +7,6 @@
 common:
   # ** common definitions for umcrunner
   umcrunner:    
-    # hostname mapping allows to map actual hostnames to new hostnames in case there are different hostnames
-    # used for the same boxoes across environments, for example, when one environment is cloned but hostnames are different
-    hostname-mapping:
-      - ukbn0Xhr.umc.local=ukbn01hr.umc.local
-  
     # http server configuration
     http:
       # true to enable http server
@@ -23,7 +18,7 @@ common:
       # The following configuration defines hostnames and their ip address umcrunnerd will bind to on respective hosts
       # when tcp_port is omitted, the default tcp-port will be used
       server-binding:
-        - hostname=ukbn0Xhr.umc.local, address=192.168.10.101, enabled=True 
+        - hostname=ukbn01hr.umc.local, address=192.168.10.101, enabled=True 
         - hostname=ukbn02hr.umc.local, address=192.168.10.102, enabled=True
         - hostname=ukbn03hr.umc.local, address=192.168.10.103, enabled=True
         
@@ -212,7 +207,7 @@ umc-instances:
   - umc-id: dms.jdbc
     enabled: true
     umcrunner:
-      hosts: ukbn0Xhr.umc.local,ukbn02hr.umc.local
+      hosts: ukbn01hr.umc.local,ukbn02hr.umc.local
       params: 20 dms 10 10 JDBC_DataSource config.sample
     reader:
       timefield: datetime
@@ -268,7 +263,7 @@ umc-instances:
   - umc-id: perflib
     enabled: true
     umcrunner:
-      hosts: ukbn0Xhr.umc.local
+      hosts: ukbn01hr.umc.local
       params: 20 perflib 60 60 perflib.conf.sample 
     reader:
       timefield: Time
@@ -283,7 +278,7 @@ umc-instances:
   - umc-id: oradb.aiaflows  
     enabled: true
     umcrunner:    
-      hosts: ukbn0Xhr.umc.local
+      hosts: ukbn01hr.umc.local
       params: 20 oradb 10 10 aiaflows.sql oradb.conf.sample
       options: setsid
     reader:
@@ -300,7 +295,7 @@ umc-instances:
   - umc-id: iostat  
     enabled: false
     umcrunner:    
-      hosts: ukbn0Xhr.umc.local
+      hosts: ukbn01hr.umc.local
       params: 20 iostat 10 10   
     reader:
       fields: "tps,kB_read/s,kB_wrtn/s,kB_read,kB_wrtn"      

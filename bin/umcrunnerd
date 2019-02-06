@@ -7,7 +7,6 @@
 import os
 import sys
 import signal
-import yaml
 import datetime
 import socket
 import time

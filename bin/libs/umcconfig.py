@@ -14,6 +14,17 @@ from time import gmtime, strftime
 
 from utils import Map
 
+# matcher and resolver to resolve environment variables to values in YAML
+env_matcher = re.compile(r'\$\{([a-zA-Z_0-9]+)\}')
+def env_constructor(loader, node):
+  value = node.value
+  match = env_matcher.match(value)
+  env_var = match.group()[2:-1]
+  return os.environ.get(env_var) + value[match.end():]
+
+yaml.add_implicit_resolver('!env', env_matcher)
+yaml.add_constructor('!env', env_constructor)
+
 # umc configuration object for umc configuration file metrics.conf
 class UmcConfig:
     def __init__(self, configFile=None, logDir=None):
