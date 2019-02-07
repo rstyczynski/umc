@@ -14,15 +14,25 @@ from time import gmtime, strftime
 
 from utils import Map
 
-# matcher and resolver to resolve environment variables to values in YAML
-env_matcher = re.compile(r'\$\{([a-zA-Z_0-9]+)\}')
-def env_constructor(loader, node):
-  value = node.value
-  match = env_matcher.match(value)
-  env_var = match.group()[2:-1]
-  return os.environ.get(env_var) + value[match.end():]
+# patterns to match environment variables in YAML document
+# they must be in a form ${VARIABLE_NAME}
+ENVPARAM_PATTERN="\$\{[a-zA-Z0-9_]+\}"
 
-yaml.add_implicit_resolver('!env', env_matcher)
+# matcher and resolver to resolve environment variables to values in YAML
+def env_constructor(loader, node):
+  value = node.value    
+  params = list(set(re.findall("(%s)"%ENVPARAM_PATTERN, value)))
+  if len(params)>0:
+    for k in params:
+      env_value=os.environ.get(k[2:-1])
+      if env_value is None:
+        Msg.err_msg("The environment variable %s used in the configuration file does not exist!"%(k))
+      else:
+        value = value.replace(k, env_value)
+  return value
+
+# register resolver with YAML parser
+yaml.add_implicit_resolver('!env', re.compile(r'.*%s.*'%ENVPARAM_PATTERN))
 yaml.add_constructor('!env', env_constructor)
 
 # umc configuration object for umc configuration file metrics.conf

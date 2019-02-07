@@ -1,11 +1,9 @@
-
 import re
 import messages as Msg
 
 from influxdb import InfluxDBClient
 from utils import Map 
 from umcwriter import UmcWriter
-
 
 class InfluxDBWriter(UmcWriter):
     

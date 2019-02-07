@@ -150,7 +150,7 @@ common:
         # connection details
         connect: 
           url: http://localhost:8086/  
-          dbname: rodmon_sample
+          dbname: rodmon_${UMC_ORG}_${UMC_ENV}
           user: 
           pass: 
                 
@@ -311,7 +311,7 @@ umc-instances:
         TXoverruns,TXcarrier,collisions,txqueuelen,RXbytes,TXbytes"     
       tags: device                  
     writers:
-      - writer-id: influxdb2
+      - writer-id: influxdb
         name: ifconfig 
     
   # netstattcp
