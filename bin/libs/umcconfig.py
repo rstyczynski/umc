@@ -31,9 +31,19 @@ def env_constructor(loader, node):
         value = value.replace(k, env_value)
   return value
 
+def include_constructor(loader, node):
+    filename = os.path.join(env_constructor(loader, node))
+    if not(os.path.exists(filename)):
+        Msg.err_msg("The include file %s does not exist!"%filename)
+        return []
+    else:
+        with open(filename, 'r') as f:
+            return yaml.load(f)
+
 # register resolver with YAML parser
 yaml.add_implicit_resolver('!env', re.compile(r'.*%s.*'%ENVPARAM_PATTERN))
 yaml.add_constructor('!env', env_constructor)
+yaml.add_constructor('!include', include_constructor)
 
 # umc configuration object for umc configuration file metrics.conf
 class UmcConfig:
@@ -51,11 +61,11 @@ class UmcConfig:
             
         # check it exists, if not, look for it in the umc bin directory
         if not(os.path.exists(self.configFile)):
-            nfl==os.path.dirname(os.path.realpath(__file__)) + "/../" + self.configFile
+            nfl=os.path.dirname(os.path.realpath(__file__)) + "/../" + self.configFile
             if os.path.exists(nfl):
                 self.configFile=nfl
             else:
-                raise Exception("Configuration file %s does not exist!"%sself.configFile)
+                raise Exception("Configuration file %s does not exist!"%self.configFile)
         
         # location of logs
         self.logDir = logDir
@@ -66,7 +76,7 @@ class UmcConfig:
         try:
             with open(self.configFile, 'r') as confDoc:
                 self.YAMLfile=yaml.load(confDoc)
-            self.conf_mtime=os.stat(self.configFile).st_mtime                                
+            self.conf_mtime=os.stat(self.configFile).st_mtime    
         except Exception as e:
             raise Exception("Error when reading the configuration file %s: %s"%(self.configFile,e))
     # // init
@@ -97,6 +107,18 @@ class UmcConfig:
         return self.value_element(self.YAMLfile,path,default,delim)
     # // value
 
+    # reads all umc instances; this converts array of instances returned by !include
+    def get_umc_instances(self):
+        umcinstances=[]
+        for e in self.value("umc-instances", []):
+            if isinstance(e, list):
+                for e1 in e:
+                    umcinstances.append(e1)
+            else:
+                umcinstances.append(e)
+        return umcinstances
+    # // get_umc_instances
+
     # retrieves umc id from a log filename
     def get_umcid_from_logfile(self,logfile):
         dirname=os.path.dirname(logfile)
@@ -108,7 +130,7 @@ class UmcConfig:
     # // get_umcid_from_logfile
 
     def read_umcdefs(self, reader, writer):
-        allinstances=self.value("umc-instances", [])
+        allinstances=self.get_umc_instances()
         umcdefs={}
         
         for instance in allinstances:

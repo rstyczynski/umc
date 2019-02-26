@@ -76,7 +76,7 @@ class UmcRunner:
 
     # umcrunner umc instance specific parameters 
     def read_umcdefs(self):
-        for umcconf in self.config.value("umc-instances", []):
+        for umcconf in self.config.get_umc_instances():
             # is this entry for this host?
             hostname=socket.gethostname().lower()
             hosts = [ h.strip().lower() for h in self.config.value_element(umcconf, "umcrunner.hosts", '').split(',') ]                

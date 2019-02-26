@@ -1,0 +1,69 @@
+# umc instances definition for OS metrics
+# this file is loaded from the main configuration file
+
+# iostat
+- umc-id: iostat  
+  enabled: false
+  umcrunner:    
+    hosts: ${HOST1}
+    params: 20 iostat 10 10   
+  reader:
+    fields: "tps,kB_read/s,kB_wrtn/s,kB_read,kB_wrtn"      
+    tags: device                  
+  writers:
+    - writer-id: influxdb
+      name: iostat 
+  
+# ifconfig
+- umc-id: ifconfig  
+  enabled: true
+  umcrunner:    
+    hosts: _ALL_
+    params: 20 ifconfig 10 10   
+  reader:
+    fields: "RXpackets,RXerrors,RXdropped,RXoverruns,RXframe,TXpackets,TXerrors,TXdropped,
+      TXoverruns,TXcarrier,collisions,txqueuelen,RXbytes,TXbytes"     
+    tags: device                  
+  writers:
+    - writer-id: influxdb
+      name: ifconfig 
+  
+# netstattcp
+- umc-id: netstattcp  
+  enabled: true
+  umcrunner:    
+    hosts: ${ALL_HOSTS}
+    params: 20 netstattcp 10 10   
+  reader:
+    fields: "active_connections_openings,passive_connection_openings,failed_connection_attempts,connection_resets_received,connections_established,
+      !segments_received,!segments_send_out,!segments_retransmited,!bad_segments_received,resets_sent"     
+    tags:                  
+  writers:
+    - writer-id: influxdb
+      name: netstattcp 
+  
+# free
+- umc-id: free  
+  enabled: true
+  umcrunner:    
+    hosts: _ALL_
+    params: 20 free 10 10   
+  reader:
+    fields: "total,used,free,shared,buffers,cached,usedNoBuffersCache,freePlusBuffersCache,SwapTotal,SwapUsed,SwapFree"      
+    tags:                  
+  writers:
+    - writer-id: influxdb
+      name: free 
+
+# uptime
+- umc-id: uptime  
+  enabled: true
+  umcrunner:    
+    hosts: _ALL_
+    params: 20 uptime 10 10   
+  reader:
+    fields: "users,load1min,load5min,load15min"      
+    tags:                  
+  writers:
+    - writer-id: influxdb
+      name: uptime 
