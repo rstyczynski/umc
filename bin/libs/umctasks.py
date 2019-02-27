@@ -161,7 +161,7 @@ class CollectLogStatsTask():
                         log_dir=get_umc_instance_log_dir(ud.umc_instanceid, GlobalContext)                
                         
                         if os.path.isdir(log_dir):
-                            for file in [f.path for f in scandir(log_dir)]:
+                            for file in [os.path.basename(f.path) for f in scandir(log_dir)]:
                                 # match the log file waiting to be consumed
                                 # there is a maximum of 9 groups (1-9)
                                 m1 = re.match(r"^{umc_instanceid}_[0-9\-]+.log.([1-9])$".format(umc_instanceid=ud.umc_instanceid), file) 
