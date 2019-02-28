@@ -183,7 +183,7 @@ common:
         
         # omc connection details
         connect:
-          base-url: https://vod153408-oscemea001.eucom-north-1.oraclecloud.com
+          base-url: <omc_endpoint_here>
           data-url: /serviceapi/entityModel/data/metrics
           user: <ask>
           pass: <ask>
