@@ -75,6 +75,23 @@ services:
       umcnet:
         ipv4_address: 192.168.10.120
 
+  # rodmon node
+  ukbn30hr:
+    image: ${IMAGE_OEL511}
+    container_name: umc-ukbn30hr
+    user: oracle
+    hostname: ukbn30hr
+    stdin_open: true
+    tty: true
+    command: /bin/bash -l
+    volumes:
+      - ../../:/home/oracle/umc
+    ports:
+      - "9195:9194"
+    networks:
+      umcnet:
+        ipv4_address: 192.168.10.130
+
   grafana:
     image: tomvit/grafana:1.0
     container_name: umc-grafana
