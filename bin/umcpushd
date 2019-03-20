@@ -107,13 +107,14 @@ def write(GlobalContext, datapoints, datafiles,try_once=False):
                 # this will make the umcpush exit
                 raise Exception("Maximum number of %d retries reached!"%(retryCount))                          
         except Exception as e:
-            Msg.err_msg("Error occurred when inserting data, all records in the write buffer (%d) will be discarded!: %s"
+            Msg.err_msg("Error occurred when inserting data, all records in the write buffer (%d) will be discarded! %s"
                 %(len(datapoints),str(e)))
             retry = False
             pass                                                    
             
         if not(retry):
             removeFiles(datafiles)
+            GlobalContext.lastwritecall = time.time()
             break # break the retry loop
     # // end retry loop
     

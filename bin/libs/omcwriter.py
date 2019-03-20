@@ -27,8 +27,12 @@ class OMCWriter(UmcWriter):
             user=self.param("connect.user"), 
             upass=self.param("connect.pass", ""),
             connect_timeout=self.param("connect.connect-timeout", 5),
-            read_timeout=self.param("connect.read-timeout", 10))
-        
+            read_timeout=self.param("connect.read-timeout", 10),
+            omc_inprogress_timeout=self.param("connect.omc-inprogress-timeout", 120))
+       
+        # print params
+        Msg.info2_msg("OMC Writer parameters: %s"%self.omc_params)
+ 
         # check the db was defined
         if self.omc_params.data_url == None:
             raise Exception("Invalid connection details (data_url is missing).")
@@ -49,14 +53,20 @@ class OMCWriter(UmcWriter):
         return umcdef
     # // read_umcdef
         
-    def run_request(self, method, url, data=None, ContentType=None):
-        return requests.request(method, self.omc_params.base_url+url, 
+    def run_request(self, method, url, data=None, ContentType=None):        
+        #Msg.info2_msg("HTTP request at %s. The timeout is: connect: %s, read:%s"%(url,self.omc_params.connect_timeout,self.omc_params.read_timeout))
+
+        response=requests.request(method, self.omc_params.base_url+url, 
             proxies=self.omc_params.proxies,
             timeout=(self.omc_params.connect_timeout, self.omc_params.read_timeout), 
             auth=HTTPBasicAuth(self.omc_params.user, self.omc_params.upass) if self.omc_params.user is not None else None,
             allow_redirects=True,
             headers={'Content-Type': ContentType } if ContentType is not None else None,
             data=json.dumps(data) if data is not None else None)
+        
+        #Msg.info2_msg("HTTP request finished, status code=%s"%response.status_code) 
+
+        return response
     # // run_request
         
     # creates an object to be later writen by this writer
@@ -112,20 +122,26 @@ class OMCWriter(UmcWriter):
 
         return records
     # // createWriteItem
-        
+       
+    def get_all_entity_types(self,datapoints):
+        return json.dumps(list(set([ k.get("entityType","UNKNOWN") for k in datapoints ])))
+ 
     def write(self,datapoints,exit_event=None):
         Msg.info2_msg("Uploading %d records to OMC..."%len(datapoints))        
-        
+        Msg.info2_msg("The batch contains entity types %s"%self.get_all_entity_types(datapoints))
+
         #if datapoints is not None:
-        #    print "========= BATCH OUTPUT START"
-        #    print json.dumps(datapoints)
-        #    print "========= BATCH OUTPUT END" 
+          #print "========= BATCH OUTPUT START"
+          #print json.dumps(datapoints)
+          #print "========= BATCH OUTPUT END" 
 
         response = self.run_request('POST',self.omc_params.data_url, datapoints, 'application/octet-stream')
         if response.status_code<300:
             resp=json.loads(response.text)
             status_uri=resp["statusUri"]
             
+            Msg.info2_msg("Upload request sent, waiting for the result at %s up to %s seconds..."%(status_uri,self.omc_params.omc_inprogress_timeout))
+
             start_t=time.time()
             while resp["status"]=="IN_PROGRESS" and (exit_event is not None and not(exit_event.is_set())):
                 response=self.run_request('GET',status_uri)
@@ -134,6 +150,11 @@ class OMCWriter(UmcWriter):
                 
                 resp=json.loads(response.text)
                 if resp["status"]=="IN_PROGRESS":
+                    # wait only certain number of seconds
+                    if time.time()-start_t>self.omc_params.omc_inprogress_timeout:
+                      Msg.err_msg("Upload failed, the datapoints in the batch will be discarded, they contain the following entity types: %s"%self.get_all_entity_types(datapoints))
+                      raise Exception("OMC upload failed due to a timeout of %d seconds while waiting for OMC to confirm the data was uploaded successfully! The status response payload is %s"%(self.omc_params.omc_inprogress_timeout,resp))   
+                    # wait
                     exit_event.wait(1) if exit_event is not None else sleep(1)
             # // while
 
