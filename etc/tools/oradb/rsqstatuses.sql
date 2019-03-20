@@ -7,7 +7,7 @@ SELECT
 	m.status as "MsgStatus",
 	count(1) as "Count",
 	SUBSTR(gs.component_dn,-INSTR(reverse(gs.component_dn),'/') + 1) as "Component",
-	gs.container_id
+	gs.container_id as "ContainerId"
 FROM 
 	__SOAINFRA_SCHEMA__.mediator_group_status gs, __SOAINFRA_SCHEMA__.mediator_resequencer_message m
 WHERE 
