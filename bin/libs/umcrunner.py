@@ -67,7 +67,8 @@ class UmcRunner:
                     )
                     server_list[hostname] = df
                 except Exception as e:
-                    Msg.err_msg("Error occured when obtaining configuration for server's hostname '%s': %s!"%(hostname,e))
+                    if "Name or service not known" not in str(e):
+                      Msg.err_msg("Error occured when obtaining configuration for server's hostname '%s': %s!"%(hostname,e))
                     pass
         # // server_binding
         
