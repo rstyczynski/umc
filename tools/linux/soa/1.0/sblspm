@@ -35,9 +35,6 @@ if [ ! -f "$getSensorData_bin/spm-getstatus.xml.template" ]; then
 	exit 1
 fi
 
-# remove all temp files
-rm -f $getSensorData_bin/spm-get-status-*.xml
-
 # create payload
 # generate unique id
 # this not really reliable
