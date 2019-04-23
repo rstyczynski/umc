@@ -157,7 +157,7 @@ class CollectLogStatsTask():
                 if ud.enabled:
                     ud.lock.acquire()
                     try:
-                        log_stats=Map(backlog_total=0)                    
+                        log_stats=Map(backlog_total=0, errorlog_mtime=0, errorlog_size=0, errorlog_tail=[])                    
                         log_dir=get_umc_instance_log_dir(ud.umc_instanceid, GlobalContext)                
                         
                         if os.path.isdir(log_dir):
@@ -172,13 +172,17 @@ class CollectLogStatsTask():
                                     else:
                                         log_stats[fg_key]+=1
                                     log_stats.backlog_total += 1
-                                # // if match
+                                # // if match log file
                                 
                                 # match the error log
-                                # m2 = re.match(r"^{umc_instanceid}(_[0-9\-]+)?.error.out$".format(umc_instanceid=ud.umc_instanceid), file) 
-                                # if m2:
-                                #     print "*** " + log_dir + "/" + file
-                                #     print utils.tail(log_dir + "/" + file, 10)
+                                m2 = re.match(r"^{umc_instanceid}(_[0-9\-]+)?.error.out$".format(umc_instanceid=ud.umc_instanceid), file) 
+                                if m2:
+                                    stat=os.stat(log_dir + "/" + file)
+                                    log_stats.errorlog_size=stat.st_size
+                                    log_stats.errorlog_mtime=stat.st_mtime
+                                    #the below takes too much time to finish, better not run this
+                                    #log_stats.errorlog_tail=utils.tail(log_dir + "/" + file, 10)
+                                # // if match error log
                             # // for 
                         else:
                             Msg.warn_msg("Directory %s does not exist!"%log_dir)
@@ -212,6 +216,11 @@ class CollectPrcStatsTask():
                     umc_counts.runs += ud.num_runs
                     if ud.lasterror_time > umc_counts.last_errortime:
                         umc_counts.last_errortime = ud.lasterror_time
+                    
+                    # error from error log
+                    if ud.log_stats is not None and ud.log_stats.errorlog_mtime > umc_counts.last_errortime:
+                        umc_counts.last_errortime = ud.log_stats.errorlog_mtime
+                        
                     if time.time()<ud.start_after:
                         umc_counts.waiting += 1
                     umc_counts.backlog_total += ud.log_stats.backlog_total if ud.get("log_stats") and ud.get("log_stats").get("backlog_total") else 0 
