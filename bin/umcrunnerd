@@ -139,7 +139,7 @@ if __name__ == "__main__":
         tasks.addTask(Tasks.CollectPrcStatsTask, GlobalContext.params.prcstats_interval, run_on_global_pause=True,
             time_limit_pause=2, pause_for=60*5, time_limit_disable=5)
         tasks.addTask(Tasks.CollectLogStatsTask, GlobalContext.params.logstats_interval, run_on_global_pause=False,
-            time_limit_pause=2, pause_for=60*10, time_limit_disable=5)
+            time_limit_pause=10, pause_for=60*10, time_limit_disable=20)
         
         # checks
         tasks.addTask(Tasks.OrphansCheckTask, GlobalContext.params.orphans_interval, run_on_global_pause=True)
