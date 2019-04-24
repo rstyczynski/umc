@@ -13,7 +13,7 @@ common:
       enabled: True
       
       # tcp port the server should be listening on all servers
-      tcp-port: 1989
+      tcp-port: 11989
       
       # The following configuration defines list of hostnames where umcrunnerd will listen on
       server-binding: ${ALL_HOSTS}

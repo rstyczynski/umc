@@ -109,13 +109,29 @@ class UmcConfig:
 
     # reads all umc instances; this converts array of instances returned by !include
     def get_umc_instances(self):
+        
+        def append_instance(umcinstances, e):
+            exists=False
+            for u in umcinstances:
+                if e["umc-id"]==u["umc-id"]:
+                    exists=True
+                    break
+                # // if
+            # // for
+            
+            if not(exists):
+                umcinstances.append(e)
+            else:
+                Msg.err_msg("The umc instance with the same id=%s already exists!"%(e["umc-id"]))
+        # // append_instance            
+        
         umcinstances=[]
         for e in self.value("umc-instances", []):
             if isinstance(e, list):
                 for e1 in e:
-                    umcinstances.append(e1)
+                    append_instance(umcinstances, e1)
             else:
-                umcinstances.append(e)
+                append_instance(umcinstances, e)
         return umcinstances
     # // get_umc_instances
 

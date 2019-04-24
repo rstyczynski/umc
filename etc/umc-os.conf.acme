@@ -67,3 +67,17 @@
   writers:
     - writer-id: influxdb
       name: uptime 
+
+# vmstat
+- umc-id: vmstat  
+  enabled: true
+  umcrunner:    
+    hosts: _ALL_
+    params: 20 vmstat 10 10   
+  reader:
+    fields: "ProcessRunQueue,ProcessBlocked,MemSwpd,MemFree,MemBuff,MemCache,SwapReadBlocks,SwapWriteBlocks,IOReadBlocks,IOWriteBlocks,Interrupts,ContextSwitches,CPUuser,CPUsystem,CPUidle,CPUwaitIO,CPUVMStolenTime"      
+    tags:                  
+  writers:
+    - writer-id: influxdb
+      name: vmstat 
+
