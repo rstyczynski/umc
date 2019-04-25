@@ -101,20 +101,20 @@ class Table:
         lines=[]
         line = ""
         for cdef in self.table_def:
-            line = line + self.format_item(cdef,cdef["name"], skipformat=True, entry=None)
+            line = line + self.format_item(cdef,cdef["name"], skipformat=True, entry=None, adjust=not(noterm))
         lines.append(line)
 
         # display rows
         for e in self.data:
             line = ""
             for cdef in self.table_def:        
-                line = line + self.format_item(cdef,self.eval_value(cdef["value"],e),skipformat=False, entry=e)
+                line = line + self.format_item(cdef,self.eval_value(cdef["value"],e),skipformat=False, entry=e, adjust=not(noterm))
             lines.append(line)
         
         if not(noterm):
             cols=self.getTerminalCols()
         else:
-            cols=1000
+            cols=100000
         
         for line in lines:
             sys.stdout.write("%s\n"%line[0:cols])         

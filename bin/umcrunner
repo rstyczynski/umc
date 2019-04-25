@@ -67,6 +67,12 @@ def format_cedrwe(cdef, value, entry):
 def format_cpuload(cdef, value, entry):
     return "%.4f"%(entry["cpu"]/entry["uptime"])
 
+def format_error_rows(cdef, value, entry):
+    rows=""
+    for row in value:
+      rows+=row
+    return rows
+
 # resource table definition
 stats_umcrunner = [
     { "name" : "HOST",        "mlen" : 0,  "value" : "{hostname}",                                          "help" : "umcrunner hostname" }, 
@@ -98,6 +104,10 @@ stats_umc = [
     { "name" : "LAST_ERROR",  "mlen" : 0,  "value" : "{lasterror_time}",     "format" : format_time ,       "help" : "Last time an error occurred." }
 ]
 
+error_umc = [
+    { "name" : "ERROR_TEXT",  "mlen" : 0,  "value" : "{rows}",               "format" : format_error_rows,  "help" : "error log entry" }, 
+]
+
 rules_umc = [
     { "rule" : "{stats.p.uptime} > ({delay}*{count})", "type" : "warning", "msg" : "umc instance {umc_instanceid} on {hostname} is running longer than it should!" }
 ]
@@ -105,9 +115,11 @@ rules_umc = [
 # resource definitions
 resources = {
     "hosts" : { "url" : "/stats/hosts/{hostname}", "table_def" : stats_umcrunner, "rules_def" : rules_umc, 
-        "help" : "umcrunner runtime information" }, 
+        "terminate_cols": True, "help" : "umcrunner runtime information" }, 
     "umc" : { "url" : "/stats/hosts/{hostname}/umc/{umc}", "table_def" : stats_umc, 
-        "help" : "umc instances configuration and runtime information" } 
+        "terminate_cols": True, "help" : "umc instances configuration and runtime information" },
+    "error" : { "url" : "/logs/error/hosts/{hostname}/umc/{umc}", "table_def" : error_umc, 
+        "terminate_cols": False, "help" : "umc instance error log" } 
 }
 
 # commands definitions
@@ -268,8 +280,8 @@ if __name__ == "__main__":
                     
                     if args.cont and args.format=="text": os.system('clear')
 
-                    if args.format=="text":                    
-                        table.display(response.json(), args.noterm)
+                    if args.format=="text":
+                        table.display(response.json(), args.noterm or not(rdef["terminate_cols"]))
                     else:                        
                         sys.stdout.write("%s\n"%json.dumps(response.json(), indent=2))
                         

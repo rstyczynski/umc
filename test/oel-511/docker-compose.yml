@@ -11,6 +11,8 @@ services:
     command: /bin/bash -l
     volumes:
       - ../../:/home/oracle/umc
+    ports:
+      - "11989:11989"
     networks:
       umcnet:
         ipv4_address: 192.168.10.101  

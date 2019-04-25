@@ -1,3 +1,4 @@
+import os
 import thread
 import threading
 import json
@@ -12,12 +13,14 @@ from threading import Event
 from threading import RLock
 from itertools import chain
 from umctasks import RefreshProcessesTask
+from umctasks import get_umc_instance_log_dir
 
 # local libraries
 import messages as Msg
 import proc_utils as putils
 from utils import Map
 from utils import PathDef
+from utils import tail
 
 allinstances_data = None
 rlock_allhostsreq = threading.RLock() 
@@ -202,7 +205,7 @@ class Handler(BaseHTTPRequestHandler):
     # if path_def contains {hostname} and its value is 'all', then proxy the request to all umcrunner servers in the cluster; 
     # otherwise redirect the request to respctive hostname; if the hostname is this umcrunner instance, then process the request here
     # the functiona always returns an array of json formatted objects
-    def process_cluster_request(self, method, path_def, cache_maxage, get_content):
+    def process_cluster_request(self, method, path_def, allow_all, cache_maxage, get_content):
         params=PathDef(path_def).params(self.path) #get_path_params(path_def, self.path)
         
         # path must be a valid path and hostname param must exist in it
@@ -214,7 +217,7 @@ class Handler(BaseHTTPRequestHandler):
         server_list = self.get_server_list(params)
         
         # hostname is "all", will forward to individual umcrunner servers
-        if len(server_list) > 1:
+        if len(server_list) > 1 and allow_all:
             # check if this has been proxied already
             if self.headers.get("Via") is None:
                 # acquire lock on this path to prevent other threads from doing the same
@@ -281,7 +284,7 @@ class Handler(BaseHTTPRequestHandler):
                 return True
         # // if one hostname only
         else:
-            self.send(404, None, "The host %s cannot be found!"%params.params.hostname)
+            self.send(404, None, "The host '%s' cannot be found or is not allowed!"%params.params.hostname)
             return False
         # else 
     # process_cluster_request       
@@ -293,8 +296,28 @@ class Handler(BaseHTTPRequestHandler):
         for ud in GlobalContext.umcdefs:
             ud.lock.acquire()
             try:
+                if not(ud.get("errorlog")):
+                    sl_def = GlobalContext.server_list.get(socket.gethostname())
+                    if sl_def is not None and sl_def.address is not None and sl_def.tcp_port is not None and sl_def.me:
+                        ud["link_errorlog"]="http://{address}:{tcp_port}/logs/error/hosts/{hostname}/umc/{umc_instance}".format(address=sl_def.address,tcp_port=sl_def.tcp_port,hostname=ud.hostname,umc_instance=ud.umc_instanceid)
+                
                 if params.params.umc=='all' or ud.umc_instanceid.startswith(params.params.umc): 
                     content.json.append(ud.to_json(CustomEncoder,exclude=['proc','options','lock']))
+            finally:
+                ud.lock.release()
+        return content
+
+    # callback to retrieve error log content 
+    def callback_umc_errorlog(self, params):
+        content=Map(code=200, json=[])
+        for ud in GlobalContext.umcdefs:
+            ud.lock.acquire()
+            try:
+                if ud.umc_instanceid.startswith(params.params.umc):
+                    errorlog="%s/%s.error.out"%(get_umc_instance_log_dir(ud.umc_instanceid,GlobalContext),ud.umc_instanceid)
+                    if os.path.exists(errorlog):
+                        content.json.append(json.dumps({ "umc_instanceid" : ud.umc_instanceid, "rows": tail(errorlog, 10) }))
+                # // if umc id 
             finally:
                 ud.lock.release()
         return content
@@ -355,15 +378,21 @@ class Handler(BaseHTTPRequestHandler):
     # reading data
     def do_GET(self):
         # umcrunner stats
-        if self.process_cluster_request("get", "/stats/hosts/{hostname}", 
+        if self.process_cluster_request("get", "/stats/hosts/{hostname}", True,
             GlobalContext.params.stats_interval, 
             lambda params : Map(code=200, json=[ GlobalContext.umcrunner_stats.to_json() ] )) is not None:
             return
 
         # umc stats
-        if self.process_cluster_request("get", "/stats/hosts/{hostname}/umc/{umc}", 
+        if self.process_cluster_request("get", "/stats/hosts/{hostname}/umc/{umc}", True,
             GlobalContext.params.stats_interval, 
             self.callback_umcdef_content) is not None:
+            return
+
+        # umc error log
+        if self.process_cluster_request("get", "/logs/error/hosts/{hostname}/umc/{umc}", False,
+            GlobalContext.params.stats_interval, 
+            self.callback_umc_errorlog) is not None:
             return
             
         # others are not found 
@@ -372,22 +401,22 @@ class Handler(BaseHTTPRequestHandler):
     # modifications
     def do_POST(self):
         # terminate umc instance
-        if self.process_cluster_request("post", "/terminate/hosts/{hostname}/umc/{umc_instance}", 0, 
+        if self.process_cluster_request("post", "/terminate/hosts/{hostname}/umc/{umc_instance}", True, 0, 
             self.callback_umc_terminate) is not None:            
             return
 
         # disable umc instance
-        if self.process_cluster_request("post", "/disable/hosts/{hostname}/umc/{umc_instance}", 0, 
+        if self.process_cluster_request("post", "/disable/hosts/{hostname}/umc/{umc_instance}", True, 0, 
             self.callback_umc_disable) is not None:            
             return
 
         # enable umc instance
-        if self.process_cluster_request("post", "/enable/hosts/{hostname}/umc/{umc_instance}", 0, 
+        if self.process_cluster_request("post", "/enable/hosts/{hostname}/umc/{umc_instance}", True, 0, 
             self.callback_umc_enable) is not None:            
             return
             
         # enable umc instance
-        if self.process_cluster_request("post", "/stop/hosts/{hostname}", 0, 
+        if self.process_cluster_request("post", "/stop/hosts/{hostname}", True, 0, 
             self.callback_stop) is not None:            
             return
 
