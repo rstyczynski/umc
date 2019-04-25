@@ -179,7 +179,10 @@ class CollectLogStatsTask():
                                 if m2:
                                     stat=os.stat(log_dir + "/" + file)
                                     log_stats.errorlog_size=stat.st_size
-                                    log_stats.errorlog_mtime=stat.st_mtime
+                                    if log_stats.errorlog_size>0:
+                                        log_stats.errorlog_mtime=stat.st_mtime
+                                    else:
+                                        log_stats.errorlog_mtime=0
                                     #the below takes too much time to finish, better not run this
                                     #log_stats.errorlog_tail=utils.tail(log_dir + "/" + file, 10)
                                 # // if match error log
@@ -214,13 +217,14 @@ class CollectPrcStatsTask():
                         umc_counts.disabled += 1
                     umc_counts.errors += ud.num_errors
                     umc_counts.runs += ud.num_runs
+                    
+                    # update last error time from the error log if it was sooner
+                    if ud.log_stats is not None and ud.log_stats.errorlog_mtime > ud.lasterror_time:
+                        ud.lasterror_time = ud.log_stats.errorlog_mtime
+
                     if ud.lasterror_time > umc_counts.last_errortime:
                         umc_counts.last_errortime = ud.lasterror_time
                     
-                    # error from error log
-                    if ud.log_stats is not None and ud.log_stats.errorlog_mtime > umc_counts.last_errortime:
-                        umc_counts.last_errortime = ud.log_stats.errorlog_mtime
-                        
                     if time.time()<ud.start_after:
                         umc_counts.waiting += 1
                     umc_counts.backlog_total += ud.log_stats.backlog_total if ud.get("log_stats") and ud.get("log_stats").get("backlog_total") else 0 
