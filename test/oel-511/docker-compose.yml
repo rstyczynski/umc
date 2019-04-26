@@ -11,8 +11,6 @@ services:
     command: /bin/bash -l
     volumes:
       - ../../:/home/oracle/umc
-    ports:
-      - "11989:11989"
     networks:
       umcnet:
         ipv4_address: 192.168.10.101  
@@ -102,6 +100,21 @@ services:
     networks:
       umcnet:
         ipv4_address: 192.168.10.220
+
+  # nginx proxy server
+  nginx:
+    image: tomvit/nginx
+    container_name: ngx-ukbn40hr
+    user: root
+    hostname: ukbn40hr
+    stdin_open: true
+    tty: true
+    command: /bin/bash -l -c 'service nginx start && /bin/bash -l'
+    ports:
+      - "11989:80"
+    networks:
+      umcnet:
+        ipv4_address: 192.168.10.140
 
 networks:
   umcnet:
