@@ -151,6 +151,22 @@ class HTTPCache():
         return self.data[url]
     # create_data    
     
+    def purge_cache(self):
+        topurge=[]
+        for url in self.data:
+            d=self.data[url]
+            if (not(d.lock._RLock__owner)) and (d.created_time is None or d.age is None or time.time()-d.created_time>d.age):
+                topurge.append(url)
+            # // if purge
+        # // for
+    
+        # purge 
+        for url in topurge:
+            del self.data[url]
+            Msg.info2_msg("The cache item %s has been purged from the cache."%url)
+        
+    # // purge_cache
+    
     def acquire_lock(self,url):
         if self.data.get(url) is None:
             self.create_data(url, None, None, None)
@@ -163,7 +179,9 @@ class HTTPCache():
     # release_lock
     
     def get(self,url):
+        self.purge_cache()
         d=self.data.get(url)
+        print str(d)
         if d is not None and d.created_time is not None and d.age is not None and time.time()-d.created_time<=d.age:
             return d
         else:
@@ -379,19 +397,19 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         # umcrunner stats
         if self.process_cluster_request("get", "/stats/hosts/{hostname}", True,
-            GlobalContext.params.stats_interval, 
+            GlobalContext.params.logstats_interval, 
             lambda params : Map(code=200, json=[ GlobalContext.umcrunner_stats.to_json() ] )) is not None:
             return
 
         # umc stats
         if self.process_cluster_request("get", "/stats/hosts/{hostname}/umc/{umc}", True,
-            GlobalContext.params.stats_interval, 
+            GlobalContext.params.logstats_interval, 
             self.callback_umcdef_content) is not None:
             return
 
         # umc error log
         if self.process_cluster_request("get", "/logs/error/hosts/{hostname}/umc/{umc}", False,
-            GlobalContext.params.stats_interval, 
+            GlobalContext.params.logstats_interval, 
             self.callback_umc_errorlog) is not None:
             return
             
