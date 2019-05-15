@@ -127,12 +127,14 @@ class RefreshProcessesTask():
                     if not(umcdef.proc.is_running()) or (umcdef.proc.is_running() and umcdef.proc.status() == psutil.STATUS_ZOMBIE):   
                         del umcdef.proc
                         umcdef.proc=None
+                        umcdef.last_started_time=0
                         sleep(0.1)
                                         
                 except Exception as e:
                     Msg.warn_msg("There was a problem when quering the process with pid %d: %s"%(umcdef.proc.pid,str(e)))
                     if e.__class__ == psutil.NoSuchProcess:
                         umcdef.proc=None
+                        umcdef.last_started_time=0
                     pass
         finally:
             umcdef.lock.release()
@@ -239,7 +241,8 @@ class CollectPrcStatsTask():
                             umc_counts.running += 1
                             
                             p["top_pid"] = ud.proc.pid
-                            p["uptime"] = time.time() - ud.proc.create_time()
+                            #p["uptime"] = time.time() - ud.proc.create_time()
+                            p["uptime"] = time.time()-ud.last_started_time
                             p["cmdline"] = ud.proc.cmdline()
                             
                             kids = ud.proc.children(True)
@@ -259,7 +262,8 @@ class CollectPrcStatsTask():
                             umc_counts.cpu_s += p["cpu_s"]                            
                             umc_counts.num_children += p["num_chproc"]    
                         # // end if
-                    except:
+                    except Exception as e:
+                        Msg.warn_msg("Error occurred when retrieving process info: %s"%str(e))
                         pass
                     
                     stats["p"] = p
