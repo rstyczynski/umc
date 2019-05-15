@@ -36,6 +36,9 @@ import threading
 # *** constants
 VERSION="0.3"
 
+SIGNALS=dict((k, v) for v, k in reversed(sorted(signal.__dict__.items()))
+     if v.startswith('SIG') and not v.startswith('SIG_'))
+
 # global umcrunner context 
 class GlobalContext():
     config=None             # main configuration object
@@ -71,8 +74,8 @@ def get_lock():
         return False
             
 # signal handler; terminate all child processes on exit        
-def signal_quit(singal, frame):
-    Msg.warn_msg("Shutting down...")
+def signal_quit(signal, frame):
+    Msg.warn_msg("Shutting down due to %s (%d)..."%(SIGNALS[signal],signal))
     GlobalContext.exitEvent.set()
         
 # *** MAIN
