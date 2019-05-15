@@ -272,15 +272,17 @@ class CollectPrcStatsTask():
             proc=psutil.Process()
             d = proc.as_dict(attrs=['cpu_times', 'memory_info'])
             uptime=time.time()-proc.create_time()
+            hostname=socket.gethostname()
             GlobalContext.umcrunner_stats = Map(
                 pid=proc.pid,
-                hostname=socket.gethostname(),
+                hostname=hostname,
                 uptime=uptime,
                 cpu=d["cpu_times"].user,
                 cpu_s=d["cpu_times"].user/uptime,
                 rss=float(d["memory_info"].rss/1024/1024),
                 threads=proc.num_threads(),
-                umc_counts=umc_counts
+                umc_counts=umc_counts,
+                link_umcinstances="/stats/hosts/{hostname}/umc/all".format(hostname=hostname)
             )
             
             return True
