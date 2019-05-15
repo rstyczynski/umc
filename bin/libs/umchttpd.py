@@ -6,6 +6,7 @@ import socket
 import re
 import time
 import requests
+import datetime
 
 from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
 from SocketServer import ThreadingMixIn
@@ -21,6 +22,8 @@ import proc_utils as putils
 from utils import Map
 from utils import PathDef
 from utils import tail
+from time import sleep
+from Queue import Queue 
 
 allinstances_data = None
 rlock_allhostsreq = threading.RLock() 
@@ -181,7 +184,6 @@ class HTTPCache():
     def get(self,url):
         self.purge_cache()
         d=self.data.get(url)
-        print str(d)
         if d is not None and d.created_time is not None and d.age is not None and time.time()-d.created_time<=d.age:
             return d
         else:
@@ -194,6 +196,8 @@ cache = HTTPCache()
 # *** http server class for api requests 
 class Handler(BaseHTTPRequestHandler):
     server_version = "umcrunner, BaseHTTP/0.3, Python/2.7.11"    
+    protocol_version='HTTP/1.1'
+    timeout = 10
     
     # helper to format a message in json
     def msg(self, msg, code=200):
@@ -205,6 +209,8 @@ class Handler(BaseHTTPRequestHandler):
         if headers is not None:
             for k,v in headers.items():
                 self.send_header(k, v)
+        self.send_header('Content-Length', len(data))
+        self.send_header('Connection', 'keep-alive')
         self.end_headers()
         if data is not None:
             self.wfile.write(data)
@@ -219,11 +225,18 @@ class Handler(BaseHTTPRequestHandler):
         return server_list
     # get_server_list
     
+    def read(self):
+        request_headers = self.headers
+        content_length = request_headers.getheaders('content-length')
+        length = int(content_length[0]) if content_length else 0
+        return self.rfile.read(length)
+    # read 
+    
     # process request in the umcrunner cluster in the following way:
     # if path_def contains {hostname} and its value is 'all', then proxy the request to all umcrunner servers in the cluster; 
     # otherwise redirect the request to respctive hostname; if the hostname is this umcrunner instance, then process the request here
     # the functiona always returns an array of json formatted objects
-    def process_cluster_request(self, method, path_def, allow_all, cache_maxage, get_content):
+    def process_cluster_request(self, method, path_def, allow_all, cache_maxage, is_stream, get_content):
         params=PathDef(path_def).params(self.path) #get_path_params(path_def, self.path)
         
         # path must be a valid path and hostname param must exist in it
@@ -293,13 +306,17 @@ class Handler(BaseHTTPRequestHandler):
                 self.send(308, { "Location" : location_url }, "")
                 return
             else:
-                content = get_content(params)
-                if content is not None:
-                    self.send(content.code, { "Content-Type" : "application/json" }, "[%s]"%",".join(content.json) )
+                if not(is_stream):
+                    content = get_content(params)
+                    if content is not None:
+                        self.send(content.code, { "Content-Type" : "application/json" }, "[%s]"%",".join(content.json) )
+                    else:
+                        # should not happen really
+                        self.send(500, None, "" )
+                    return True
                 else:
-                    # should not happen really
-                    self.send(500, None, "" )
-                return True
+                    get_content(params)
+                    return True
         # // if one hostname only
         else:
             self.send(404, None, "The host '%s' cannot be found or is not allowed!"%params.params.hostname)
@@ -317,7 +334,7 @@ class Handler(BaseHTTPRequestHandler):
                 if not(ud.get("errorlog")):
                     sl_def = GlobalContext.server_list.get(socket.gethostname())
                     if sl_def is not None and sl_def.address is not None and sl_def.tcp_port is not None and sl_def.me:
-                        ud["link_errorlog"]="http://{address}:{tcp_port}/logs/error/hosts/{hostname}/umc/{umc_instance}".format(address=sl_def.address,tcp_port=sl_def.tcp_port,hostname=ud.hostname,umc_instance=ud.umc_instanceid)
+                        ud["link_errorlog"]="/logs/error/hosts/{hostname}/umc/{umc_instance}".format(address=sl_def.address,tcp_port=sl_def.tcp_port,hostname=ud.hostname,umc_instance=ud.umc_instanceid)
                 
                 if params.params.umc=='all' or ud.umc_instanceid.startswith(params.params.umc): 
                     content.json.append(ud.to_json(CustomEncoder,exclude=['proc','options','lock']))
@@ -391,26 +408,72 @@ class Handler(BaseHTTPRequestHandler):
     def callback_stop(self,params):
         GlobalContext.exitEvent.set()
         return self.msg("%s: umcrunner exit event set."%(params.params.hostname), code=202)
+
+    # callback to stop umcrunner
+    # def callback_updatesettings(self,params):
+    #     try:
+    #         data=json.loads(self.read())
+    #         if (data.get("verbose") is not None and (data["verbose"]==True or data["verbose"]==False)):
+    #             mode=Msg.verbose_mode(data["verbose"])
+    #             return self.msg("%s: verbose mode is %s."%(params.params.hostname,mode), code=202)
+    #         else:
+    #             raise Exception("Invalid settings data!")
+    #     except Exception as e:
+    #         self.send_error(400, str(e))
+    # callback_updatesettings
+    
+    # callback to stop umcrunner
+    def callback_logstream(self,params):
+        q=Queue()
+        Msg.subscribe(q)
+        try:
+            self.send_response(200)
+            self.send_header("Content-Type", "text/event-stream")
+            self.send_header("Cache-Control", "no-cache")
+            self.send_header("X-Accel-Buffering", "no") # turn off buffering on nginx proxy servers for this request
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            started=time.time()
+            
+            # run for 120 seconds
+            # the SSE client should reconnect automatically
+            while time.time()-started<120:
+              try:
+                data=q.get()
+                if (data is not None):
+                    self.wfile.write("data: %s\n\n"%json.dumps(data))
+                    q.task_done()
+                else:
+                  sleep(0.5)
+              except Exception as e:
+                pass
+        finally:
+            Msg.unsubscribe(q)
+            del q        
     
     # *** HTTP methods handlers
     # reading data
     def do_GET(self):
         # umcrunner stats
         if self.process_cluster_request("get", "/stats/hosts/{hostname}", True,
-            GlobalContext.params.logstats_interval, 
+            GlobalContext.params.logstats_interval, False,
             lambda params : Map(code=200, json=[ GlobalContext.umcrunner_stats.to_json() ] )) is not None:
             return
 
         # umc stats
         if self.process_cluster_request("get", "/stats/hosts/{hostname}/umc/{umc}", True,
-            GlobalContext.params.logstats_interval, 
+            GlobalContext.params.logstats_interval, False,
             self.callback_umcdef_content) is not None:
             return
 
         # umc error log
         if self.process_cluster_request("get", "/logs/error/hosts/{hostname}/umc/{umc}", False,
-            GlobalContext.params.logstats_interval, 
+            GlobalContext.params.logstats_interval, False,
             self.callback_umc_errorlog) is not None:
+            return
+            
+        # messages log steam (server-sent events)
+        if self.process_cluster_request("get", "/logs/stream/hosts/{hostname}", False, 0, True, self.callback_logstream) is not None:
             return
             
         # others are not found 
@@ -419,31 +482,46 @@ class Handler(BaseHTTPRequestHandler):
     # modifications
     def do_POST(self):
         # terminate umc instance
-        if self.process_cluster_request("post", "/terminate/hosts/{hostname}/umc/{umc_instance}", True, 0, 
+        if self.process_cluster_request("post", "/terminate/hosts/{hostname}/umc/{umc_instance}", True, 0, False,
             self.callback_umc_terminate) is not None:            
             return
 
         # disable umc instance
-        if self.process_cluster_request("post", "/disable/hosts/{hostname}/umc/{umc_instance}", True, 0, 
+        if self.process_cluster_request("post", "/disable/hosts/{hostname}/umc/{umc_instance}", True, 0, False,
             self.callback_umc_disable) is not None:            
             return
 
         # enable umc instance
-        if self.process_cluster_request("post", "/enable/hosts/{hostname}/umc/{umc_instance}", True, 0, 
+        if self.process_cluster_request("post", "/enable/hosts/{hostname}/umc/{umc_instance}", True, 0, False,
             self.callback_umc_enable) is not None:            
             return
             
         # enable umc instance
-        if self.process_cluster_request("post", "/stop/hosts/{hostname}", True, 0, 
+        if self.process_cluster_request("post", "/stop/hosts/{hostname}", True, 0, False,
             self.callback_stop) is not None:            
             return
 
         # others are not found 
         self.send_response(404)
-        
+
+    # def do_PUT(self):
+    #     # update settings
+    #     if self.process_cluster_request("put", "/settings/hosts/{hostname}", False, 0, False, 
+    #         self.callback_updatesettings) is not None:            
+    #         return
+    # 
+    #     # others are not found 
+    #     self.send_response(404)
+                    
     def log_request(self, size):
         Msg.info2_msg('HTTP request from (%s) %s %s'%(self.address_string(), self.requestline, str(size)))
 
+    # def handle_one_request(self):
+    #     #try:
+    #     BaseHTTPRequestHandler.__init__(self, Handler).handle_one_request()
+    #     #except:
+    #     #    print "*** handle request error!"
+        
 # threaded HTTP server, this is required due to connections that may be reused in chrome
 # hence requests coming from other clients would get blocked
 # this is a similar solution provided by a fix here: https://bugs.python.org/issue31639

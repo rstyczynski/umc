@@ -1,6 +1,7 @@
 
 import sys
 import datetime
+import time
 
 # messages colors
 class bcolors:
@@ -16,10 +17,33 @@ MSG_WARN  = 2
 lasterror=None          # last error text
 lasterrorcount=0        # last error count
 verbose=False
+subscribers=[]
+
+def verbose_mode(v):
+    global verbose
+    if (v!=verbose):
+        verbose=v
+        info1_msg("Verbose mode changed to %s"%str(verbose))
+    return verbose    
+
+def subscribe(queue):
+    subscribers.append(queue)
+    info1_msg("A new messages subscriber created, there are %d subscribers"%len(subscribers))    
+
+def unsubscribe(queue):
+    subscribers.remove(queue)    
+    info1_msg("Messages subscriber removed, there are %d subscribers"%len(subscribers))  
     
 # *** print info message
 def message(type, msg, forcePrint=False):
-    global lasterror; global lasterrorcount
+    global lasterror; global lasterrorcount; global subscribers
+    message_time=time.time() 
+    
+    # send message to subscribers
+    if len(subscribers)>0:
+        data={ 'timestamp': message_time, 'type': type, 'message': msg }
+        for q in subscribers:
+            q.put(data)
     
     # count number of errors and exit if the error message is the same as the previous one
     if type == MSG_ERROR and lasterror == msg:
@@ -48,15 +72,15 @@ def message(type, msg, forcePrint=False):
             if not(sys.stderr.isatty()):
                 error_color=''; end_color_error=''
                 
-            sys.stderr.write("[" + str(datetime.datetime.now()) + "]:" + error_color + 
+            sys.stderr.write("[" + str(datetime.datetime.fromtimestamp(message_time)) + "]:" + error_color + 
                 " The previous error occurred %d times!"%lasterrorcount + end_color_error + "\n")
             sys.stderr.flush()
             lasterrorcount=0
         
         # write the message to respective stream
-        out.write("[" + str(datetime.datetime.now()) + "]:" + out_color + " " + msg + end_color_out + "\n")  
+        out.write("[" + str(datetime.datetime.fromtimestamp(message_time)) + "]:" + out_color + " " + msg + end_color_out + "\n")  
         out.flush()
-        
+                
         # if the message type is error, remember the message and reset the counter
         if type == MSG_ERROR:
             lasterror=msg
