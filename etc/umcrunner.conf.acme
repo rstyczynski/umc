@@ -206,7 +206,7 @@ umc-instances:
     enabled: true
     umcrunner:
       hosts: ${HOST1},${HOST2}
-      params: 20 dms 10 10 JDBC_DataSource config.sample
+      params: 20 dms 60 60 JDBC_DataSource config.sample
     reader:
       timefield: datetime
       timeformat: "%y-%m-%d %H:%M:%S"
@@ -277,7 +277,7 @@ umc-instances:
     enabled: true
     umcrunner:    
       hosts: ${HOST1}
-      params: 20 oradb 10 10 aiaflows.sql oradb.conf.sample
+      params: 20 oradb 60 60 aiaflows.sql oradb.conf.sample
       options: setsid
     reader:
       timefield: time

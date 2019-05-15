@@ -6,7 +6,7 @@
   enabled: false
   umcrunner:    
     hosts: ${HOST1}
-    params: 20 iostat 10 10   
+    params: 20 iostat 60 60   
   reader:
     fields: "tps,kB_read/s,kB_wrtn/s,kB_read,kB_wrtn"      
     tags: device                  
@@ -19,7 +19,7 @@
   enabled: true
   umcrunner:    
     hosts: _ALL_
-    params: 20 ifconfig 10 10   
+    params: 20 ifconfig 60 60   
   reader:
     fields: "RXpackets,RXerrors,RXdropped,RXoverruns,RXframe,TXpackets,TXerrors,TXdropped,
       TXoverruns,TXcarrier,collisions,txqueuelen,RXbytes,TXbytes"     
@@ -33,7 +33,7 @@
   enabled: true
   umcrunner:    
     hosts: ${ALL_HOSTS}
-    params: 20 netstattcp 10 10   
+    params: 20 netstattcp 60 60   
   reader:
     fields: "active_connections_openings,passive_connection_openings,failed_connection_attempts,connection_resets_received,connections_established,
       !segments_received,!segments_send_out,!segments_retransmited,!bad_segments_received,resets_sent"     
@@ -47,7 +47,7 @@
   enabled: true
   umcrunner:    
     hosts: _ALL_
-    params: 20 free 10 10   
+    params: 20 free 60 60   
   reader:
     fields: "total,used,free,shared,buffers,cached,usedNoBuffersCache,freePlusBuffersCache,SwapTotal,SwapUsed,SwapFree"      
     tags:                  
@@ -60,7 +60,7 @@
   enabled: true
   umcrunner:    
     hosts: _ALL_
-    params: 20 uptime 10 10   
+    params: 20 uptime 60 60   
   reader:
     fields: "users,load1min,load5min,load15min"      
     tags:                  
@@ -73,7 +73,7 @@
   enabled: true
   umcrunner:    
     hosts: _ALL_
-    params: 20 vmstat 10 10   
+    params: 20 vmstat 60 60   
   reader:
     fields: "ProcessRunQueue,ProcessBlocked,MemSwpd,MemFree,MemBuff,MemCache,SwapReadBlocks,SwapWriteBlocks,IOReadBlocks,IOWriteBlocks,Interrupts,ContextSwitches,CPUuser,CPUsystem,CPUidle,CPUwaitIO,CPUVMStolenTime"      
     tags:                  
