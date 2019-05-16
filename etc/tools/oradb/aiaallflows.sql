@@ -29,7 +29,6 @@ FROM (
          __SOAINFRA_SCHEMA__.cube_instance partition (PT_20180605) cui
     WHERE 
          ci.ecid = cif.ecid (+) AND ci.id = ri.composite_instance_id (+) AND ci.id=cui.cmpst_id(+) AND
-         ci.created_time BETWEEN TO_DATE('18-06-06 12:35:00', 'YY-MM-DD HH24:MI:SS') AND
-                                  TO_DATE('18-06-06 17:20:00', 'YY-MM-DD HH24:MI:SS')
+         ci.created_time >= trunc(sysdate - 6/1440, 'MI') AND ci.created_time < trunc(sysdate - 5/1440, 'MI') 
   ) GROUP BY ecid
 ) GROUP BY ora_hash(cdns), cdns;
