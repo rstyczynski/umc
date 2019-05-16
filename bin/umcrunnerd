@@ -76,6 +76,19 @@ def get_lock():
             
 # signal handler; terminate all child processes on exit        
 def signal_quit(signal, frame):
+    Msg.warn_msg("Got %s (%d) signal, will dump all processes on this host..."%(SIGNALS[signal],signal))
+    sys.stderr.write("----- ps axf -o pid,cmd -----\n")
+    
+    # dump the current ps - to find out who is killing me
+    cmd=subprocess.Popen('ps axf -o pid,cmd', shell=True, stdin=None, stdout=subprocess.PIPE, stderr=None)
+    try:
+        for e in cmd.stdout:
+            sys.stderr.write(e)
+    finally:
+        del cmd
+    
+    sys.stderr.write("----------------------------\n")
+    
     Msg.warn_msg("Shutting down due to %s (%d)..."%(SIGNALS[signal],signal))
     GlobalContext.exitEvent.set()
         
