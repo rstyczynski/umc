@@ -135,7 +135,11 @@ if __name__ == "__main__":
     try:
         # ensure or children processes will share the same process group id 
         # (except the ones that require session ID)
-        os.setpgrp()
+        try:
+            os.setpgrp()
+        except Exception as e:
+            Msg.warn_msg("Cannot set pgid as pid due to '%s'"%str(e))
+            pass
         
         # all task being run as part of the main loop
         tasks = Tasks.TasksDef(GlobalContext)
