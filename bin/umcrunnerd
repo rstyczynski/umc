@@ -61,7 +61,8 @@ class GlobalContext():
 def resolve(hostname):
     try:
         return socket.gethostbyname(hostname)
-    except socket.error:
+    except:
+        Msg.warn_msg("Cannot resolve hostname %s to IP address."%hostname)
         return None
 
 # gets a lock using domain sockets to prevent this script from running more than once
