@@ -1,0 +1,118 @@
+#!/bin/bash
+# td capture scripts
+# this script does not produce CSV but only thread dumps in raw format
+# in order to produce CSV data there needs to be other tools to process thread dumps 
+
+# this script directory
+getSensorData_bin=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+
+# check umc was configured
+if [ ! -d $umcRoot ]; then
+  echo >&2 "umc was not initialized!"
+  exit 1
+fi
+
+# configuration directory
+configDir="$umcRoot/etc/tools/td"
+
+# the first parameter is timestamp directive
+# since we do not use it, we skip it (the value is None)
+shift
+
+# the next arguments are delay and count
+delay=$1 && shift
+count=$1 && shift
+env=$1 && shift
+config=$1 && shift
+
+# check config file exists
+if [ ! -f "$configDir/$config" ]; then
+	echo >&2 "$(date): The configuration file '$configDir/$config' does not exist!" 
+	exit 1
+fi
+
+# check env file exists
+if [ ! -f "$configDir/$env" ]; then
+	echo >&2 "$(date): The environment file '$configDir/$env' does not exist!" 
+	exit 1
+fi
+
+# load configuration
+source $configDir/$env
+
+server=$HOSTNAME
+lockfile=$getSensorData_bin/$HOSTNAME.lck
+DEBUG=false
+
+# on this machine run only once at a time
+if [ -e $lockfile ]; then
+   exit 0
+fi 
+
+trap "rm -f $lockfile; exit" INT TERM EXIT
+touch $lockfile
+
+# wait till the beginning of the next interval
+sleep $(($delay - ($(date +%s) % $delay)))
+
+# count the cycles and loop for number of cycles
+NUM=1
+while true; do
+	$DEBUG && echo "Cycle $NUM..."	
+
+	today_date=$(date +"%Y-%m-%d")
+	timestamp=$(date +"%Y-%m-%d-%H%M%S")
+  currenttime=$(date +%s)
+
+	# read configurations
+	cat $getSensorData_bin/$config | \
+	while read line; do
+        	if [ "$(echo $line | grep -o $HOSTNAME)" = "$HOSTNAME"  ]; then
+                	domain=$(echo $line | awk '{print $1}')
+                	servers=$(echo $line | awk '{print $3}' | sed "s/,/ /gi")
+
+			$DEBUG && echo "Domain $domain" 
+
+			for s in $servers; do
+				pids=$(ps ax | egrep "Dweblogic.Name=$s" | egrep -v grep | egrep -o "^.[0-9]+" | head -1)
+				for pid in $pids; do
+					logpath=$LOG_DIR/$today_date/$domain/$s
+					mkdir -p $logpath
+				
+					$DEBUG && echo "        Capturing top to $logpath/$s-$timestamp.td..."
+					top -b -n1 | egrep "(top.+up)|(Tasks)|(Cpu)|(Mem)|(Swap)|$pid|(PID)" >$logpath/$s-$timestamp.td
+					echo "  " >>$logpath/$s-$timestamp.td
+					echo "  " >>$logpath/$s-$timestamp.td	
+
+					$DEBUG && echo "        Capturing cpu info per thread for PID=$pid to $logpath/$s-$timestamp.td..."
+                                        ps -eLo pid,ppid,tid,pcpu,comm | egrep "(PID)|($pid)" >>$logpath/$s-$timestamp.td
+					echo "	" >>$logpath/$s-$timestamp.td
+					echo "  " >>$logpath/$s-$timestamp.td
+
+					$DEBUG && echo "	Capturing TD for PID=$pid to $logpath/$s-$timestamp.td..."
+					$JAVA_HOME/bin/jrcmd $pid print_threads >>$logpath/$s-$timestamp.td
+				done
+			done
+		fi
+	done
+
+	if [ $count = "" ] || [ "$NUM" -ge "$count" ]; then
+		break;
+	else
+		$DEBUG && echo "Sleeping..."
+    
+    e=$(date +%s); duration=$(expr $e - $currenttime)
+    if [ "$duration" -le "5" ]; then
+      sleep $(expr $delay - $duration)
+    else
+      echo >&2 "$(date): The thread dump collection took $duration seconds!"  
+      sleep $delay
+    fi
+		
+    NUM=$(( NUM + 1 ))
+	fi
+done
+
+rm $lockfile
+trap - INT TERM EXIT
+

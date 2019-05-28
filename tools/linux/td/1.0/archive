@@ -1,0 +1,37 @@
+
+# PAT monitor for thread dumps
+# The script captures thread dumps of selected WLS domains and its servers running
+# on the host where the script was run from
+
+# env file
+envfile=$1
+
+if [ ! -f "$envfile" ]; then
+  echo "environment file $envfile does not exist!"
+fi
+
+source $envfile
+
+DEBUG=false
+
+# all dirs older than N days to be archived
+dirs=$(find $LOG_DIR/ -mindepth 1 -maxdepth 1 -type d -mtime +2)
+for dir in $dirs; do
+	$DEBUG && echo "Dir: $dir"
+	# get all leafs in this directory - servers TDs to be archived
+	srvdirs=$(find $dir -type d | sort | awk '$0 !~ last "/" {print last} {last=$0} END {print last}' | grep -v "^$")
+	for srvdir in $srvdirs; do
+		$DEBUG && echo "	srv_dir: $srvdir"
+		tarname=$(echo $srvdir | sed 's/\// /gi' | awk '{ print $(NF-2)"-"$(NF-1)"-"$NF }')
+		$DEBUG && echo "        tar_name: $tarname.tar.gz"
+		cd $ARC_DIR
+		tar -czf $tarname.tar.gz $srvdir -C $ARC_DIR 2>&1 | grep -v "Removing leading"
+	done
+	# check not to make a disaster
+	if [[ $dir = /var/SP/log/monitoring/umc/logs/tools/td/logs/* ]]; then 
+		rm $dir -fr
+	fi
+done
+
+
+
