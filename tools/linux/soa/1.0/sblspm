@@ -21,6 +21,7 @@ shift
 delay=$1 && shift
 count=$1 && shift
 config=$1 && shift
+hostid=$1 && shift
 
 # check config file exists
 if [ ! -f "$configDir/$config" ]; then
@@ -33,6 +34,11 @@ source $configDir/$config
 if [ ! -f "$getSensorData_bin/spm-getstatus.xml.template" ]; then
 	echo >&2 "SPM get status template file does not exist!"
 	exit 1
+fi
+
+# set default host id if it was not provided as argument
+if [ "$hostid" = "" ]; then
+  hostid="SEBL_01"
 fi
 
 # create payload
@@ -48,6 +54,7 @@ fi
 tmpfile=$getSensorData_bin/spm-get-status-$uid.xml
 sed s/__USERNAME__/$USERNAME/gi $getSensorData_bin/spm-getstatus.xml.template >$tmpfile
 sed -i s/__PASSWORD__/$PASSWORD/gi $tmpfile
+sed -i s/__HOSTID__/$hostid/gi $tmpfile
 
 # remove the tmpfile on exit
 function cleanup {
@@ -70,7 +77,7 @@ function getSpmStatus() {
 }
 
 # header
-echo "time,hostname,server,poolsize,available,inuse,blocked_900s,avgused_ms,maxused_ms,p95used_ms,p90used_ms"
+echo "time,hostname,hostid,server,poolsize,available,inuse,blocked_900s,avgused_ms,maxused_ms,p95used_ms,p90used_ms"
 
 # loop count times
 current_count=0
@@ -103,7 +110,7 @@ while [ $current_count -lt $count ]; do
         use=$(echo "$msgstatus" | grep BPELInstanceID | awk '{ print $5 }' | sort -n | awk '{ values[NR] = $0; sum+=$0} END { if (NR > 0) { printf "%.0f,%.0f,%.0f,%.0f",sum/NR,values[NR],values[int(NR*0.95-0.5)],values[int(NR*0.90-0.5)] } else { printf "0,0,0,0"  } }')
 
 				# output the line
-				echo "$dt,$server,$sname,$curpool,$avail,$inuse,$blocked,$use"
+				echo "$dt,$server,$hostid,$sname,$curpool,$avail,$inuse,$blocked,$use"
 			fi
 		fi
 	done

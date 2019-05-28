@@ -10,7 +10,7 @@
    <soapenv:Body>
       <aias:GenericAIASessionPoolManagerRequest>
          <!--Optional:-->
-         <aias:HostId>SEBL_01</aias:HostId>
+         <aias:HostId>__HOSTID__</aias:HostId>
       </aias:GenericAIASessionPoolManagerRequest>
    </soapenv:Body>
 </soapenv:Envelope>
