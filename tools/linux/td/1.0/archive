@@ -1,7 +1,5 @@
-
-# PAT monitor for thread dumps
-# The script captures thread dumps of selected WLS domains and its servers running
-# on the host where the script was run from
+#!/bin/bash
+# Thread dumps archive script
 
 # env file
 envfile=$1
@@ -12,26 +10,29 @@ fi
 
 source $envfile
 
-DEBUG=false
+DEBUG=true
+
+$DEBUG && echo "Log dir: $LOG_DIR"
+
+# create archive directory
+mkdir -p $ARC_DIR
 
 # all dirs older than N days to be archived
-dirs=$(find $LOG_DIR/ -mindepth 1 -maxdepth 1 -type d -mtime +2)
+dirs=$(find $LOG_DIR -mindepth 1 -maxdepth 1 -type d -mtime +1)
 for dir in $dirs; do
-	$DEBUG && echo "Dir: $dir"
-	# get all leafs in this directory - servers TDs to be archived
-	srvdirs=$(find $dir -type d | sort | awk '$0 !~ last "/" {print last} {last=$0} END {print last}' | grep -v "^$")
-	for srvdir in $srvdirs; do
-		$DEBUG && echo "	srv_dir: $srvdir"
-		tarname=$(echo $srvdir | sed 's/\// /gi' | awk '{ print $(NF-2)"-"$(NF-1)"-"$NF }')
-		$DEBUG && echo "        tar_name: $tarname.tar.gz"
-		cd $ARC_DIR
-		tar -czf $tarname.tar.gz $srvdir -C $ARC_DIR 2>&1 | grep -v "Removing leading"
-	done
-	# check not to make a disaster
-	if [[ $dir = /var/SP/log/monitoring/umc/logs/tools/td/logs/* ]]; then 
-		rm $dir -fr
-	fi
+        $DEBUG && echo "Dir: $dir"
+        # get all leafs in this directory - servers TDs to be archived
+        srvdirs=$(find $dir -type d | sort | awk '$0 !~ last "/" {print last} {last=$0} END {print last}' | grep -v "^$")
+        for srvdir in $srvdirs; do
+                $DEBUG && echo "        srv_dir: $srvdir"
+                tarname=$(echo $srvdir | sed 's/\// /gi' | awk '{ print $(NF-2)"-"$(NF-1)"-"$NF }')
+                cd $ARC_DIR
+                $DEBUG && echo "        creating archive in $tarname.tar.gz in $ARC_DIR"
+                tar -czf $tarname.tar.gz $srvdir -C $ARC_DIR 2>&1 | grep -v "Removing leading"
+        done
+        # check not to make a disaster
+        if [[ $dir = /var/SP/log/monitoring/umc/logs/tools/td/logs/* ]]; then
+                $DEBUG && echo "Removing dir: $dir"
+                rm -fr $dir
+        fi
 done
-
-
-
