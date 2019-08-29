@@ -24,4 +24,4 @@ function start() {
 }
 
 start influxdb
-start omc
+#start omc

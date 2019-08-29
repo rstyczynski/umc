@@ -85,7 +85,8 @@ class UmcRunner:
                 
             if "_all_" in hosts or hostname in hosts:
                 # enabled        
-                enabled=self.config.value_element(umcconf, "enabled", False)
+                ens=self.config.value_element(umcconf, "enabled", "false")
+                enabled=((isinstance(ens, (unicode)) or isinstance(ens, (str))) and ens.lower() in ["true", "True"]) or (isinstance(ens, (bool)) and ens)
 
                 # parameters
                 rotation_timelimit = None
