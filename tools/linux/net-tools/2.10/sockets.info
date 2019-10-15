@@ -1,0 +1,25 @@
+sockets:
+    version:    1.0
+    layer:      OS
+    subsystem:  network
+    header: >-
+        PID,ProgramName,TcpPort,Direction,State,Count,SendQ,RecvQ
+    rawheader:
+        method:     
+        directive:  
+        expected:  
+    availability:
+        method:     command
+        directive:  netstat -V
+    loop:
+        method:     external
+        directive:  
+    timestamp:
+        method:     
+        directive:  
+    metrics:
+        packets:
+            SendQ:
+            RecvQ:           
+        misc:
+            Count:

@@ -1,0 +1,6 @@
+#!/bin/bash
+
+delay=$1
+count=$2
+
+free -k -s $delay -c $count | perl $toolsBin/joinlines.pl $perlBUFFER -stop "Swap:" | sed 's\Swap:\buffers/cache: 0 0 Swap:\g' | sed $sedBUFFER -e 's#[/,a-zA-Z:+-]##g' -e 's/\s\s*/,/g' -e 's/^,//'

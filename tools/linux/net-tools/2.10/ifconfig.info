@@ -1,0 +1,42 @@
+ifconfig:
+    version:    1.0
+    layer:      OS
+    subsystem:  network
+    header: >-
+        device,
+        RXpackets,RXerrors,RXdropped,RXoverruns,RXframe,
+        TXpackets,TXerrors,TXdropped,TXoverruns,TXcarrier,
+        collisions,txqueuelen,
+        RXbytes,TXbytes
+    rawheader:
+        method:     bash
+        directive:  ifconfig.validateheader.sh
+        expected: |-
+            RXpackets:errors:dropped:overruns:frame:TXpackets:errors:dropped:overruns:carrier:collisions:txqueuelen:RXbytes:TXbytes:
+    availability:
+        method:     file
+        directive:  /sbin/ifconfig
+    loop:
+        method:     external
+        directive:  
+    timestamp:
+        method:     
+        directive:  
+    metrics:
+        packets:
+            RXpackets:
+            TXpackets:           
+        bytes:
+            RXbytes:
+            TXbytes:     
+        problems:
+            RXerrors:
+            RXdropped:
+            RXoverruns:
+            RXframe:
+            TXerrors:
+            TXdropped:
+            TXoverruns:
+            TXcarrier:
+            collisions:
+            txqueuelen:

@@ -1,0 +1,4 @@
+#!/bin/bash
+
+netstat -s | sed $sedBUFFER -n '/active connections openings/,/resets sent/p' | sed $sedBUFFER -e 's/^ *//g' | cut -d' ' -f1 | tr '\n' ',' | sed $sedBUFFER -e 's/,$//g'
+echo
