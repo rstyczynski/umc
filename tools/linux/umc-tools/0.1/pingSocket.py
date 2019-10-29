@@ -42,7 +42,7 @@ def getStats(targetSystem, targetPort):
         s.settimeout(2)
         #
         start_time = time.time()
-        addressFullStr=socket.getaddrinfo(targetSystem, 80)
+        addressFullStr=socket.getaddrinfo(targetSystem, targetPort)
         ms = (time.time() - start_time ) * 1000
         resolvFull=ms
         #
@@ -58,7 +58,8 @@ def getStats(targetSystem, targetPort):
         #
         start_time = time.time()
         s.sendall("GET / HTTP/1.1\r\nHost: " + targetSystem + "\r\n\r\n")
-        ms = (time.time() - start_time ) * 1000
+        #s.sendall("\n")
+	ms = (time.time() - start_time ) * 1000
         send=ms
         #
         start_time = time.time()
