@@ -56,17 +56,22 @@ echo
 echo "Batch UMC collector initializes data collection for following probes:"
 echo $tools | tr ' ' '\n' | tr ':' ' ' | sed 's/^/-> /g'
 echo
+
+probe_separator=' '
+param_separator=':'
+
+
  
 oldIFS=$IFS
-IFS='
-'
+IFS=$probe_separator
+
 for tool in $tools; do
     IFS=$oldIFS
-    cmd=$(echo $tool | cut -f1 -d' ')
-    args=$(echo $tool | cut -f2-999 -d' ')
-    echo $tool
-    echo $cmd
-    echo $args
+    cmd=$(echo $tool | cut -f1 -d"$param_separator")
+    args=$(echo $tool | cut -f2-999 -d"$param_separator")
+    #echo $tool
+    #echo $cmd
+    #echo $args
     if [ "$args" = "$cmd" ]; then
         unset args
     fi
@@ -92,13 +97,18 @@ for tool in $tools; do
         mkdir -p $logDir/$testId
     fi
     # execute
-    arg1=$(echo $args | cut -f1 -d' ')
-    arg2=$(echo $args | cut -f2 -d' ')
-    arg3=$(echo $args | cut -f3 -d' ')
-    arg4=$(echo $args | cut -f4 -d' ')
-    arg5=$(echo $args | cut -f5 -d' ')
-    arg6=$(echo $args | cut -f6 -d' ')
-    echo umc $cmd collect $delay $count $arg1 $arg2 $arg3 $arg4 $arg5 $arg6
+    if [[ $args == *":"* ]]; then
+    	arg1=$(echo $args | cut -f1 -d"$param_separator")
+    	arg2=$(echo $args | cut -f2 -d"$param_separator")
+    	arg3=$(echo $args | cut -f3 -d"$param_separator")
+    	arg4=$(echo $args | cut -f4 -d"$param_separator")
+    	arg5=$(echo $args | cut -f5 -d"$param_separator")
+    	arg6=$(echo $args | cut -f6 -d"$param_separator")
+    else
+	arg1=$args
+        unset arg2; unset arg2; unset arg3; unset arg4; unset arg5; unset arg6
+    fi
+    echo \>\>\> umc $cmd collect $delay $count $arg1 $arg2 $arg3 $arg4 $arg5 $arg6
  
     umc $cmd collect $delay $count $arg1 $arg2 $arg3 $arg4 $arg5 $arg6 | perl $umcRoot/bin/logdirector.pl -dir $logDir/$testId -n $subsystem_name -rotateByTime clock -timeLimit 3600 -addDateSubDir -alwaysRotate -prefixDate -detectHeader &
  
