@@ -13,7 +13,7 @@ except:
     
 try:
     yamlDoc = open(yamlFile, 'r')
-    doc = yaml.load(yamlDoc)
+    doc = yaml.load(yamlDoc, Loader=yaml.SafeLoader)
 
     finalDoc=doc
     for cfgElement in getData.split(delim):
