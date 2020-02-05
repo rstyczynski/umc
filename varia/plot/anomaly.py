@@ -1,4 +1,3 @@
-$# -*- coding: utf-8 -*-
 """
 Spyder Editor
 
@@ -52,11 +51,11 @@ y = np.array([1,1,1.1,1,0.9,1,1,1.1,-3,-5,1,1.1,1,1,0.9,1,1,1.1,1,1,1,1,1.1,0.9,
        4,4,3,4,4,3,3,4,4,3,4,4,4,4,5,5,5,4,3,
        4,4,3,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,3,3,4,4,4,2,2.5,1,1,1])
     
-df = pd.read_csv('/Users/rstyczynski/Documents/IKEA/11.Test/TESTS/TEST2505#5/ppseelm-lx41085/tmp/umc/TEST2505#5/2018-05-25/2018-05-25-140250_vmstat.log')
-df['datetime'] = pd.to_datetime(df['datetime'])
-df.index = df['datetime']
+#df = pd.read_csv('/Users/rstyczynski/Documents/IKEA/11.Test/TESTS/TEST2505#5/ppseelm-lx41085/tmp/umc/TEST2505#5/2018-05-25/2018-05-25-140250_vmstat.log')
+#df['datetime'] = pd.to_datetime(df['datetime'])
+#df.index = df['datetime']
 
-y = df[' CPUuser'].values
+#y = df[' CPUuser'].values
     
 # Settings: lag = 30, threshold = 5, influence = 0
 lag = 30
