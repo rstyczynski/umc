@@ -13,6 +13,7 @@ my $verbose=0;     #verbose flaga
 my $notbuffered=0;
 my $dateTimeDelimiter=",";
 my $delimiter=",";
+my $header=0;
 
 #read cmd line options
 my $optError=0;
@@ -22,7 +23,8 @@ GetOptions (
             'notbuffered'  => \$notbuffered,       #flag
             'verbose'      => \$verbose,           # flag
             'help|?'       => \$help,              # flag
-            'man'          => \$man)               # flag
+            'man'          => \$man,               # flag
+ 	    'header'       => \$header)            # flag
 or $optError=1;
 
 
@@ -35,20 +37,26 @@ if ( $notbuffered ) {
 
 
 $tz = strftime("%z", localtime());
+$first = 1;
 
 while (<>) {
-	($sec, $min, $hour, $day, $mon, $year) = localtime;
-	if($DEBUG eq 1){
-		print $min . ":" .$sec . " vs. " .$minPrint.":". $secPrint . "->";
-	}
-	if ( $sec >= ($secPrint + 2) || ($min != $minPrint) ){
-		($secPrint, $minPrint, $hourPrint, $dayPrint, $monPrint, $yearPrint) = 
-								($sec, $min, $hour, $day, $mon, $year);
-	}
 
-	#format: 2010-11-20,16:44:34,
-	printf("%04d-%02d-%02d" . $dateTimeDelimiter . "%02d:%02d:%02d" . $delimiter . $tz . $delimiter . time() , 1900 + $yearPrint, $monPrint + 1, $dayPrint,
+	if($first and $header eq 1){
+		printf("datetime" . $delimiter . "timezone" . $delimiter . "timestamp");
+		$first = 0;
+	} else {
+		($sec, $min, $hour, $day, $mon, $year) = localtime;
+		if($DEBUG eq 1){
+			print $min . ":" .$sec . " vs. " .$minPrint.":". $secPrint . "->";
+		}
+		if ( $sec >= ($secPrint + 2) || ($min != $minPrint) ){
+			($secPrint, $minPrint, $hourPrint, $dayPrint, $monPrint, $yearPrint) = 
+								($sec, $min, $hour, $day, $mon, $year);
+		}
+	
+		#format: 2010-11-20,16:44:34,
+		printf("%04d-%02d-%02d" . $dateTimeDelimiter . "%02d:%02d:%02d" . $delimiter . $tz . $delimiter . time() , 1900 + $yearPrint, $monPrint + 1, $dayPrint,
 						$hourPrint, $minPrint, $secPrint);
+	}
 	print ",$_";
 }
-
