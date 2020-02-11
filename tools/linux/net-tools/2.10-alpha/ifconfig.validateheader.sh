@@ -7,6 +7,7 @@ sed 's/RX packets /RX packets:/g'|
 sed 's/TX packets /TX packets:/g'| 
 sed 's/RX errors /RX errors:/g'| 
 sed 's/TX errors /TX errors:/g'| 
+sed 's/bytes /bytes:/g'| 
 sed 's/dropped /dropped:/g'| 
 sed 's/overruns /overruns:/g'| 
 sed 's/frame / frame:/g'| 
