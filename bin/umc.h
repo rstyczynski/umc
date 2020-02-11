@@ -190,7 +190,7 @@ function getLayerDirectories {
   layer_version_patch=$(eval "echo $(echo \$$layer\_version_patch)")
   layer_version_specific=$(eval "echo $(echo \$$layer\_version_specific)")
   
-  if [ ! "$layer/$layer_version_major/$layer_version_minor/$layer_version_patch/$layer_version_specific" == "$layer////" ]; then
+  if [ ! "$layer/$layer_version_major/$layer_version_minor/$layer_version_patch/$layer_version_specific" = "$layer////" ]; then
     echo "$layer/$layer_version_major/$layer_version_minor/$layer_version_patch/$layer_version_specific"
   fi
   if [ ! "$layer/$layer_version_major/$layer_version_minor/$layer_version_patch" == "$layer///" ]; then
@@ -550,7 +550,7 @@ function testCompatibility {
   fi
   
   if [[ "$rawHeaderMethod" == "command" ]]; then
-    systemHeader=$rawHeaderDirective
+    systemHeader=$(eval $rawHeaderDirective)
     if [ "$rawHeader" == "$systemHeader" ]; then
       echo OK
       #reportCompatibilityResult $toolCmd Success $toolExecDir
