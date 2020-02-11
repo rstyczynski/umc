@@ -7,7 +7,7 @@ free:
     rawheader:
         method:     command
         directive:  free -k | perl $toolsBin/joinlines.pl -stop "Swap:" | sed -e 's/[0-9]//g' -e 's/\s\s*/,/g'
-        expected:   ",total,used,free,shared,buffers,cached,Mem:,,-/+,buffers/cache:,,Swap:,"
+        expected:   ",total,used,free,shared,buff/cache,available,Mem:,,Swap:,"
     availability:
         method:     
         directive:  

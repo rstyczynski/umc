@@ -1,0 +1,5 @@
+#!/bin/bash
+
+top -b -n 1 | grep $grepBUFFER -A100 PID | grep -v PID | sort -r -k8 | head -11 | sed $sedBUFFER -e ':a;N;$!ba;s/\n/ /g' -e 's/\s\s*/,/g' -e 's/,$//g'
+
+
