@@ -132,7 +132,7 @@ function umc {
         sensor=$1; shift
     fi
 
-    if [ $sensor = help -o $sensor = -V -o $sensor = test -o $sensor = sensors -o $sensor = cluster ]; then
+    if [ $sensor == help -o $sensor == -V -o $sensor == test -o $sensor == sensors -o $sensor == cluster ]; then
         command=$sensor
     else
         command=sensor_$1; shift
@@ -190,16 +190,16 @@ function getLayerDirectories {
   layer_version_patch=$(eval "echo $(echo \$$layer\_version_patch)")
   layer_version_specific=$(eval "echo $(echo \$$layer\_version_specific)")
   
-  if [ ! "$layer/$layer_version_major/$layer_version_minor/$layer_version_patch/$layer_version_specific" = "$layer////" ]; then
+  if [ ! "$layer/$layer_version_major/$layer_version_minor/$layer_version_patch/$layer_version_specific" == "$layer////" ]; then
     echo "$layer/$layer_version_major/$layer_version_minor/$layer_version_patch/$layer_version_specific"
   fi
-  if [ ! "$layer/$layer_version_major/$layer_version_minor/$layer_version_patch" = "$layer///" ]; then
+  if [ ! "$layer/$layer_version_major/$layer_version_minor/$layer_version_patch" == "$layer///" ]; then
     echo "$layer/$layer_version_major/$layer_version_minor/$layer_version_patch"
   fi
-  if [ ! "$layer/$layer_version_major/$layer_version_minor" = "$layer//" ]; then
+  if [ ! "$layer/$layer_version_major/$layer_version_minor" == "$layer//" ]; then
     echo "$layer/$layer_version_major/$layer_version_minor"
   fi
-  if [ ! "$layer/$layer_version_major" = "$layer/" ]; then
+  if [ ! "$layer/$layer_version_major" == "$layer/" ]; then
     echo "$layer/$layer_version_major"
   fi
   echo "$layer"
@@ -211,11 +211,11 @@ function getDirectories {
   
   for directoryRoot in ""; do
       for directoryLinux in $(getLayerDirectories linux); do
-        if [ ! $layer = "linux" ]; then
+        if [ ! $layer == "linux" ]; then
             for directoryJava in $(getLayerDirectories java); do
-                if [ ! $layer = "java" ]; then
+                if [ ! $layer == "java" ]; then
                     for directoryWLS in $(getLayerDirectories wls); do
-                        if [ ! $layer = "wls" ]; then
+                        if [ ! $layer == "wls" ]; then
                             for directorySOA in $(getLayerDirectories soa); do
                                 echo -n "$umcRoot/tools"
                                 echo $directoryRoot/$directoryLinux/$directoryJava/$directoryWLS/$directorySOA
@@ -308,7 +308,7 @@ function assertInvoke {
     availabilityMethod="None"
   fi
   
-  if [ "$availabilityMethod" = "None" ]; then
+  if [ "$availabilityMethod" == "None" ]; then
     $toolCmd 2>/dev/null 1>/dev/null
     if [ $? -eq 127 ]; then
       echo "Error! Reason: utility not installed."
@@ -316,7 +316,7 @@ function assertInvoke {
     fi
   fi
 
-  if [ "$availabilityMethod" = "command" ]; then
+  if [ "$availabilityMethod" == "command" ]; then
     command=$($toolsBin/getCfg.py $probeInfo $probeYAMLRoot.availability.directive)
     $command 2>/dev/null 1>/dev/null
     if [ $? -eq 127 ]; then
@@ -325,7 +325,7 @@ function assertInvoke {
     fi
   fi
 
-  if [ "$availabilityMethod" = "file" ]; then
+  if [ "$availabilityMethod" == "file" ]; then
     file=$($toolsBin/getCfg.py $probeInfo $probeYAMLRoot.availability.directive)
     if [ ! -f $file ]; then
       echo "Error! Reason: data file not available."
@@ -333,7 +333,7 @@ function assertInvoke {
     fi 
   fi
 
-  if [ "$availabilityMethod" = "env" ]; then
+  if [ "$availabilityMethod" == "env" ]; then
     envVariable=$($toolsBin/getCfg.py $probeInfo $probeYAMLRoot.availability.directive)
     if [ -z $envVariable ]; then
       echo "Error! Reason: required variable not available."
@@ -345,7 +345,7 @@ function assertInvoke {
 
 function cfgBuffered {
 
- if [ "$BUFFERED" = "yes" ]; then
+ if [ "$BUFFERED" == "yes" ]; then
    export sedBUFFER=""
    export grepBUFFER=""
    export perlBUFFER=""
@@ -380,7 +380,7 @@ function string2value {
 function invoke {
 
   unset DEBUG
-  if [ "$1" = "DEBUG" ]; then
+  if [ "$1" == "DEBUG" ]; then
         export uosmcDEBUG=DEBUG
         shift
   fi
@@ -415,9 +415,9 @@ function invoke {
     loop="None"
   fi
   
-  if [ "$loop" = "external" ]; then
+  if [ "$loop" == "external" ]; then
         shift 2  
-  elif [ "$loop" = "options" ]; then
+  elif [ "$loop" == "options" ]; then
         shift 2
         loop_string=$($toolsBin/getCfg.py $probeInfo $probeYAMLRoot.loop.directive)
         #convert strong to values
@@ -440,7 +440,7 @@ function invoke {
 #  fi
 
   #TODO implement proper handler for options
-  if [ $interval = "help" ]; then
+  if [ $interval == "help" ]; then
     $toolExecDir/$cmd $UMC_SENSOR_HELP
     return 1
   fi
@@ -472,16 +472,16 @@ function invoke {
   fi
 
   #run the tool
-  if [ "$loop" = "external" ]; then
-    if [ "$timestampMethod" = "internal" ] || [ "$headerMethod" = "internal" ] ; then
+  if [ "$loop" == "external" ]; then
+    if [ "$timestampMethod" == "internal" ] || [ "$headerMethod" == "internal" ] ; then
         $toolsBin/timedExec.sh $interval $count $uosmcDEBUG $toolExecDir/$cmd $timestampDirective $@
     else
         $toolsBin/timedExec.sh $interval $count $uosmcDEBUG $toolExecDir/$cmd $@ \
         | perl -ne "$perlBUFFER; print \"$hostname,$cmd,\$_\";" \
         | $toolsBin/addTimestamp.pl $addTimestampBUFFER -timedelimiter=" " -delimiter=$CSVdelimiter
     fi
-  elif [ "$loop" = "options" ]; then
-    if [ "$timestampMethod" = "internal" ] || [ "$headerMethod" = "internal" ]; then
+  elif [ "$loop" == "options" ]; then
+    if [ "$timestampMethod" == "internal" ] || [ "$headerMethod" == "internal" ]; then
         $toolExecDir/$cmd $loop_options $timestampDirective $@
     else
         $toolExecDir/$cmd $loop_options $@ \
@@ -489,7 +489,7 @@ function invoke {
         | $toolsBin/addTimestamp.pl $addTimestampBUFFER -timedelimiter=" " -delimiter=$CSVdelimiter
     fi
   else
-    if [ "$timestampMethod" = "internal" ] || [ "$headerMethod" = "internal" ]; then
+    if [ "$timestampMethod" == "internal" ] || [ "$headerMethod" == "internal" ]; then
 	$toolExecDir/$cmd $timestampDirective $@ 
     else
 	 $toolExecDir/$cmd $@ \
@@ -542,7 +542,7 @@ function testCompatibility {
   
   if [[ "$rawHeaderMethod" == "line" ]]; then
     systemHeader=$($toolCmd | sed -n "$rawHeaderDirective"p)
-    if [ "$rawHeader" = "$systemHeader" ]; then
+    if [ "$rawHeader" == "$systemHeader" ]; then
       echo OK
       #reportCompatibilityResult $toolCmd Success $toolExecDir
       return 0
@@ -550,8 +550,8 @@ function testCompatibility {
   fi
   
   if [[ "$rawHeaderMethod" == "command" ]]; then
-    systemHeader=$(eval $rawHeaderDirective)
-    if [ "$rawHeader" = "$systemHeader" ]; then
+    systemHeader=$($rawHeaderDirective)
+    if [ "$rawHeader" == "$systemHeader" ]; then
       echo OK
       #reportCompatibilityResult $toolCmd Success $toolExecDir
       return 0
@@ -560,7 +560,7 @@ function testCompatibility {
 
   if [[ "$rawHeaderMethod" == "bash" ]]; then
     systemHeader=$(. $toolExecDir/$rawHeaderDirective)
-    if [ "$rawHeader" = "$systemHeader" ]; then
+    if [ "$rawHeader" == "$systemHeader" ]; then
       echo OK
       #reportCompatibilityResult $toolCmd Success $toolExecDir
       return 0
@@ -569,7 +569,7 @@ function testCompatibility {
   
   if [[ "$rawHeaderMethod" == "script" ]]; then
     systemHeader=$($toolExecDir/$rawHeaderDirective | tr -d '\r')
-    if [[ "$rawHeader" = "$systemHeader" ]]; then
+    if [[ "$rawHeader" == "$systemHeader" ]]; then
       echo OK
       #reportCompatibilityResult $toolCmd Success $toolExecDir
       return 0
