@@ -6,7 +6,7 @@ sockets:
         PID,ProgramName,TcpPort,Direction,State,Count,SendQ,RecvQ
     rawheader:
         method:    command
-        directive: netstat | head -2 | tail -1 | tr -s ' '
+        directive: netstat | head -2 | tail -1 | tr -s ' ' | sed 's/ $//g'
         expected:  Proto Recv-Q Send-Q Local Address Foreign Address State
     availability:
         method:     command
