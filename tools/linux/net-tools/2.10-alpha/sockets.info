@@ -5,9 +5,9 @@ sockets:
     header: >-
         PID,ProgramName,TcpPort,Direction,State,Count,SendQ,RecvQ
     rawheader:
-        method:     
-        directive:  
-        expected:  
+        method:     line
+        directive:  2,2
+        expected:  Proto Recv-Q Send-Q Local Address           Foreign Address         State
     availability:
         method:     command
         directive:  netstat -V
