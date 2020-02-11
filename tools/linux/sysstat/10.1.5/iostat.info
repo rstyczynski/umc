@@ -6,7 +6,7 @@ iostat:
         Device,tps,kB_read/s,kB_wrtn/s,kB_read,kB_wrtn
     rawheader:
         method:     line
-        directive:  6,6p
+        directive:  6,6
         expected:   "Device:            tps    kB_read/s    kB_wrtn/s    kB_read    kB_wrtn"
     availability:
         method:     command
