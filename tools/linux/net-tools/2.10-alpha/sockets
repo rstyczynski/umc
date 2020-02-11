@@ -1,0 +1,45 @@
+#!/bin/bash
+# tcpsockets 
+
+netstat_out=$(netstat --tcp -anp 2>/dev/null)
+
+# list of ports that processes are listening on
+lp=$(echo "$netstat_out" | gawk '{ if ($6 == "LISTEN") { match($4,".+:([0-9]+)", ary); printf "%s ", ary[1] } }' | sort | uniq)
+
+echo "$netstat_out" | grep "^tcp" | \
+gawk -v lp="$lp" '
+  {     
+    if ($6 != "LISTEN") {
+      recvQ=$2; sendQ=$3
+      localA=$4; foregA=$5
+      match($4, ".+:([0-9]+)", ary); localP=ary[1]
+      match($5, ".+:([0-9]+)", ary); foregP=ary[1]  
+      state=$6
+      prname=$7
+      
+      # if local port is in listening ports then it is inbound connection otherwise it is outbound
+      if (index(lp,localP) > 0) {
+        dir = "inbound"
+        port = localP
+      } else {
+        dir = "outbound"
+        port = foregP
+      }
+      
+      # get pid and program name as separate fields
+      if (!match(prname,"(.+)/(.+)"))
+        prname = "0/unknown"
+      match(prname, "(.+)/(.+)", ary)
+      
+      # count metrics
+      key = sprintf("pid-%s,%s,tcp/%s,%s,%s",ary[1],ary[2],port,dir,state)
+      count[key]++
+      sendq[key]+=sendQ
+      recvq[key]+=recvQ    
+    } 
+  } END {    
+      for (key in count) {
+        printf("%s,%s,%d,%d\n",key,count[key],sendq[key],recvq[key])
+      }
+    }'
+    

@@ -1,0 +1,1 @@
+ /sbin/ifconfig ens3 | grep -i X | perl $toolsBin/joinlines.pl -stop "TX errors" | sed $sedBUFFER 's/[a-zA-Z:]//g' | sed $sedBUFFER 's/  */,/g' | cut -d',' -f2-6,8-13,14-15,18,21  | perl -ne "$perlBUFFER:q; print \"ens3,\$_\";"

@@ -1,0 +1,69 @@
+#!/bin/bash
+
+#get interface name
+netlist=$1
+
+#if no parameter is specified get data from all interfeces
+if [ -z $netlist ]; then
+  netlist=ALL
+fi
+
+#extract interface names
+if [ "$netlist" = "ALL" ]; then 
+  netlist=$(ifconfig | grep "^[a-zA-Z]" | cut -d ':' -f1)
+fi
+
+#collect data for each interface
+for net in $netlist; do 
+   /sbin/ifconfig $net \
+   | grep -i X \
+   | perl $toolsBin/joinlines.pl -stop "TX errors" \
+   | sed $sedBUFFER 's/[(),]//g' \
+   | sed $sedBUFFER 's/  */,/g' \
+   | cut -d ',' -f9,16,18,20,22,25,32,34,36,38,40,5,11,27 \
+   | perl -ne "$perlBUFFER; print \"$net,\$_\";"
+done
+
+# index to identify fields in the header:
+# RXpackets,RXerrors,RXdropped,RXoverruns,RXframe, TXpackets,TXerrors,TXdropped,TXoverruns,TXcarrier, collisions,txqueuelen, RXbytes,TXbytes 
+#1:
+#2: ether
+#3: 02:00:17:01:2f:03
+#4: txqueuelen
+#5: 1000
+#6: Ethernet
+#7: RX
+#8: packets
+#9: 1957867
+#10: bytes
+#11: 2198250733
+#12: 2.0
+#13: GiB
+#14: RX
+#15: errors
+#16: 0
+#17: dropped
+#18: 0
+#19: overruns
+#20: 0
+#21: frame
+#22: 0
+#23: TX
+#24: packets
+#25: 985883
+#26: bytes
+#27: 1849579584
+#28: 1.7
+#29: GiB
+#30: TX
+#31: errors
+#32: 0
+#33: dropped
+#34: 0
+#35: overruns
+#36: 0
+#37: carrier
+#38: 0
+#39: collisions
+#40: 0
+
