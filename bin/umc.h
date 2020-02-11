@@ -550,7 +550,7 @@ function testCompatibility {
   fi
   
   if [[ "$rawHeaderMethod" == "command" ]]; then
-    systemHeader=$($rawHeaderDirective)
+    systemHeader=$rawHeaderDirective
     if [ "$rawHeader" == "$systemHeader" ]; then
       echo OK
       #reportCompatibilityResult $toolCmd Success $toolExecDir
