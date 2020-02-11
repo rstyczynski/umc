@@ -364,7 +364,7 @@ function string2value {
     optionsString=$1
 
     for element in $optionsString; do
-      if [ $element = '$'* ]; then
+      if [[ $element == '$'* ]]; then
         value=$(eval  echo $element)
         #echo $element, $value
         sedCmd="s#$element#$value#g"
