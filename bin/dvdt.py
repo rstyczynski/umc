@@ -75,7 +75,7 @@ while line:
 
         # wriote dvdt state file
         state_f = open(state_dst + '/state', "w")
-        for i in range(len(header)-1):
+        for i in range(len(header)):
             if i < dataat:
                 state_f.write(header[i] + '=' + str(line_asis[i]) + '\n')
             else:
@@ -85,16 +85,17 @@ while line:
         # write dvdt data to stdout if needed
         if out_data == 'compute':
             if out_format == 'csv':
-                for i in range(len(header)-2):
+                for i in range(len(header)-1):
                     if i < dataat:
                         sys.stdout.write(str(line_asis[i]) + ',')
                     else:
                         sys.stdout.write(str(dvdt[i]) + ',')
-                print(str(dvdt[len(header)-1]))
+                print(str(header))
+                print(str(dvdt[len(header)]))
                 print(str(dvdt))
 
             elif out_format == 'map':
-                for i in range(len(header)-1):
+                for i in range(len(header)):
                     if i < dataat:
                         print(header[i] + '=' + str(line_asis[i]))
                     else:
