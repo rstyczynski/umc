@@ -81,7 +81,7 @@ function FLAG() {
 
     case $flag_action in
     RAISE)
-        flag_filename=$herald_state/$resource/flags/$flag_name
+        flag_filename=$status_root/$resource/flags/$flag_name
         if [[ -e $flag_filename ]]; then
             i=1
             while [[ -e $flag_filename-$i ]]; do
@@ -92,15 +92,15 @@ function FLAG() {
         echo $flag_options >$flag_filename
         ;;
     REMOVE)
-        if [ -f $herald_state/$resource/flags/$flag_name ]; then
+        if [ -f $status_root/$resource/flags/$flag_name ]; then
             # remove all flags incl. more detailed e.g. *_long
-            rm -f $herald_state/$resource/flags/$flag_name*
-            #rm -f $herald_state/$resource/flags/$flag_name-[0-9]*
+            rm -f $status_root/$resource/flags/$flag_name*
+            #rm -f $status_root/$resource/flags/$flag_name-[0-9]*
         fi
         ;;
     CHECK)
-        if [ -f $herald_state/$resource/flags/$flag_name ]; then
-            repeated=$(ls $herald_state/$resource/flags/$flag_name-* 2>/dev/null | wc -l)
+        if [ -f $status_root/$resource/flags/$flag_name ]; then
+            repeated=$(ls $status_root/$resource/flags/$flag_name-* 2>/dev/null | wc -l)
             flags=$((1 + $repeated))
             return $flags
         fi
