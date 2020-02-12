@@ -105,7 +105,12 @@ function RUN() {
             command_attribute=$(cat $status_root/$resource/lock/$command\_$attribute | grep '^attribute=' | cut -f2 -d'=')
 
             # look for unique process descriptors in process list
-            command_ps=$(ps ux | grep -v grep | grep $command_id | grep $command_pid | grep $command_attribute 2>&1 | wc -l | tr -d ' ')
+            command_ps=$(ps ux | 
+            grep -v grep 2>&1 | 
+            grep $command_id 2>&1 | 
+            grep $command_pid 2>&1 | 
+            grep $command_attribute 2>&1 | 
+            wc -l | tr -d ' ')
             if [ $command_ps -eq 0 ]; then
                 rm -f $status_root/$resource/lock/$command\_$attribute
             else
