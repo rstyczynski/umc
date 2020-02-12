@@ -1,6 +1,7 @@
 import sys
 import os
 
+
 res_type = sys.argv[1]     # os.environ['herald_res_type'] #'ens3'
 res_name = sys.argv[2]     # os.environ['herald_res_name'] #'ens3'
 dt = int(sys.argv[3])
@@ -86,9 +87,9 @@ while line:
             if out_format == 'csv':
                 for i in range(len(header)-1):
                     if i < dataat:
-                        print(str(line_asis[i]) + ',', end='')
+                        sys.stdout.write(str(line_asis[i]) + ',')
                     else:
-                        print(str(dvdt[i]) + ',', end=''))
+                        sys.stdout.write(str(dvdt[i]) + ',')
                 print(str(dvdt[len(header)]))
 
             elif out_format == 'map':
