@@ -75,9 +75,9 @@ while line:
         state_f = open(state_dst + '/state', "w")
         for i in range(len(header)-1):
             if i < dataat:
-                state_f.write(header[i] + '=' + str(data_now[i]) + '\n'))
+                state_f.write(header[i] + '=' + str(data_now[i]) + '\n')
             else:
-                state_f.write(header[i] + '=' + str(dvdt[i]) + '\n'))
+                state_f.write(header[i] + '=' + str(dvdt[i]) + '\n')
         state_f.close
 
         # write dvdt data to stdout if needed
