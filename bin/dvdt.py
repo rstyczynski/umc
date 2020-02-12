@@ -79,5 +79,5 @@ while line:
             else:
                 raise Exception('out_format format unknown:' + out_format)
         
-    data_prv = data_now
+    data_prv = data_now.copy()
     data_prv_set = True
