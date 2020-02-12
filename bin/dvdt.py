@@ -90,8 +90,9 @@ while line:
                         sys.stdout.write(str(line_asis[i]) + ',')
                     else:
                         sys.stdout.write(str(dvdt[i]) + ',')
+                print(str(dvdt[len(header)-1]))
+                
                 print(str(header))
-                print(str(dvdt[len(header)]))
                 print(str(dvdt))
 
             elif out_format == 'map':
