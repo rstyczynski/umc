@@ -79,6 +79,8 @@ function FLAG() {
     shift
     flag_options=$@
 
+    mkdir -p $status_root/$resource/flags/
+
     case $flag_action in
     RAISE)
         flag_filename=$status_root/$resource/flags/$flag_name
