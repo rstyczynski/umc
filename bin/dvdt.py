@@ -3,8 +3,8 @@ import os
 
 res_type = sys.argv[1]     # os.environ['herald_res_type'] #'ens3'
 res_name = sys.argv[2]     # os.environ['herald_res_name'] #'ens3'
-dt = sys.argv[3]
-dt_column = sys.argv[4]
+dt = int(sys.argv[3])
+dt_column = int(sys.argv[4])
 out_format = sys.argv[5]   # map | csv
 out_data = sys.argv[6]     # compute | forward
 separator = sys.argv[7]
