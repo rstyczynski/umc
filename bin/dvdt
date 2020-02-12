@@ -1,0 +1,95 @@
+#!/bin/bash
+
+#####
+##### parameter seciton start
+#####
+
+function usage() {
+    echo -n "Usage: $(basename $0) "
+    cat $0 | grep -v '/# parameters - start/,/# parameters - stop/p' | 
+    sed -n '/# parameters - start/,/# parameters - stop/p' | 
+    grep '\--' | cut -f1 -d ')' | tr -s ' ' | tr '\n' ' '
+    echo
+
+    echo
+    echo "Mandatory parameters: "
+    cat $0 | grep -v '/# mandatory parameters - start/,/# mandatory parameters - stop/p' | 
+    sed -n '/# mandatory parameters - start/,/# mandatory parameters - stop/p' | 
+    grep '\[ -z'  | sed 's/|/;/g' | cut -f2 -d ';' | sed 's/"$//g' | nl
+    echo
+
+    echo
+    echo "Parameter defaults: "
+    cat $0 | grep -v '/# parameters defaults - start/,/# parameters defaults - stop/p' | 
+    sed -n '/# parameters defaults - start/,/# parameters defaults - stop/p' | 
+    grep '\[ -z' | sed 's/&& /;/g' | cut -f2 -d ';' | nl
+    echo
+}
+
+
+# parameters - start
+while [ $# -gt 0 ]; do opt="$1"; shift
+    case $opt in
+        --type) type=$1 ;;
+        --resource) resource=$1 ;;
+        --delta) delta=$1 ;;
+        --column) column=$1 ;;
+        --format) format=$1 ;;
+        --display) display=$1 ;;
+        --separator) separator=$1 ;;
+        --status_root) status_root=$1 ;;
+        -h|--help)  usage; exit ;;
+    esac
+    shift
+done
+# parameters - stop
+
+# parameters defaults - start
+[ -z $type ] && type=.
+[ -z $display ] && display=compute
+[ -z $format ] && format=csv
+[ -z $delta ] && delta=1
+[ -z $separator ] && separator=','
+[ -z $status_root ] && status_root=~/obd
+# parameters defaults - stop
+
+# mandatory parameters - start
+error=''
+[ -z $resource ] && error="$error|resource cannot be none"
+
+if [ "$error" != "" ]; then
+    echo '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+    echo -n "Error. Mandatory arguments missing:"
+    echo "$error" | tr '|' '\n' | nl
+    echo '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+    echo 
+    usage
+    exit 1
+fi
+# mandatory parameters - stop
+
+#####
+##### parameter seciton stop
+#####
+
+if [ ! -z "$column" ]; then
+    delta=-1
+fi
+
+if [ ! "$display" != "compute" ]; then
+    if [ ! "$display" != "forward" ]; then
+        echo "Error: display takes copute or forward"
+        usage()
+        exit 1
+    fi
+fi
+
+if [ ! "$format" != "csv" ]; then
+    if [ ! "$format" != "map" ]; then
+        echo "Error: display takes csv or map"
+        usage()
+        exit 1
+    fi
+fi
+
+python $(dirname $0)/dvdt.py $type $resource $delta $column $format $display $separator $status_root
