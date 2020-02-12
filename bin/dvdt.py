@@ -45,7 +45,8 @@ while line:
         print(line.rstrip())
 
     line = line.rstrip()
-    for element in line.split(separator):
+    line_asis = line.split(separator)
+    for element in line_asis:
         try:
             value = int(element)
         except:
@@ -75,7 +76,7 @@ while line:
         state_f = open(state_dst + '/state', "w")
         for i in range(len(header)-1):
             if i < dataat:
-                state_f.write(header[i] + '=' + str(data_now[i]) + '\n')
+                state_f.write(header[i] + '=' + str(line_asis[i]) + '\n')
             else:
                 state_f.write(header[i] + '=' + str(dvdt[i]) + '\n')
         state_f.close
@@ -85,14 +86,14 @@ while line:
             if out_format == 'csv':
                 for i in range(len(header)-1):
                     if i < dataat:
-                        print(str(data_now[i]))
+                        print(str(line_asis[i]))
                     else:
                         print(str(dvdt[i]))
                         
             elif out_format == 'map':
                 for i in range(len(header)-1):
                     if i < dataat:
-                        print(header[i] + '=' + str(data_now[i]))
+                        print(header[i] + '=' + str(line_asis[i]))
                     else:
                         print(header[i] + '=' + str(dvdt[i]))
             else:
