@@ -70,7 +70,7 @@
 #####
 
 function FLAG() {
-    # FLAG RAISE TX_dvdt_over_threshold $value
+    # FLAG raise TX_dvdt_over_threshold $value
     resource=$1
     shift
     flag_action=$1
@@ -82,7 +82,7 @@ function FLAG() {
     mkdir -p $status_root/$resource/flags/
 
     case $flag_action in
-    RAISE)
+    raise)
         flag_filename=$status_root/$resource/flags/$flag_name
         if [[ -e $flag_filename ]]; then
             i=1
@@ -93,14 +93,14 @@ function FLAG() {
         fi
         echo $flag_options >$flag_filename
         ;;
-    REMOVE)
+    remove)
         if [ -f $status_root/$resource/flags/$flag_name ]; then
             # remove all flags incl. more detailed e.g. *_long
             rm -f $status_root/$resource/flags/$flag_name*
             #rm -f $status_root/$resource/flags/$flag_name-[0-9]*
         fi
         ;;
-    CHECK)
+    check)
         if [ -f $status_root/$resource/flags/$flag_name ]; then
             repeated=$(ls $status_root/$resource/flags/$flag_name-* 2>/dev/null | wc -l)
             flags=$((1 + $repeated))

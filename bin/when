@@ -81,7 +81,7 @@ function WHEN() {
     shift
 
     # nic/ens3 FLAG TX_dvdt_over_threshold gt 5 
-    if [ $1 == FLAG ]; then
+    if [ $1 == flag ]; then
         resource_type=FLAG
         resource=$metric
         shift
@@ -135,8 +135,8 @@ function WHEN() {
     REGULAR)
         current_value=$(get $resource $metric $modifier)
         ;;
-    FLAG)
-        flag $resource CHECK $metric
+    flag)
+        flag $resource check $metric
         current_value=$?
         ;;
     esac
@@ -164,13 +164,13 @@ function WHEN() {
 
     if [ $perform_action == yes ]; then
         case $action in
-        FLAG)
+        flag)
             flag $resource $options $metric $current_value $value
             ;;
-        RUN)
+        run)
             run $resource $options $metric $current_value $value
             ;;
-        PRINT)
+        print)
             echo $resource $options $metric $current_value $value
             ;;
         *)
