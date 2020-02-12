@@ -22,6 +22,7 @@ for net in $netlist; do
    | sed $sedBUFFER 's/  */,/g' \
    | cut -d ',' -f9,16,18,20,22,25,32,34,36,38,40,5,11,27 \
    | perl -ne "$perlBUFFER; print \"$net,\$_\";"
+   | sed 's/,,/,/g'
 done
 
 # index to identify fields in the header:
