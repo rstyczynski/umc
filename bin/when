@@ -70,6 +70,10 @@
 ##### functions section start
 #####
 
+function debug() {
+    return 1
+}
+
 function WHEN() {
 
     resource_type=REGULAR
@@ -129,10 +133,10 @@ function WHEN() {
 
     case $resource_type in
     REGULAR)
-        current_value=$(GET $resource $metric $modifier)
+        current_value=$(get $resource $metric $modifier)
         ;;
     FLAG)
-        FLAG $resource CHECK $metric
+        flag $resource CHECK $metric
         current_value=$?
         ;;
     esac
@@ -161,10 +165,10 @@ function WHEN() {
     if [ $perform_action == yes ]; then
         case $action in
         FLAG)
-            FLAG $resource $options $metric $current_value $value
+            flag $resource $options $metric $current_value $value
             ;;
         RUN)
-            RUN $resource $options $metric $current_value $value
+            run $resource $options $metric $current_value $value
             ;;
         PRINT)
             echo $resource $options $metric $current_value $value
