@@ -1,0 +1,115 @@
+#!/bin/bash
+
+#####
+##### parameter seciton start
+#####
+
+function usage() {
+    echo -n "Usage: $(basename $0) "
+    cat $0 | grep -v '/# parameters - start/,/# parameters - stop/p' | 
+    sed -n '/# parameters - start/,/# parameters - stop/p' | 
+    grep '\--' | cut -f1 -d ')' | tr -s ' ' | tr '\n' ' '
+    echo
+
+    echo
+    echo "Mandatory parameters: "
+    cat $0 | grep -v '/# mandatory parameters - start/,/# mandatory parameters - stop/p' | 
+    sed -n '/# mandatory parameters - start/,/# mandatory parameters - stop/p' | 
+    grep '\[ -z'  | sed 's/|/;/g' | cut -f2 -d ';' | sed 's/"$//g' | nl
+    echo
+
+    echo
+    echo "Parameter defaults: "
+    cat $0 | grep -v '/# parameters defaults - start/,/# parameters defaults - stop/p' | 
+    sed -n '/# parameters defaults - start/,/# parameters defaults - stop/p' | 
+    grep '\[ -z' | sed 's/&& /;/g' | cut -f2 -d ';' | nl
+    echo
+}
+
+
+# parameters - start
+while [ $# -gt 0 ]; do opt="$1"; shift
+    case $opt in
+        --resource) resource=$1 ;;
+        --header) header=$1 ;;
+        --display) display=$1 ;;
+        --max_lines) max_lines=$1 ;;
+        --status_root) status_root=$1 ;;
+        -h|--help)  usage; exit ;;
+    esac
+    shift
+done
+# parameters - stop
+
+# parameters defaults - start
+[ -z $display ] && display=yes
+[ -z $max_lines ] && max_lines=20
+[ -z $status_root ] && status_root=~/obd
+[ -z $header ] && header=instream
+# parameters defaults - stop
+
+# mandatory parameters - start
+error=''
+[ -z $resource ] && error="$error|resource cannot be none"
+
+if [ "$error" != "" ]; then
+    echo '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+    echo -n "Error. Mandatory arguments missing:"
+    echo "$error" | tr '|' '\n' | nl
+    echo '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+    echo 
+    usage
+    exit 1
+fi
+# mandatory parameters - stop
+
+#####
+##### parameter seciton stop
+#####
+
+
+tmp=$status_root/$resource/tmp
+mkdir -p $status_root/$resource/log
+mkdir -p $status_root/$resource/tmp
+
+while read -r line; do
+    process_line=1
+    if [ "$header" != "external" ]; then
+        if [ "$header" == "instream" ]; then
+            header=$line
+            echo $header | tr , '\n' | tr -d ' ' > $tmp/header
+
+            echo $header > $status_root/$resource/log/header
+            #if [ ! -f $status_root/$resource/log/state ]; then
+              #echo $header > $status_root/$resource/log/state
+            #fi
+	      # display
+            if [ "$display" == "yes" ]; then
+                echo $line
+            fi
+            process_line=0
+        fi
+    fi
+
+    if [ $process_line -eq 1 ]; then
+      # append to log
+      echo $line >> $status_root/$resource/log/state
+
+      # limit log to N lines; use mv/cat? for atomic file change
+      if [ $max_lines -gt 0 ]; then
+        tail -$max_lines $status_root/$resource/log/state > $status_root/$resource/tmp/state.max_lines
+        #echo $header > $status_root/$resource/log/state
+        cat $status_root/$resource/tmp/state.max_lines > $status_root/$resource/log/state
+      fi
+
+      # display
+      if [ "$display" == "yes" ]; then
+        echo $line
+      fi
+
+      # save to state line; use mv/cat? for atomic file change
+      echo $line | tr , '\n' >$tmp/line
+      paste -d = $tmp/header $tmp/line | tr -d ' ' >$status_root/$resource/tmp/state.new
+      cat $status_root/$resource/tmp/state.new > $status_root/$resource/state
+    fi
+done
