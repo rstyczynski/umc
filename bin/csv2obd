@@ -68,6 +68,37 @@ fi
 #####
 
 
+#####
+##### functions start
+#####
+
+# Credits: https://www.unix.com/unix-for-dummies-questions-and-answers/181419-sliding-window-variables.html
+function add_line {
+  typeset i=0
+
+  i=${#data_window[@]}
+  if (( $i >= $max_lines )); then
+      i=$(( $max_lines - 1 ))
+  fi
+  for (( ; i > 0; i-- )); do
+      data_window[$i]=${data_window[$(($i-1))]}
+  done
+
+  data_window[0]=$1
+}
+
+function dump_window {
+  i=${#data_window[@]}
+  for (( ; i > 0; i-- )); do
+      echo ${data_window[$(($i-1))]}
+  done
+}
+
+
+#####
+##### functions stop
+#####
+
 tmp=$status_root/$resource/tmp
 mkdir -p $status_root/$resource/log
 mkdir -p $status_root/$resource/tmp
@@ -96,12 +127,18 @@ while read -r line; do
       # append to log
       echo $line >> $status_root/$resource/log/state
 
+      # keep data history in bash array as sliding window
+      add_line $line
+
+      echo $header > $status_root/$resource/log/state
+      dump_window >> $status_root/$resource/log/state
+      
       # limit log to N lines; use mv/cat? for atomic file change
-      if [ $max_lines -gt 0 ]; then
-        tail -$max_lines $status_root/$resource/log/state > $status_root/$resource/tmp/state.max_lines
-        #echo $header > $status_root/$resource/log/state
-        cat $status_root/$resource/tmp/state.max_lines > $status_root/$resource/log/state
-      fi
+      # if [ $max_lines -gt 0 ]; then
+      #   tail -$max_lines $status_root/$resource/log/state > $status_root/$resource/tmp/state.max_lines
+      #   #echo $header > $status_root/$resource/log/state
+      #   cat $status_root/$resource/tmp/state.max_lines > $status_root/$resource/log/state
+      # fi
 
       # display
       if [ "$display" == "yes" ]; then
