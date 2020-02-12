@@ -84,6 +84,10 @@ function RUN() {
     shift
     args=$@
 
+    if [ -z "$attribute" ]; then
+        attribute=none
+    fi
+
     mkdir -p $status_root/$resource/lock
 
     case $command in
