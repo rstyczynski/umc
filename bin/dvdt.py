@@ -52,6 +52,8 @@ while line:
     if data_prv_set == True and line: 
         dv = map(int.__sub__, data_now, data_prv)
         
+        print(dv)
+        
         if dt_column:
             dt = dv[dt_column]
             if dt == 0: 
