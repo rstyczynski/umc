@@ -33,7 +33,8 @@ while [ $# -gt 0 ]; do opt="$1"; shift
         --type) type=$1 ;;
         --resource) resource=$1 ;;
         --delta) delta=$1 ;;
-        --column) column=$1 ;;
+        --timeat) timeat=$1 ;;
+        --dataat) dataat=$1 ;;
         --format) format=$1 ;;
         --display) display=$1 ;;
         --separator) separator=$1 ;;
@@ -48,7 +49,9 @@ done
 [ -z $type ] && type=.
 [ -z $display ] && display=compute
 [ -z $format ] && format=csv
-[ -z $delta ] && delta=1
+[ -z $timeat ] && timeat=3
+[ -z $dataat ] && dataat=7
+[ -z $delta ] && delta=-1
 [ -z $separator ] && separator=','
 [ -z $status_root ] && status_root=~/obd
 # parameters defaults - stop
@@ -72,10 +75,6 @@ fi
 ##### parameter seciton stop
 #####
 
-if [ ! -z "$column" ]; then
-    delta=-1
-fi
-
 if [ ! "$display" != "compute" ]; then
     if [ ! "$display" != "forward" ]; then
         echo "Error: display takes copute or forward"
@@ -92,4 +91,4 @@ if [ ! "$format" != "csv" ]; then
     fi
 fi
 
-python $(dirname $0)/dvdt.py $type $resource $delta $column $format $display $separator $status_root
+python $(dirname $0)/dvdt.py $type $resource $timeat $dataat $column $format $display $separator $status_root

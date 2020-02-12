@@ -5,10 +5,12 @@ res_type = sys.argv[1]     # os.environ['herald_res_type'] #'ens3'
 res_name = sys.argv[2]     # os.environ['herald_res_name'] #'ens3'
 dt = int(sys.argv[3])
 dt_column = int(sys.argv[4])
-out_format = sys.argv[5]   # map | csv
-out_data = sys.argv[6]     # compute | forward
-separator = sys.argv[7]
-herald_state = sys.argv[8]
+dataat = int(sys.argv[5])
+out_format = sys.argv[6]   # map | csv
+out_data = sys.argv[7]     # compute | forward
+separator = sys.argv[8]
+herald_state = sys.argv[9]
+
 
 header_src = herald_state + '/' + res_type + '/' + res_name + '/header'
 state_dst = herald_state + '/' + res_type + '/' + res_name + '/dvdt'
@@ -81,7 +83,10 @@ while line:
                 print(str(dvdt).replace('[','').replace(']',''))
             elif out_format == 'map':
                 for i in range(len(header)-1):
-                    print(header[i] + '=' + str(dvdt[i]))
+                    if i < dataat:
+                        print(header[i] + '=' + str(data_now[i]))
+                    else:
+                        print(header[i] + '=' + str(dvdt[i]))
             else:
                 raise Exception('out_format format unknown:' + out_format)
         
