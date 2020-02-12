@@ -35,14 +35,15 @@ if out_data == 'compute' and out_format == 'csv':
     print(header_line)
 
 while line:
-    data_now = []
+    data_now = list()
     line = sys.stdin.readline()
 
     # print inpute data in forward mode
     if out_data == 'forward':
         print(line.rstrip())
 
-    for element in line.rstrip().split(separator):
+    line = line.rstrip()
+    for element in line.split(separator):
         try:
             value = int(element)
         except:
@@ -52,9 +53,11 @@ while line:
     if data_prv_set == True and line: 
         dv = map(int.__sub__, data_now, data_prv)
         
+        print('--- start')
         print(data_now)
         print(data_prv)
         print(dv)
+        print('--- stop')
 
         if dt_column:
             dt = dv[dt_column]
