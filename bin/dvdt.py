@@ -80,7 +80,12 @@ while line:
         # write dvdt data to stdout if needed
         if out_data == 'compute':
             if out_format == 'csv':
-                print(str(dvdt).replace('[','').replace(']',''))
+                for i in range(len(header)-1):
+                    if i < dataat:
+                        print(str(data_now[i]))
+                    else:
+                        print(str(dvdt[i]))
+                        
             elif out_format == 'map':
                 for i in range(len(header)-1):
                     if i < dataat:
