@@ -50,7 +50,7 @@ while line:
             value = 0
         data_now.append(value)
 
-    if sum(data_now) = 0:
+    if sum(data_now) == 0:
         continue
 
     if data_prv_set == True and line: 
