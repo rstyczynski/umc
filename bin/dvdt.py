@@ -24,6 +24,7 @@ header_line = header_f.read()
 header_f.close
 #header_line = header_line.replace('\n', '_dvdt' + separator)
 header_line = header_line.replace('\n', separator)
+header_line = header_line.replace(' ', '')
 
 if header_line.endswith(separator):
     header_line = header_line[0:-1]
