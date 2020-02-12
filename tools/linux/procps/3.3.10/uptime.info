@@ -6,7 +6,7 @@ uptime:
         users,load1min,load5min,load15min
     rawheader:
         method:     command
-        directive:  uptime | cut -d' ' -f6-99 | sed -e 's/[ .0-9:]//g'
+        directive:  uptime | cut -d' ' -f6-99 | sed -e 's/[ .0-9:]//g' | sed 's/users/user/g'
         expected:   |-
             ,user,loadaverage,,
     availability:
