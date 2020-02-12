@@ -79,7 +79,7 @@ fi
 if [ ! "$display" != "compute" ]; then
     if [ ! "$display" != "forward" ]; then
         echo "Error: display takes copute or forward"
-        usage()
+        usage
         exit 1
     fi
 fi
@@ -87,7 +87,7 @@ fi
 if [ ! "$format" != "csv" ]; then
     if [ ! "$format" != "map" ]; then
         echo "Error: display takes csv or map"
-        usage()
+        usage
         exit 1
     fi
 fi
