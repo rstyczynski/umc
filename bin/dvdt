@@ -50,7 +50,7 @@ done
 [ -z $display ] && display=compute
 [ -z $format ] && format=csv
 [ -z $timeat ] && timeat=3
-[ -z $dataat ] && dataat=7
+[ -z $dataat ] && dataat=6
 [ -z $delta ] && delta=-1
 [ -z $separator ] && separator=','
 [ -z $status_root ] && status_root=~/obd
