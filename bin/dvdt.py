@@ -91,9 +91,9 @@ while line:
                     else:
                         sys.stdout.write(str(dvdt[i]) + ',')
                 print(str(dvdt[len(header)-1]))
-                
-                print(str(header))
-                print(str(dvdt))
+
+                # print(str(header))
+                # print(str(dvdt))
 
             elif out_format == 'map':
                 for i in range(len(header)):
