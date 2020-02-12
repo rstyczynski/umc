@@ -50,6 +50,9 @@ while line:
             value = 0
         data_now.append(value)
 
+    if sum(data_now) = 0:
+        continue
+
     if data_prv_set == True and line: 
         dv = map(int.__sub__, data_now, data_prv)
         
@@ -82,5 +85,5 @@ while line:
             else:
                 raise Exception('out_format format unknown:' + out_format)
         
-    data_prv = list(data_now)
+    data_prv = data_now
     data_prv_set = True
