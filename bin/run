@@ -84,6 +84,8 @@ function RUN() {
     shift
     args=$@
 
+    mkdir -p $status_root/$resource/lock
+
     case $command in
     printf)
             # TODO executed command must control amount of processes being exetued in the same time

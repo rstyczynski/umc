@@ -79,7 +79,7 @@ function FLAG() {
     shift
     flag_options=$@
 
-    mkdir -p $status_root/$resource/flags/
+    mkdir -p $status_root/$resource/flags
 
     case $flag_action in
     raise)
