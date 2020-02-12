@@ -80,6 +80,7 @@ while read -r line; do
             echo $header | tr , '\n' | tr -d ' ' > $tmp/header
 
             echo $header > $status_root/$resource/log/header
+            echo $header > $status_root/$resource/header
             #if [ ! -f $status_root/$resource/log/state ]; then
               #echo $header > $status_root/$resource/log/state
             #fi
