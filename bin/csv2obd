@@ -128,11 +128,11 @@ while read -r line; do
       echo $line >> $status_root/$resource/log/state
 
       # keep data history in bash array as sliding window
-      add_line $line
+      add_line "$line"
 
       echo $header > $status_root/$resource/log/state
       dump_window >> $status_root/$resource/log/state
-      
+
       # limit log to N lines; use mv/cat? for atomic file change
       # if [ $max_lines -gt 0 ]; then
       #   tail -$max_lines $status_root/$resource/log/state > $status_root/$resource/tmp/state.max_lines
