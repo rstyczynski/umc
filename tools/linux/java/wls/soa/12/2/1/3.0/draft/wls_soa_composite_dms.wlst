@@ -1,0 +1,213 @@
+from java.io import File
+from java.io import FileOutputStream
+from java.util import Collections
+import getopt
+import sys
+import socket
+import datetime
+import time as pytime
+
+
+bindingMetrics = HashMap()
+compositeMetrics= HashMap()
+
+def getCompositeMetrics( compositeList ):
+	#
+    metric_table='weblogic_j2eeserver:soainfra_composite_label_rollup'    
+    #
+    # displayMetricTables displays data
+    # block this stdout http://www.javamonamour.org/2011/08/wlst-redirecting-all-output-to-file.html
+    #
+    prev = theInterpreter.getOut()
+    f = File("/dev/null")
+    fos = FileOutputStream(f)
+    theInterpreter.setOut(fos)
+    results = displayMetricTables(metric_table)
+    theInterpreter.setOut(prev)
+    #
+    #
+    for table in results:
+        name = table.get('Table')
+        rows = table.get('Rows')
+        rowCollection = rows.values()
+        iter = rowCollection.iterator()
+        while iter.hasNext():
+            row = iter.next()    
+            # 
+            # top level identifier
+            # 
+            value = row.get('soainfra_composite')
+            # 
+            # check if current composite in on a list of interest
+            # 
+            if (value in compositeList) or (len(compositeList)==0):
+                if not compositeMetrics.containsKey(value):
+                    compositeMetrics.put(value, HashMap())
+                compositeMap = compositeMetrics.get(value)
+                #
+                # low level identifier
+                # 
+                rowType = row.getCompositeType()
+                keys = rowType.keySet()
+                keyIter = keys.iterator()
+                while keyIter.hasNext():
+                   columnName = keyIter.next()
+                   value = row.get(columnName)
+                   compositeMap.put(columnName, value)
+				   
+#
+sortedKeys = ArrayList()
+compositeList = ArrayList()
+def getSortedKeys():
+	#
+	global compositeList
+	global compositeMetrics
+	global sortedKeys
+	#
+	sortedKeys = ArrayList()
+	composite = compositeList[0]
+	sortedKeys.addAll(compositeMetrics.get(composite).keySet())
+	java.util.Collections.sort(sortedKeys, String.CASE_INSENSITIVE_ORDER)
+#	
+def printHeader():
+    #	
+	global sortedKeys
+	global timestamp
+	global globalheader
+	global delimiter
+	#
+	if(timestamp): 
+		sys.stdout.write(globalheader)
+		sys.stdout.write(delimiter)
+	pos=len(sortedKeys)
+	for key in sortedKeys:
+	   sys.stdout.write(key)
+	   if(pos>1):
+		   sys.stdout.write(delimiter)
+	   else:
+		   sys.stdout.write('\n')
+	   pos=pos-1
+#
+def printData():
+	#
+	global compositeList
+	global sortedKeys
+	global timestamp
+	global system
+	global source
+	global delimiter
+	global timedelimiter
+	#
+	for composite in compositeList:
+		#
+		if(timestamp): 
+			now = datetime.datetime.now()
+			sys.stdout.write(now.strftime('%d-%m-%Y' + timedelimiter + '%H:%M:%S' + delimiter +  '%z' + delimiter))
+			epoch = int(pytime.time())
+			sys.stdout.write(str(epoch) + delimiter + system + delimiter + source + delimiter)
+        #
+		pos=len(sortedKeys)
+		for key in sortedKeys:
+		   sys.stdout.write(str(compositeMetrics.get(composite).get(key)))
+		   if(pos>1):
+			   sys.stdout.write(delimiter)
+		   else:
+			   sys.stdout.write('\n')
+		   pos=pos-1
+#
+def dumpCommpositeCSV(compositeListArg=[], header=true):
+	#
+	global compositeList
+	#
+	getCompositeMetrics( compositeListArg )
+	if(len(compositeListArg)==0):
+		compositeList=compositeMetrics.keySet()
+	else:
+		compositeList=compositeListArg
+	#
+	getSortedKeys()
+	if(header): printHeader()
+	printData()
+
+#
+def compositestat(composites=[], count=10, interval=1):
+    dumpCommpositeCSV(composites, true)
+    count = count - 1
+    while count >0:
+      java.lang.Thread.sleep(interval * 1000)
+      dumpCommpositeCSV(composites,false)
+      count = count - 1
+  
+#
+def usage():
+	print "TODO"
+  
+#
+#
+# default values
+admin_name = 'AdminServer'
+admin_address = 'localhost'
+admin_port = 7001
+admin_protocol = 't3'
+admin_url = admin_protocol + "://" + admin_address + ":" + str(admin_port)
+monitor_composites = []
+monitor_count = 10
+monitor_interval = 5
+delimiter = ','
+timedelimiter = ' '
+system = socket.gethostname()
+source = 'soa_dms'
+globalheader = 'datetime' + delimiter + 'timezone' + delimiter + 'timestamp' + delimiter + 'system' + delimiter + 'source'
+timestamp = false
+
+#
+try:
+    opts, args = getopt.getopt( sys.argv[1:], 's:p:u:c:d:h', ['server=','port=','ulr=', 'count=','delay=','composites=','help','timedelimiter=','delimiter=','system=','source=', 'globalheader=', 'timestamp'] )
+except getopt.GetoptError, err:
+    print str(err)
+    usage()
+    sys.exit(2)
+	
+for opt, arg in opts:
+    if opt in ('-h', '--help'):
+        usage()
+        sys.exit(2)
+    elif opt in ('-s', '--server'):
+        admin_name = arg
+    elif opt in ('-p', '--port'):
+        admin_port = arg
+        admin_url = admin_protocol + "://" + admin_address + ":" + str(admin_port)
+    elif opt in ('-u', '--url'):
+        admin_url = arg
+    elif opt in ('-c', '--count'):
+        monitor_count = int(arg)
+    elif opt in ('-d', '--delay'):
+        monitor_interval = int(arg)
+    elif opt in ('--composites'):
+        monitor_composites = arg.split(',')
+    elif opt in ('--timedelimiter'):
+        timedelimiter = arg
+    elif opt in ('--delimiter'):
+        delimiter = arg
+        globalheader = 'datetime' + delimiter + 'timezone' + delimiter + 'timestamp' + delimiter + 'system' + delimiter + 'source'
+    elif opt in ('--system'):
+        system = arg
+    elif opt in ('--source'):
+        source = arg
+    elif opt in ('--globalheader'):
+        globalheader = arg
+    elif opt in ('--timestamp'):
+        timestamp = true
+    else:
+        usage()
+        sys.exit(2)
+
+#
+connect(url=admin_url, adminServerName=admin_name)
+compositestat(monitor_composites, monitor_count, monitor_interval)
+
+#
+disconnect()
+exit()
+
+

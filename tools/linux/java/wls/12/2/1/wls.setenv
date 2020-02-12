@@ -1,0 +1,28 @@
+#!/bin/bash
+
+#
+# Taking args w/o getops from: https://gist.github.com/dgoguerra/9206418
+#
+
+UMC_PROBE_META_EXT=general
+UMC_PROBE_LOG_NAME=general
+while [ "$#" -gt 0 ]
+do  
+    option=$(echo $1 | cut -f1 -d'=')
+    arg=$(echo $1 | cut -f2 -d'=')
+	case "$option" in
+	--subsystem)
+		export UMC_PROBE_META_EXT="$arg"
+        export UMC_PROBE_LOG_NAME="$arg"
+		;;
+	--)
+		break
+		;;
+	# an option argument, continue
+	*)	;;
+	esac
+	shift
+done
+
+UMC_SENSOR_HELP="--help"
+
