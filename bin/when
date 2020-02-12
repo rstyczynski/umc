@@ -1,0 +1,183 @@
+#!/bin/bash
+
+# #####
+# ##### parameter section start
+# #####
+
+# function usage() {
+#     echo -n "Usage: $(basename $0) "
+#     cat $0 | grep -v '/# parameters - start/,/# parameters - stop/p' | 
+#     sed -n '/# parameters - start/,/# parameters - stop/p' | 
+#     grep '\--' | cut -f1 -d ')' | tr -s ' ' | tr '\n' ' '
+#     echo
+
+#     echo
+#     echo "Mandatory parameters: "
+#     cat $0 | grep -v '/# mandatory parameters - start/,/# mandatory parameters - stop/p' | 
+#     sed -n '/# mandatory parameters - start/,/# mandatory parameters - stop/p' | 
+#     grep '\[ -z'  | sed 's/|/;/g' | cut -f2 -d ';' | sed 's/"$//g' | nl
+#     echo
+
+#     echo
+#     echo "Parameter defaults: "
+#     cat $0 | grep -v '/# parameters defaults - start/,/# parameters defaults - stop/p' | 
+#     sed -n '/# parameters defaults - start/,/# parameters defaults - stop/p' | 
+#     grep '\[ -z' | sed 's/&& /;/g' | cut -f2 -d ';' | nl
+#     echo
+# }
+
+
+# # parameters - start
+# while [ $# -gt 0 ]; do opt="$1"; shift
+#     case $opt in
+#         --type) type=$1 ;;
+#         --resource) resource=$1 ;;
+#         --attribute) attribute=$1 ;;
+#         --name) name=$1 ;;
+#         --options) options=$1 ;;
+#         -h|--help)  usage; exit ;;
+#     esac
+#     shift
+# done
+# # parameters - stop
+
+# # parameters defaults - start
+# [ -z $type ] && type=.
+# [ -z $status_root ] && status_root=~/obd
+# # parameters defaults - stop
+
+# # mandatory parameters - start
+# error=''
+# [ -z $resource ] && error="$error|resource cannot be none"
+# [ -z $attribute ] && error="$error|attribute cannot be none"
+
+# if [ "$error" != "" ]; then
+#     echo '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+#     echo -n "Error. Mandatory arguments missing:"
+#     echo "$error" | tr '|' '\n' | nl
+#     echo '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+#     echo 
+#     usage
+#     exit 1
+# fi
+# # mandatory parameters - stop
+
+# #####
+# ##### parameter section stop
+# #####
+
+#####
+##### functions section start
+#####
+
+function WHEN() {
+
+    resource_type=REGULAR
+    metric=$1
+    shift
+
+    # nic/ens3 FLAG TX_dvdt_over_threshold gt 5 
+    if [ $1 == FLAG ]; then
+        resource_type=FLAG
+        resource=$metric
+        shift
+        metric=$1
+        shift
+    fi
+
+    operator=$1
+    shift
+    value=$1
+    shift
+    action=$1
+    shift
+    options=$@
+
+
+    if [ $resource_type == REGULAR ]; then
+        # nic/ens3/TX/dvdt gt 50000 FLAG CHECK TX_dvdt_over_threshold
+        IFS='/ ' read -r -a uri <<<$metric
+        if debug; then
+            for index in "${!uri[@]}"; do
+                echo "$index ${uri[index]}"
+            done
+        fi
+
+        len="${#uri[@]}"
+        metric="${uri[@]: -1:1}"
+        resource=$(echo "${uri[@]:0:$(($len - 1))}" | tr ' ' '/')
+
+        #TODO add check against list
+        #
+        unset modifier
+        if [ $metric == dvdt ]; then
+            modifier="${uri[@]: -1:1}"
+            metric="${uri[@]: -2:1}"
+            resource=$(echo "${uri[@]:0:$(($len - 2))}" | tr ' ' '/')
+        fi
+    fi
+
+    if debug; then
+        echo $resource
+        echo $metric
+        echo $modifier
+        echo $operator
+        echo $value
+        echo $action
+        echo $options
+    fi
+
+    case $resource_type in
+    REGULAR)
+        current_value=$(GET $resource $metric $modifier)
+        ;;
+    FLAG)
+        FLAG $resource CHECK $metric
+        current_value=$?
+        ;;
+    esac
+
+    if debug; then
+        echo $current_value
+    fi
+
+    perform_action=no
+    case $operator in
+    gt)
+        if [ $current_value -gt $value ]; then
+            perform_action=yes
+        fi
+        ;;
+    lt)
+        if [ $current_value -lt $value ]; then
+            perform_action=yes
+        fi
+        ;;
+    *)
+        echo "Error: Unknown operator: $operator"
+        ;;
+    esac
+
+    if [ $perform_action == yes ]; then
+        case $action in
+        FLAG)
+            FLAG $resource $options $metric $current_value $value
+            ;;
+        RUN)
+            RUN $resource $options $metric $current_value $value
+            ;;
+        PRINT)
+            echo $resource $options $metric $current_value $value
+            ;;
+        *)
+            echo "Error: Unknown action: $action"
+            ;;
+        esac
+    fi
+}
+
+#####
+##### functions section stop
+#####
+
+WHEN $@

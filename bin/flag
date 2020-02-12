@@ -1,0 +1,120 @@
+#!/bin/bash
+
+# #####
+# ##### parameter section start
+# #####
+
+# function usage() {
+#     echo -n "Usage: $(basename $0) "
+#     cat $0 | grep -v '/# parameters - start/,/# parameters - stop/p' | 
+#     sed -n '/# parameters - start/,/# parameters - stop/p' | 
+#     grep '\--' | cut -f1 -d ')' | tr -s ' ' | tr '\n' ' '
+#     echo
+
+#     echo
+#     echo "Mandatory parameters: "
+#     cat $0 | grep -v '/# mandatory parameters - start/,/# mandatory parameters - stop/p' | 
+#     sed -n '/# mandatory parameters - start/,/# mandatory parameters - stop/p' | 
+#     grep '\[ -z'  | sed 's/|/;/g' | cut -f2 -d ';' | sed 's/"$//g' | nl
+#     echo
+
+#     echo
+#     echo "Parameter defaults: "
+#     cat $0 | grep -v '/# parameters defaults - start/,/# parameters defaults - stop/p' | 
+#     sed -n '/# parameters defaults - start/,/# parameters defaults - stop/p' | 
+#     grep '\[ -z' | sed 's/&& /;/g' | cut -f2 -d ';' | nl
+#     echo
+# }
+
+
+# # parameters - start
+# while [ $# -gt 0 ]; do opt="$1"; shift
+#     case $opt in
+#         --type) type=$1 ;;
+#         --resource) resource=$1 ;;
+#         --action) action=$1 ;;
+#         --name) name=$1 ;;
+#         --options) options=$1 ;;
+#         -h|--help)  usage; exit ;;
+#     esac
+#     shift
+# done
+# # parameters - stop
+
+# # parameters defaults - start
+# [ -z $type ] && type=.
+# [ -z $status_root ] && status_root=~/obd
+# # parameters defaults - stop
+
+# # mandatory parameters - start
+# error=''
+# [ -z $resource ] && error="$error|resource cannot be none"
+
+# if [ "$error" != "" ]; then
+#     echo '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+#     echo -n "Error. Mandatory arguments missing:"
+#     echo "$error" | tr '|' '\n' | nl
+#     echo '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+#     echo 
+#     usage
+#     exit 1
+# fi
+# # mandatory parameters - stop
+
+# #####
+# ##### parameter section stop
+# #####
+
+#####
+##### functions section start
+#####
+
+function FLAG() {
+    # FLAG RAISE TX_dvdt_over_threshold $value
+    resource=$1
+    shift
+    flag_action=$1
+    shift
+    flag_name=$1
+    shift
+    flag_options=$@
+
+    case $flag_action in
+    RAISE)
+        flag_filename=$herald_state/$resource/flags/$flag_name
+        if [[ -e $flag_filename ]]; then
+            i=1
+            while [[ -e $flag_filename-$i ]]; do
+                let i++
+            done
+            flag_filename=$flag_filename-$i
+        fi
+        echo $flag_options >$flag_filename
+        ;;
+    REMOVE)
+        if [ -f $herald_state/$resource/flags/$flag_name ]; then
+            # remove all flags incl. more detailed e.g. *_long
+            rm -f $herald_state/$resource/flags/$flag_name*
+            #rm -f $herald_state/$resource/flags/$flag_name-[0-9]*
+        fi
+        ;;
+    CHECK)
+        if [ -f $herald_state/$resource/flags/$flag_name ]; then
+            repeated=$(ls $herald_state/$resource/flags/$flag_name-* 2>/dev/null | wc -l)
+            flags=$((1 + $repeated))
+            return $flags
+        fi
+        ;;
+    *)
+        echo "Error: Unknown FLAG option: $action"
+        ;;
+    esac
+}
+
+#####
+##### functions section stop
+#####
+
+#FLAG $type/$resource $action $name $option
+
+FLAG $@

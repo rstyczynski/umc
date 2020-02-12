@@ -1,0 +1,96 @@
+#!/bin/bash
+
+# #####
+# ##### parameter section start
+# #####
+
+# function usage() {
+#     echo -n "Usage: $(basename $0) "
+#     cat $0 | grep -v '/# parameters - start/,/# parameters - stop/p' | 
+#     sed -n '/# parameters - start/,/# parameters - stop/p' | 
+#     grep '\--' | cut -f1 -d ')' | tr -s ' ' | tr '\n' ' '
+#     echo
+
+#     echo
+#     echo "Mandatory parameters: "
+#     cat $0 | grep -v '/# mandatory parameters - start/,/# mandatory parameters - stop/p' | 
+#     sed -n '/# mandatory parameters - start/,/# mandatory parameters - stop/p' | 
+#     grep '\[ -z'  | sed 's/|/;/g' | cut -f2 -d ';' | sed 's/"$//g' | nl
+#     echo
+
+#     echo
+#     echo "Parameter defaults: "
+#     cat $0 | grep -v '/# parameters defaults - start/,/# parameters defaults - stop/p' | 
+#     sed -n '/# parameters defaults - start/,/# parameters defaults - stop/p' | 
+#     grep '\[ -z' | sed 's/&& /;/g' | cut -f2 -d ';' | nl
+#     echo
+# }
+
+
+# # parameters - start
+# while [ $# -gt 0 ]; do opt="$1"; shift
+#     case $opt in
+#         --type) type=$1 ;;
+#         --resource) resource=$1 ;;
+#         --attribute) attribute=$1 ;;
+#         --dv) dv=$1 ;;
+#         -h|--help)  usage; exit ;;
+#     esac
+#     shift
+# done
+# # parameters - stop
+
+# # parameters defaults - start
+# [ -z $type ] && type=.
+# [ -z $dv ] && dv=.
+# [ -z $status_root ] && status_root=~/obd
+# # parameters defaults - stop
+
+# # mandatory parameters - start
+# error=''
+# [ -z $resource ] && error="$error|resource cannot be none"
+# [ -z $attribute ] && error="$error|attribute cannot be none"
+
+# if [ "$error" != "" ]; then
+#     echo '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+#     echo -n "Error. Mandatory arguments missing:"
+#     echo "$error" | tr '|' '\n' | nl
+#     echo '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+#     echo 
+#     usage
+#     exit 1
+# fi
+# # mandatory parameters - stop
+
+# #####
+# ##### parameter section stop
+# #####
+
+#####
+##### functions section stop
+#####
+
+function GET() {
+    path=$1
+    attribute=$2
+    dv=$3
+
+    if [ -f $status_root/$path/$dv/state ]; then
+        value=$(cat $status_root/$path/$dv/state | grep $attribute= | cut -f2 -d=)
+        if [ -z "$value" ]; then
+            echo "-0"
+        else
+            echo "$value"
+        fi
+    else
+        echo "-1"
+    fi
+}
+
+#####
+##### functions section stop
+#####
+
+#GET $type/$resource $attribute $dv
+
+GET $@

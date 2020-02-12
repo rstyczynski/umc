@@ -1,0 +1,138 @@
+#!/bin/bash
+
+# #####
+# ##### parameter section start
+# #####
+
+# function usage() {
+#     echo -n "Usage: $(basename $0) "
+#     cat $0 | grep -v '/# parameters - start/,/# parameters - stop/p' | 
+#     sed -n '/# parameters - start/,/# parameters - stop/p' | 
+#     grep '\--' | cut -f1 -d ')' | tr -s ' ' | tr '\n' ' '
+#     echo
+
+#     echo
+#     echo "Mandatory parameters: "
+#     cat $0 | grep -v '/# mandatory parameters - start/,/# mandatory parameters - stop/p' | 
+#     sed -n '/# mandatory parameters - start/,/# mandatory parameters - stop/p' | 
+#     grep '\[ -z'  | sed 's/|/;/g' | cut -f2 -d ';' | sed 's/"$//g' | nl
+#     echo
+
+#     echo
+#     echo "Parameter defaults: "
+#     cat $0 | grep -v '/# parameters defaults - start/,/# parameters defaults - stop/p' | 
+#     sed -n '/# parameters defaults - start/,/# parameters defaults - stop/p' | 
+#     grep '\[ -z' | sed 's/&& /;/g' | cut -f2 -d ';' | nl
+#     echo
+# }
+
+
+# # parameters - start
+# while [ $# -gt 0 ]; do opt="$1"; shift
+#     case $opt in
+#         --type) type=$1 ;;
+#         --resource) resource=$1 ;;
+#         --command) command=$1 ;;
+#         --value) value=$1 ;;
+#         --right_value) right_value=$1 ;;
+#         -h|--help)  usage; exit ;;
+#     esac
+#     shift
+# done
+# # parameters - stop
+
+# # parameters defaults - start
+# [ -z $type ] && type=.
+# [ -z $status_root ] && status_root=~/obd
+# # parameters defaults - stop
+
+# # mandatory parameters - start
+# error=''
+# [ -z $resource ] && error="$error|resource cannot be none"
+# [ -z $command ] && error="$error|command cannot be none"
+
+# if [ "$error" != "" ]; then
+#     echo '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+#     echo -n "Error. Mandatory arguments missing:"
+#     echo "$error" | tr '|' '\n' | nl
+#     echo '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+#     echo 
+#     usage
+#     exit 1
+# fi
+# # mandatory parameters - stop
+
+# #####
+# ##### parameter section stop
+# #####
+
+#####
+##### functions section start
+#####
+
+function RUN() {
+    resource=$1
+    shift
+    command_run=$1
+    command=$(basename $1)
+    shift
+    attribute=$1
+    shift
+    value=$1
+    shift
+    right_value=$1
+    shift
+    args=$@
+
+    case $command in
+    printf)
+            # TODO executed command must control amount of processes being exetued in the same time
+            if [ ! -f $status_root/$resource/lock/$attribute ]; then
+                touch $status_root/$resource/lock/$attribute 
+                $command "$resource $attribute $value $right_value\n"
+                rm -f $status_root/$resource/lock/$attribute 
+            fi
+        ;;
+    *)
+        # check is command with lock is done
+        if [ -f $status_root/$resource/lock/$command\_$attribute ]; then
+
+            # identify command in lock fule by pid, attribute, and random id
+            command_id=$(cat $status_root/$resource/lock/$command\_$attribute | grep '^id=' | cut -f2 -d'=')
+            command_pid=$(cat $status_root/$resource/lock/$command\_$attribute | grep '^pid=' | cut -f2 -d'=')
+            command_attribute=$(cat $status_root/$resource/lock/$command\_$attribute | grep '^attribute=' | cut -f2 -d'=')
+
+            # look for unique process descriptors in process list
+            command_ps=$(ps ux | grep -v grep | grep $command_id | grep $command_pid | grep $command_attribute 2>&1 | wc -l | tr -d ' ')
+            if [ $command_ps -eq 0 ]; then
+                rm -f $status_root/$resource/lock/$command\_$attribute
+            else
+                echo "Warning: $command for attribute $attribute at $resource is beeing executed. Info: $(cat $status_root/$resource/lock/$command\_$attribute | tr '\n' ',')"
+            fi
+        else
+            # free to go! Execute command.
+
+            # identify command in lock fule by pid, attribute, and random id
+            echo "cmd=$command" > $status_root/$resource/lock/$command\_$attribute
+            echo "attribute=$attribute" >> $status_root/$resource/lock/$command\_$attribute
+            command_id=$RANDOM
+            echo "id=$command_id" >> $status_root/$resource/lock/$command\_$attribute
+
+            # run command in other process. take the PID.
+            $command_run $command_id $resource $attribute $value $right_value $args &
+            command_pid=$!
+
+            echo "pid=$command_pid" >> $status_root/$resource/lock/$command\_$attribute
+
+        fi
+        ;;
+    esac
+}
+
+#####
+##### functions section stop
+#####
+
+#RUN $type/$resource $command $attribute $value $right_value
+
+RUN $@
