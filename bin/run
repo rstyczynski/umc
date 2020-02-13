@@ -87,6 +87,7 @@ function RUN() {
     command=$(basename $1)
     shift
 
+    attribute=none
     if [ "$1" = CONTEXT ]; then
         shift
         attribute=$1
@@ -103,10 +104,6 @@ function RUN() {
             fi
             cmdargs="$cmdargs $arg"
         done
-    fi
-
-    if [ -z "$attribute" ]; then
-        attribute=none
     fi
 
     mkdir -p $status_root/$resource/lock
