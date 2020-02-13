@@ -168,7 +168,7 @@ function WHEN() {
             flag $resource $options $metric $current_value $value
             ;;
         run)
-            run $resource $options $metric $current_value $value
+            run $resource $options CONTEXT $metric $current_value $value
             ;;
         print)
             echo $resource $options $metric $current_value $value

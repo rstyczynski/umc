@@ -86,16 +86,22 @@ function RUN() {
     command_run=$1
     command=$(basename $1)
     shift
-    attribute=$1
-    shift
-    value=$1
-    shift
-    right_value=$1
-    shift
-    args=$@
 
-    if [ -z "$attribute" ]; then
-        attribute=none
+    if [ "$1" = CONTEXT ]; then
+        shift
+        attribute=$1
+        shift
+        value=$1
+        shift
+        right_value=$1
+        shift
+        args=$@
+
+        if [ -z "$attribute" ]; then
+            attribute=none
+        fi
+    else
+        args=$@
     fi
 
 
