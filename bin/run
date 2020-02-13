@@ -72,6 +72,9 @@
 
 function RUN() {
 
+    resource=$1
+    shift
+    
     context=ignore
     if [ "$1" = "with" ]; then
         if [ "$2" = "context" ]; then
@@ -80,8 +83,6 @@ function RUN() {
         fi
     fi
 
-    resource=$1
-    shift
     command_run=$1
     command=$(basename $1)
     shift
