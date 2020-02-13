@@ -150,18 +150,18 @@ function RUN() {
 
             # run command in other process. take the PID.
             if [ "$context" = pass ]; then
-                echo "attribute=$attribute" >> $status_root/$resource/lock/$command\_$attribute
+                attribute_id=$attribute
                 command_id=$RANDOM
-                echo "id=$command_id" >> $status_root/$resource/lock/$command\_$attribute
                 $command_run $command_id $resource $attribute $value $right_value $args &
             else
-                echo 'attribute=.' >> $status_root/$resource/lock/$command\_$attribute
-                command_id='.' # dot will make grep to pass all lines. will neutralize grap on random salt
-                echo "id=$command_id" >> $status_root/$resource/lock/$command\_$attribute
+                # dot will make grep to pass all lines. will neutralize grap on random salt
+                attribute_id='.'
+                command_id='.'
                 $command_run $cmdargs &
             fi
             command_pid=$!
-
+            echo "attribute=$attribute_id" >> $status_root/$resource/lock/$command\_$attribute
+            echo "id=$command_id" >> $status_root/$resource/lock/$command\_$attribute
             echo "pid=$command_pid" >> $status_root/$resource/lock/$command\_$attribute
 
         fi
