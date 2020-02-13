@@ -1,13 +1,28 @@
 #!/bin/bash
 
 function FOREACH {
+
+    # take what
     what=$1
     shift
 
+    # take silently
     if [ "$1" == "silently" ]; then
         silently=yes
         shift
     fi
+
+    # take how
+    case $1 in
+        pipeto) 
+            how=pipeto
+            shift
+            ;;
+        trigger)
+            how=trigger
+            shift
+            ;;
+    esac
 
     case $what in
         line)
@@ -17,14 +32,11 @@ function FOREACH {
                     echo $line
                 fi
 
-                how=$1
                 case $how in
                     pipeto)
-                        shift
                         echo $line | $@
                         ;;
                     trigger)
-                        shift
                         $@
                         ;;
                     *)
