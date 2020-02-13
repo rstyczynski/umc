@@ -148,13 +148,15 @@ function RUN() {
             # identify command in lock fule by pid, attribute, and random id
             echo "cmd=$command" > $status_root/$resource/lock/$command\_$attribute
             echo "attribute=$attribute" >> $status_root/$resource/lock/$command\_$attribute
-            command_id=$RANDOM
-            echo "id=$command_id" >> $status_root/$resource/lock/$command\_$attribute
 
             # run command in other process. take the PID.
             if [ "$context" = pass ]; then
+                command_id=$RANDOM
+                echo "id=$command_id" >> $status_root/$resource/lock/$command\_$attribute
                 $command_run $command_id $resource $attribute $value $right_value $args &
             else
+                command_id='.'
+                echo "id=$command_id" >> $status_root/$resource/lock/$command\_$attribute
                 $command_run $cmdargs &
             fi
             command_pid=$!
