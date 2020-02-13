@@ -4,10 +4,19 @@ function FOREACH {
     what=$1
     shift
 
+    if [ "$1" == "silently" ]; then
+        silently=yes
+        shift
+    fi
+
     case $what in
         line)
-            while read line; do 
-                #echo $line
+            while read line; do
+
+                if [ -z "$silently" ]; then
+                    echo $line
+                fi
+
                 how=$1
                 case $how in
                     pipeto)

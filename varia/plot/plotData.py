@@ -26,53 +26,53 @@ output = sys.stdout
 #
 # 
 #
-computerName='ppseelm-lx41082'
+computerName='box-41082'
 probeName = 'iostat'
 identifierColumns = 'Device'
 
-computerName='ppseelm-lx41082'
+computerName='box-41082'
 probeName = 'ifconfig'
 identifierColumns = 'device'
 
-computerName='ppseelm-lx41082'
+computerName='box-41082'
 probeName = 'wls_jmsserver'
 identifierColumns = 'jmsServerName'
 
-computerName='ppseelm-lx41082'
+computerName='box-41082'
 probeName = 'soabindings'
 identifierColumns = 'ServerName,soainfra_composite,soainfra_composite_assembly_member,soainfra_composite_assembly_member_type,soainfra_composite_revision,soainfra_domain'
 
-computerName='ppseelm-lx41082'
+computerName='box-41082'
 probeName = 'wls_channel'
 identifierColumns = 'domain,serverName,subsystem,channelName'
 
-computerName='ppseelm-lx41082'
+computerName='box-41082'
 probeName = 'wls_jmsruntime'
 identifierColumns = 'domain,serverName,subsystem,runtimeName'
 
-computerName='ppseelm-lx41082'
+computerName='box-41082'
 probeName = 'wls_datasource'
 identifierColumns = 'domain,serverName,subsystem,dsName'
 
-computerName='ppseelm-lx41089'
+computerName='box-41089'
 probeName = 'businessservice_SERVICE'
 identifierColumns = 'path,name'
 
-computerName='ppseelm-lx41089'
+computerName='box-41089'
 probeName = 'businessservice_OPERATION'
 identifierColumns = 'path,name'
 
-computerName='ppseelm-lx41089'
+computerName='box-41089'
 probeName = 'businessservice_URI'
 identifierColumns = 'path,name'
 
 ###
-computerName='ppseelm-lx41082'
+computerName='box-41082'
 probeName = 'iostat'
 identifierColumns = 'Device'
 
-probeDir='/Users/rstyczynski/Documents/IKEA/11.Test/TESTS/10.04.2018/umc_archive/rodmon_data/info/'
-srcDir = '/Users/rstyczynski/Documents/IKEA/11.Test/TESTS/10.04.2018/umc_archive/rodmon_data/data'
+probeDir='./TESTS/10.04.2018/umc_archive/rodmon_data/info/'
+srcDir = './TESTS/10.04.2018/umc_archive/rodmon_data/data'
 dstDir = '/tmp'
 
 #
