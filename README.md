@@ -628,7 +628,7 @@ flag eth0 check RX_over_threshold; echo $?
 
 Above shows that during 15 seconds of collecting data, data read on eth0 was faster than 50000 bytes/s during 5 seconds. Duringn other 10 seconds, eth0 was less utilized.
 
-## More complex example. Chaining real time conditional execution woth real time conditional flag raise and clear.
+## More complex example. Chaining real time conditional execution with real time conditional flag raise and clear.
 
 During presented below oepration netowrk card received twice higer load. First time for 10+8 seconds, and second time for 10+3 seconds.
 
