@@ -95,6 +95,9 @@ function WHEN() {
     unset modifier
     case $operator in
         gt|lt) 
+        ;;
+
+        *) 
             modifier=$operator
             shift
             operator=$1
