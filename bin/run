@@ -98,6 +98,7 @@ function RUN() {
         shift
         args=$@
     else
+        unset cmdargs
         for arg in "$@"; do
             if [ "$arg" = CONTEXT ]; then
                 break
