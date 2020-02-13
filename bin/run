@@ -124,7 +124,7 @@ function RUN() {
             fi
         fi
 
-        if [ -f $status_root/$resource/lock/$command\_$attribute ]; then
+        if [ ! -f $status_root/$resource/lock/$command\_$attribute ]; then
             # free to go! Execute command.
 
             # identify command in lock fule by pid, attribute, and random id
