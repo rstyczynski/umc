@@ -155,7 +155,7 @@ function RUN() {
                 $command_run $command_id $resource $attribute $value $right_value $args &
             else
                 # dot will make grep to pass all lines. will neutralize grap on random salt
-                attribute_id='.'
+                attribute_id=$attribute
                 command_id='.'
                 $command_run $cmdargs &
             fi
