@@ -578,7 +578,7 @@ when eth0 flag TX_over_threshold gt 0 run with context ./runlong
 Warning: runlong for attribute TX_over_threshold at eth0 is beeing executed. Info: cmd=runlong,attribute=TX_over_threshold,id=17248,pid=1200
 ```
 
-File lock is stored in od/eth0/lock directory. Process identification is performed by attribute, PID, and random number applied to starting process with "with context" clause. Note that process takes arguments of: $seed, $resource, $flag, $value, $threshold. Prepare process wrapper to accommodate.
+File lock is stored in obd/eth0/lock directory. Process identification is performed by attribute, PID, and random number applied to starting process with "with context" clause. Note that process takes arguments of: $seed, $resource, $flag, $value, $threshold. Prepare process wrapper to accommodate.
 
 You may start process without passing context, such technique may be used for programs exclusively running for the resource.
 
