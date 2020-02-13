@@ -126,7 +126,11 @@ function RUN() {
             # identify command in lock fule by pid, attribute, and random id
             command_id=$(cat $status_root/$resource/lock/$command\_$attribute | grep '^id=' | cut -f2 -d'=')
             command_pid=$(cat $status_root/$resource/lock/$command\_$attribute | grep '^pid=' | cut -f2 -d'=')
-            command_attribute=$(cat $status_root/$resource/lock/$command\_$attribute | grep '^attribute=' | cut -f2 -d'=')
+            if [ "$context" = pass ]; then
+                command_attribute=$(cat $status_root/$resource/lock/$command\_$attribute | grep '^attribute=' | cut -f2 -d'=')
+            else
+                command_attribute='.'
+            fi
 
             # look for unique process descriptors in process list
             command_ps=$(ps ux | 
@@ -155,7 +159,7 @@ function RUN() {
                 $command_run $command_id $resource $attribute $value $right_value $args &
             else
                 # dot will make grep to pass all lines. will neutralize grap on random salt
-                attribute_id=$attribute
+                attribute_id='.'
                 command_id='.'
                 $command_run $cmdargs &
             fi
