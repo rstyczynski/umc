@@ -79,7 +79,7 @@ fi
 
 if [ ! "$display" != "compute" ]; then
     if [ ! "$display" != "forward" ]; then
-        echo "Error: display takes copute or forward"
+        echo "Error: display takes compute or forward"
         usage
         exit 1
     fi
