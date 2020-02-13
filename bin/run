@@ -101,7 +101,7 @@ function RUN() {
             if [ "$arg" = CONTEXT ]; then
                 break
             fi
-            set -- "$cmdargs" "$arg"
+            cmdargs="$cmdargs $arg"
         done
     fi
 
