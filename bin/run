@@ -88,7 +88,7 @@ function RUN() {
         attribute=none
     fi
 
-    
+
 
     mkdir -p $status_root/$resource/lock
 
@@ -102,7 +102,7 @@ function RUN() {
             fi
         ;;
     *)
-        # check is command with lock is done
+        # check is command with lock is done; remove if process is done
         if [ -f $status_root/$resource/lock/$command\_$attribute ]; then
 
             # identify command in lock fule by pid, attribute, and random id
@@ -122,7 +122,9 @@ function RUN() {
             else
                 echo "Warning: $command for attribute $attribute at $resource is beeing executed. Info: $(cat $status_root/$resource/lock/$command\_$attribute | tr '\n' ',')"
             fi
-        else
+        fi
+
+        if [ -f $status_root/$resource/lock/$command\_$attribute ]; then
             # free to go! Execute command.
 
             # identify command in lock fule by pid, attribute, and random id
