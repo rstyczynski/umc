@@ -38,6 +38,7 @@ while [ $# -gt 0 ]; do opt="$1"; shift
         --format) format=$1 ;;
         --display) display=$1 ;;
         --separator) separator=$1 ;;
+        --buffering) buffering=$1 ;;
         --status_root) status_root=$1 ;;
         -h|--help)  usage; exit ;;
     esac
@@ -53,6 +54,7 @@ done
 [ -z $dataat ] && dataat=6
 [ -z $delta ] && delta=-1
 [ -z $separator ] && separator=','
+[ -z $buffering ] && buffering=no
 [ -z $status_root ] && status_root=~/obd
 # parameters defaults - stop
 
@@ -91,4 +93,8 @@ if [ ! "$format" != "csv" ]; then
     fi
 fi
 
-python $(dirname $0)/dvdt.py $type $resource $delta $timeat $dataat $format $display $separator $status_root
+if [ "$buffering" == no ]; then
+    python -u $(dirname $0)/dvdt.py $type $resource $delta $timeat $dataat $format $display $separator $status_root
+else
+    python $(dirname $0)/dvdt.py $type $resource $delta $timeat $dataat $format $display $separator $status_root
+fi

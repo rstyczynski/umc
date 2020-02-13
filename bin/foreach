@@ -7,7 +7,7 @@ function FOREACH {
     case $what in
         line)
             while read line; do 
-                echo $line
+                #echo $line
                 $@
             done
             ;;
