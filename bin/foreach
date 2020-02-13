@@ -1,0 +1,20 @@
+#!/bin/bash
+
+function FOREACH {
+    what=$1
+    shift
+
+    case $what in
+        line)
+            while read line; do 
+                echo $line
+                $@
+            done
+            ;;
+        *)
+            echo "Error: do not know how to process: $what"
+            ;;
+    esac
+}
+
+FOREACH $@

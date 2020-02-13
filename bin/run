@@ -88,6 +88,8 @@ function RUN() {
         attribute=none
     fi
 
+    
+
     mkdir -p $status_root/$resource/lock
 
     case $command in
