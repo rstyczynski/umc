@@ -93,7 +93,7 @@ function FLAG() {
         fi
         echo $flag_options >$flag_filename
         ;;
-    lower)
+    clear)
         if [ -f $status_root/$resource/flags/$flag_name ]; then
             # remove all flags incl. more detailed e.g. *_long
             rm -f $status_root/$resource/flags/$flag_name*
