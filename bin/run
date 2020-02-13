@@ -155,7 +155,7 @@ function RUN() {
                 echo "id=$command_id" >> $status_root/$resource/lock/$command\_$attribute
                 $command_run $command_id $resource $attribute $value $right_value $args &
             else
-                command_id='.'
+                command_id='.' # dot will make grep to pass all lines. will neutralize grap on random salt
                 echo "id=$command_id" >> $status_root/$resource/lock/$command\_$attribute
                 $command_run $cmdargs &
             fi
