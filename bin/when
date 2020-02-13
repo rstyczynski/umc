@@ -99,7 +99,6 @@ function WHEN() {
 
         *) 
             modifier=$operator
-            shift
             operator=$1
             shift
         ;;
