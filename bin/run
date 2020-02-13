@@ -138,7 +138,7 @@ function RUN() {
             if [ $command_ps -eq 0 ]; then
                 rm -f $status_root/$resource/lock/$command\_$attribute
             else
-                echo "Warning: $command for attribute $attribute at $resource is beeing executed. Info: $(cat $status_root/$resource/lock/$command\_$attribute | tr '\n' ',')"
+                echo "Warning: $command for attribute $command_attribute at $resource is beeing executed. Info: $(cat $status_root/$resource/lock/$command\_$attribute | tr '\n' ',')"
             fi
         fi
 
