@@ -91,6 +91,17 @@ function WHEN() {
 
     operator=$1
     shift
+
+    unset modifier
+    case $operator in
+        gt|lt) 
+            modifier=$operator
+            shift
+            operator=$1
+            shift
+        ;;
+    esac
+
     value=$1
     shift
     action=$1
@@ -99,7 +110,7 @@ function WHEN() {
 
 
     if [ $resource_type == REGULAR ]; then
-        # nic/ens3/TX/dvdt gt 50000 FLAG CHECK TX_dvdt_over_threshold
+        # nic/ens3/TX dvdt gt 50000 FLAG CHECK TX_dvdt_over_threshold
         IFS='/ ' read -r -a uri <<<$metric
         if debug; then
             for index in "${!uri[@]}"; do
@@ -113,12 +124,12 @@ function WHEN() {
 
         #TODO add check against list
         #
-        unset modifier
-        if [ $metric == dvdt ]; then
-            modifier="${uri[@]: -1:1}"
-            metric="${uri[@]: -2:1}"
-            resource=$(echo "${uri[@]:0:$(($len - 2))}" | tr ' ' '/')
-        fi
+        # unset modifier
+        # if [ $metric == dvdt ]; then
+        #     modifier="${uri[@]: -1:1}"
+        #     metric="${uri[@]: -2:1}"
+        #     resource=$(echo "${uri[@]:0:$(($len - 2))}" | tr ' ' '/')
+        # fi
     fi
 
     if debug; then
