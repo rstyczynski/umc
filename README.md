@@ -628,6 +628,32 @@ flag eth0 check RX_over_threshold; echo $?
 
 Above shows that during 15 seconds of collecting data, data read on eth0 was faster than 50000 bytes/s during 5 seconds. Duringn other 10 seconds, eth0 was less utilized.
 
+## More complex example. Chaining real time conditional execution woth real time conditional flag raise and clear.
+
+During presented below oepration netowrk card received twice higer load. First time for 10+8 seconds, and second time for 10+3 seconds.
+
+```
+flag eth0 clear RX_over_threshold
+umc ifconfig collect 1 60 eth0 | csv2obd | dvdt | 
+> foreach line when eth0/RXbytes dvdt gt 50000 flag raise RX_over_threshold | 
+> foreach line when eth0/RXbytes dvdt lt 25000 flag clear RX_over_threshold | 
+> foreach line silently when eth0 flag RX_over_threshold gt 10 run echo
+
+
+2020-02-13 19:31:53,+0000,1581622313,devmftcs01-wls-1,ifconfig,eth0,322,0,0,0,0,189,0,0,0,0,0,0,1869257,107270
+2020-02-13 19:31:53,+0000,1581622314,devmftcs01-wls-1,ifconfig,eth0,320,0,0,0,0,180,0,0,0,0,0,0,1870002,57044
+2020-02-13 19:31:55,+0000,1581622315,devmftcs01-wls-1,ifconfig,eth0,321,0,0,0,0,199,0,0,0,0,0,0,1837701,60406
+2020-02-13 19:31:55,+0000,1581622316,devmftcs01-wls-1,ifconfig,eth0,314,0,0,0,0,193,0,0,0,0,0,0,1802464,152218
+2020-02-13 19:31:57,+0000,1581622317,devmftcs01-wls-1,ifconfig,eth0,319,0,0,0,0,186,0,0,0,0,0,0,1933452,57820
+2020-02-13 19:31:57,+0000,1581622318,devmftcs01-wls-1,ifconfig,eth0,338,0,0,0,0,220,0,0,0,0,0,0,1805836,148180
+2020-02-13 19:32:00,+0000,1581622320,devmftcs01-wls-1,ifconfig,eth0,88,0,0,0,0,110,0,0,0,0,0,0,17424,49952
+2020-02-13 19:32:00,+0000,1581622321,devmftcs01-wls-1,ifconfig,eth0,96,0,0,0,0,121,0,0,0,0,0,0,17636,146530
+
+
+2020-02-13 19:32:26,+0000,1581622346,devmftcs01-wls-1,ifconfig,eth0,319,0,0,0,0,193,0,0,0,0,0,0,1836562,58526
+2020-02-13 19:32:26,+0000,1581622347,devmftcs01-wls-1,ifconfig,eth0,317,0,0,0,0,178,0,0,0,0,0,0,1868114,56472
+2020-02-13 19:32:28,+0000,1581622348,devmftcs01-wls-1,ifconfig,eth0,311,0,0,0,0,195,0,0,0,0,0,0,1801902,151510
+```
 
 
 # Oracle Middleware
