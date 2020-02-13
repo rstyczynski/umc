@@ -88,6 +88,7 @@ function RUN() {
     shift
 
     attribute=none
+    unset args
     if [ "$1" = CONTEXT ]; then
         shift
         attribute=$1
