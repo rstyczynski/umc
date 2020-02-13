@@ -101,10 +101,13 @@ function RUN() {
             attribute=none
         fi
     else
-        args=$@
+        for arg in "$@"; do
+            if [ "$arg" = CONTEXT ]; then
+                break
+            fi
+            set -- "$cmdargs" "$arg"
+        done
     fi
-
-
 
     mkdir -p $status_root/$resource/lock
 
@@ -153,7 +156,7 @@ function RUN() {
             if [ "$context" = pass ]; then
                 $command_run $command_id $resource $attribute $value $right_value $args &
             else
-                $command_run $args &
+                $command_run $cmdargs &
             fi
             command_pid=$!
 
