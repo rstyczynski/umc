@@ -96,10 +96,6 @@ function RUN() {
         right_value=$1
         shift
         args=$@
-
-        if [ -z "$attribute" ]; then
-            attribute=none
-        fi
     else
         for arg in "$@"; do
             if [ "$arg" = CONTEXT ]; then
@@ -107,6 +103,10 @@ function RUN() {
             fi
             set -- "$cmdargs" "$arg"
         done
+    fi
+
+    if [ -z "$attribute" ]; then
+        attribute=none
     fi
 
     mkdir -p $status_root/$resource/lock
