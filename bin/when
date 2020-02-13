@@ -82,7 +82,7 @@ function WHEN() {
 
     # nic/ens3 FLAG TX_dvdt_over_threshold gt 5 
     if [ $1 == flag ]; then
-        resource_type=FLAG
+        resource_type=flag
         resource=$metric
         shift
         metric=$1
