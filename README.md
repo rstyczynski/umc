@@ -1,7 +1,9 @@
 # Universal Metric Collector
+> Now with On Board Diagnostics
+
 
 # Rationale
-Operating systems are shipped with various set of tools to get certain system metrics. Moreover the same operating system in different versions may be shipped with toolset giving slightly different output. Some of tools are able to run in a loop for defined time and interval, others can't. In such environment it's not possible to relay on the regular tools, without ensuring that all of them are returning data in expected format, during predefined period with pgiven interval. Such insurance is required when other tools are relaying on data produced by tools - e.g. monitoring layer. 
+Operating systems are shipped with various set of tools to get certain system metrics. Moreover the same operating system in different versions may be shipped with toolset giving slightly different output. Some of tools are able to run in a loop for defined time and interval, others can't. In such environment it's not possible to relay on the regular tools, without ensuring that all of them are returning data in expected format, during predefined period with given interval. Such insurance is required when other tools are relaying on data produced by tools - e.g. monitoring layer. 
 
 # Solution
 The UMC adds intermediate format of data exchange between toolset and other parts of the system. To be universal and generally available uses comma value separated (CSV) plain text format, where the data is separated by comma. The CVS format is well recognized in the industry - format description may be found in RFC 4180. CVS format makes it possible to transport any type of column formatted information, what is good enough to share operational metrics of monitored system.
@@ -80,6 +82,15 @@ To install UMC in a current directory execute below one-liner. It will create um
 mkdir umc; cd umc; curl  -Lk https://github.com/rstyczynski/umc/archive/v0.4.1-beta.tar.gz | tar -xz --strip=1; cd ..; . umc/bin/umc.h
 ```
 
+Cloning repository is also good idea, as umc changes dynamically. As umc relays on os level utilities installing them during setup is a good idea.
+
+```bash
+sudo yum install -y git curl python python-yaml perl locales sysstat net-tools
+git clone https://github.com/rstyczynski/umc.git
+. umc/bin/umc.h 
+```
+
+
 Now you are ready to use UMC on Linux.
 
 # First time use
@@ -125,7 +136,7 @@ Example:
 Current version supports regular Linux utilities, OSB, and SOA. 
 
 # List available sensors
-To list available probes, execute umc with sensors paramter
+To list available probes, execute umc with sensors parameter
 
 ```
 umc sensors
@@ -135,29 +146,6 @@ vmstat free top uptime meminfo tcpext netstattcp ifconfig iostat soabindings bus
 
 It means that this version of UMC is shipped with wide range of Linux probes, and two probes for SOA: one for OSB, and the other one for Composite.
 
-# Configuration of Oracle Middleware
-To configure UMC for Oracle Middleware, edit etc/umc.cfg to provide required information about home and domain directories. Note that providing WebLogic domain directory is important, as UMC probes are started from domain directory to bypass a need of authentication. 
-
-```
-vi umc/etc/umc.cfg
-
-#---------------------------------------------------------------------------------------
-#--- platform location & specific configuration
-#---------------------------------------------------------------------------------------
-
-#TODO configure below variables to used Oracle SOA data collectors
-export FMW_HOME=/oracle/fmwhome
-export SOA_HOME=$FMW_HOME/Oracle_SOA1
-export OSB_HOME=$FMW_HOME/Oracle_OSB1
-export WLS_HOME=$FMW_HOME/wlserver_10.3/server
-export DOMAIN_HOME=$FMW_HOME/user_projects/domains/dev_soasuite
-
-#---------------------------------------------------------------------------------------
-#--- reporting
-#---------------------------------------------------------------------------------------
-
-export CSVdelimiter=,
-```
 
 # Simple test
 Availability of probes does not mean that all of them will work. Packages may be missing in the Operating system or system may be host different version of utilities. To validate compatibility of tools UMC does two things: (a) checks general availability with known OS level technique, and calls the utility to get returned headers to compare with signature stored in plugin meat-information. UMC 
@@ -217,35 +205,465 @@ dm-1              0.00         0.00         0.00          0          0
 
 With UMC you get less nice response, but more ready for automated processing.
 
-```
+```bash
 umc iostat collect 1 2
 
 datetime,timezone,timestamp,system,source,Device,tps,kB_read/s,kB_wrtn/s,kB_read,kB_wrtn
 2018-02-28 00:30:22,-0800,1519806622,soabpm-vm.site,iostat,sdb,1.56,2.27,10.65,699558,3288220
 2018-02-28 00:30:22,-0800,1519806622,soabpm-vm.site,iostat,dm-0,0.88,1.27,7.82,392265,2412892
-2018-02-28 00:30:22,-0800,1519806622,soabpm-vm.site,iostat,dm-1,0.45,0.62,1.19,192084,368136
-2018-02-28 00:30:22,-0800,1519806623,soabpm-vm.site,iostat,sda,0.00,0.00,0.00,0,0
-2018-02-28 00:30:22,-0800,1519806623,soabpm-vm.site,iostat,sdc,3.00,0.00,36.00,0,36
-2018-02-28 00:30:22,-0800,1519806623,soabpm-vm.site,iostat,sdb,2.00,0.00,16.00,0,16
-2018-02-28 00:30:22,-0800,1519806623,soabpm-vm.site,iostat,dm-0,0.00,0.00,0.00,0,0
-2018-02-28 00:30:22,-0800,1519806623,soabpm-vm.site,iostat,dm-1,0.00,0.00,0.00,0,0
-2018-02-28 00:30:24,-0800,1519806624,soabpm-vm.site,iostat,sda,0.00,0.00,0.00,0,0
-2018-02-28 00:30:24,-0800,1519806624,soabpm-vm.site,iostat,sdc,0.00,0.00,0.00,0,0
-2018-02-28 00:30:24,-0800,1519806624,soabpm-vm.site,iostat,sdb,2.00,0.00,4.00,0,4
-2018-02-28 00:30:24,-0800,1519806624,soabpm-vm.site,iostat,dm-0,0.00,0.00,0.00,0,0
-2018-02-28 00:30:24,-0800,1519806624,soabpm-vm.site,iostat,dm-1,0.00,0.00,0.00,0,0
 ```
 
 Notice change from Blk to kB, it's done by regular iostat parameter. Newer versions of iostat report performance using kB. 
 
+## Log files
+By default umc presents data as csv at stdout. It's by design as responsibility to write data to a log file was passsed to external utility. 
+
+```bash
+mkdir -p ~/obd/logs
+umc ifconfig collect 1 60 | logdirector.pl -dir ~/obd/logs \
+-name ifconfig -prefixDate -detectHeader -alwaysRotate \
+-rotateByTime clock -timeLimit 10
+ll ~/obd/logs
+```
+
+logdirector makes a lot of things related to saving csv stream to disk files. Above example will create files prefixed by date. Existing file will be rotated during start, and csv header will ba added to each new file. Rotation is done each 10 seconds using wall clock i.e. absolute time.
+
+# On board diagnostics
+The name of on bard diagnostics was stoled from car industry, where decades ago industry architects decided to equip each car with OBD-II interface making it possible to enable standardized diagnostic. On bard diagnostics is a natural extension of umc, converting csv-like collected data into other formats and other access means. The idea behind is to maintain proc-like directory and file structure enabling standardized way of storing and accessing system metrics. 
+
+
+Basic directory structure looks like following:
+
+```
+obd
+|-logs . . . . . . . . . umc logs are stored here
+|-${resource}  . . . . . resource home directory
+|  |-state . . . . . . . file with current state in map format (key=value)
+|  |-dvdt  . . . . . . . directory with data rates [/s]
+|  | \-state . . . . . . data rate state file in map format
+|  |-header  . . . . . . file with list of metrics 
+|  |-log . . . . . . . . directory with 20 recents measurements - csv
+|  |-flags . . . . . . . directory with flags informing about special state
+|  |-lock  . . . . . . . directory with locks for exclusive actions
+|  \-tmp . . . . . . . . temporary files
+(...)
+```
+
+above for network interfce:
+
+```
+obd
+|-logs
+|-eth0
+|  |-state
+|  \-dvdt
+|  | \-state
+|  |-header
+|  |-log
+|  |-flags
+|  |-lock
+|  \-tmp
+(...)
+```
+
+## Maintain odb data
+odb data is created on the fly, when requested, during each umc data collection. To do so pipe umc collector to csv2obd tool.
+
+```
+export status_root=$PWD/obd
+
+umc ifconfig collect 1 5 eth0 | csv2obd --resource eth0
+datetime,timezone,timestamp,system,source,device, RXpackets,RXerrors,RXdropped,RXoverruns,RXframe, TXpackets,TXerrors,TXdropped,TXoverruns,TXcarrier, collisions,txqueuelen, RXbytes,TXbytes
+2020-02-13 13:05:47,+0000,1581599147,oci_box1,ifconfig,eth0,623333724,0,0,0,0,708979064,0,0,0,0,0,1000,354081818206,405490847158
+2020-02-13 13:05:47,+0000,1581599148,oci_box1,ifconfig,eth0,623333808,0,0,0,0,708979168,0,0,0,0,0,1000,354081835282,405490880634
+2020-02-13 13:05:49,+0000,1581599149,oci_box1,ifconfig,eth0,623333898,0,0,0,0,708979277,0,0,0,0,0,1000,354081852630,405490927640
+2020-02-13 13:05:49,+0000,1581599150,oci_box1,ifconfig,eth0,623333992,0,0,0,0,708979403,0,0,0,0,0,1000,354081870466,405490976577
+2020-02-13 13:05:51,+0000,1581599151,oci_box1,ifconfig,eth0,623334080,0,0,0,0,708979511,0,0,0,0,0,1000,354081887646,405491023533
+```
+
+After first run obd structure is created
+
+```
+tree obd
+obd
+└── eth0
+    ├── header
+    ├── log
+    │   ├── header
+    │   └── state
+    ├── state
+    └── tmp
+        ├── header
+        ├── line
+        └── state.new
+
+3 directories, 7 files
+```
+
+, with collected data. Notice the most important element - metrics presented in map format. It's a real time information - the file is created for each line displayed by umc for running sensor.
+
+```
+cat obd/eth0/state 
+datetime=2020-02-1313:08:30
+timezone=+0000
+timestamp=1581599310
+system=oci_box1
+source=ifconfig
+device=eth0
+RXpackets=623348758
+RXerrors=0
+RXdropped=0
+RXoverruns=0
+RXframe=0
+TXpackets=708997899
+TXerrors=0
+TXdropped=0
+TXoverruns=0
+TXcarrier=0
+collisions=0
+txqueuelen=1000
+RXbytes=354084861814
+TXbytes=405502291953
+```
+
+Other files are for further use. Header is stored to be able to create  headers in csv files, and most recent 20 measurement are stored in a form of sliding window file.
+
+```
+cat obd/eth0/header 
+datetime,timezone,timestamp,system,source,device, RXpackets,RXerrors,RXdropped,RXoverruns,RXframe, TXpackets,TXerrors,TXdropped,TXoverruns,TXcarrier, collisions,txqueuelen, RXbytes,TXbytes
+
+cat obd/eth0/log/state 
+datetime,timezone,timestamp,system,source,device, RXpackets,RXerrors,RXdropped,RXoverruns,RXframe, TXpackets,TXerrors,TXdropped,TXoverruns,TXcarrier, collisions,txqueuelen, RXbytes,TXbytes
+2020-02-13 13:08:26,+0000,1581599306,oci_box1,ifconfig,eth0,623348382,0,0,0,0,708997427,0,0,0,0,0,1000,354084791049,405502010513
+2020-02-13 13:08:26,+0000,1581599307,oci_box1,ifconfig,eth0,623348495,0,0,0,0,708997567,0,0,0,0,0,1000,354084811140,405502151513
+2020-02-13 13:08:28,+0000,1581599308,oci_box1,ifconfig,eth0,623348579,0,0,0,0,708997672,0,0,0,0,0,1000,354084827260,405502196919
+2020-02-13 13:08:28,+0000,1581599309,oci_box1,ifconfig,eth0,623348675,0,0,0,0,708997795,0,0,0,0,0,1000,354084845624,405502246269
+2020-02-13 13:08:30,+0000,1581599310,oci_box1,ifconfig,eth0,623348758,0,0,0,0,708997899,0,0,0,0,0,1000,354084861814,405502291953
+```
+
+## Data change rate
+Some of sensors reports counters showing increment of metrics. Such counters are provided by e.g. network subsystem. It's in many cases information which is useless, as for this kind of devices we rather would like to see data rate. For such sensors you can apply dvdt filter.
+
+```bash
+umc ifconfig collect 1 5 eth0 | dvdt --resource eth0
+datetime,timezone,timestamp,system,source,device,RXpackets,RXerrors,RXdropped,RXoverruns,RXframe,TXpackets,TXerrors,TXdropped,TXoverruns,TXcarrier,collisions,txqueuelen,RXbytes,TXbytes
+2020-02-13 13:17:27,+0000,1581599848,oci_box1,ifconfig,eth0,39,0,0,0,0,52,0,0,0,0,0,0,7582,13780
+2020-02-13 13:17:29,+0000,1581599849,oci_box1,ifconfig,eth0,70,0,0,0,0,74,0,0,0,0,0,0,13848,24248
+2020-02-13 13:17:29,+0000,1581599850,oci_box1,ifconfig,eth0,73,0,0,0,0,79,0,0,0,0,0,0,14818,30134
+2020-02-13 13:17:31,+0000,1581599851,oci_box1,ifconfig,eth0,102,0,0,0,0,120,0,0,0,0,0,0,19601,152884
+```
+
+This kind of filer is a special data modifier, storing it's data in dvdt directory.
+
+```
+obd
+└── eth0
+    ├── dvdt   . . . . directory with data rates [/s]
+    │   └── state  . . file with current state in map format (key=value)
+    ├── header
+    ├── log
+    │   ├── header
+    │   └── state
+    ├── state
+    └── tmp
+        ├── header
+        ├── line
+        └── state.new
+```
+
+Data rate dvdt state file keeps data in map format.
+
+```
+cat obd/eth0/dvdt/state 
+datetime=2020-02-13 13:17:31
+timezone=+0000
+timestamp=1581599851
+system=oci_box1
+source=ifconfig
+device=eth0
+RXpackets=102
+RXerrors=0
+RXdropped=0
+RXoverruns=0
+RXframe=0
+TXpackets=120
+TXerrors=0
+TXdropped=0
+TXoverruns=0
+TXcarrier=0
+collisions=0
+txqueuelen=0
+RXbytes=19601
+TXbytes=152884
+```
+
+
+## Getting data from obd
+The purpose of maintaining obd information is ability to get current information about the system. Having sensor data in such format it's possible to get current value of e.x. RXbytes of eth0.
+
+```
+get eth0 RXbytes
+354084861814
+```
+
+And now it comes to umc/obd coolness. It's possible to get metric modified by applied filter. 
+
+```
+get eth0 RXbytes dvdt
+19601
+```
+
+## Chaining filters
+
+Above two filters:first converting csv to map format, and second to compute data change rate, you may chain using pipe. Note that dvdt is used with data forwarding option, so you may decide if next filter should receive measured, or computed data. Below line forwards measured data, storing dvdt in obd/eth0/dvdt/state file. Note resource name set in variable to make command line shorter.
+
+```
+export resource=eth0; umc ifconfig collect 1 5 eth0 | csv2obd | dvdt --display forward
+
+datetime,timezone,timestamp,system,source,device, RXpackets,RXerrors,RXdropped,RXoverruns,RXframe, TXpackets,TXerrors,TXdropped,TXoverruns,TXcarrier, collisions,txqueuelen, RXbytes,TXbytes
+2020-02-13 13:24:19,+0000,1581600259,oci_box1,ifconfig,eth0,623432404,0,0,0,0,709099250,0,0,0,0,0,1000,354101904298,405551430235
+2020-02-13 13:24:19,+0000,1581600260,oci_box1,ifconfig,eth0,623432497,0,0,0,0,709099365,0,0,0,0,0,1000,354101920712,405551488037
+2020-02-13 13:24:21,+0000,1581600261,oci_box1,ifconfig,eth0,623432570,0,0,0,0,709099455,0,0,0,0,0,1000,354101934734,405551528481
+2020-02-13 13:24:21,+0000,1581600262,oci_box1,ifconfig,eth0,623432670,0,0,0,0,709099581,0,0,0,0,0,1000,354101952730,405551642257
+2020-02-13 13:24:23,+0000,1581600263,oci_box1,ifconfig,eth0,623432792,0,0,0,0,709099739,0,0,0,0,0,1000,354101976111,405551778809
+```
+
+Notice that as promised most recent csv line is stored as map in state file.
+
+```
+cat obd/eth0/state
+datetime=2020-02-1313:24:23
+timezone=+0000
+timestamp=1581600263
+system=oci_box1
+source=ifconfig
+device=eth0
+RXpackets=623432792
+RXerrors=0
+RXdropped=0
+RXoverruns=0
+RXframe=0
+TXpackets=709099739
+TXerrors=0
+TXdropped=0
+TXoverruns=0
+TXcarrier=0
+collisions=0
+txqueuelen=1000
+RXbytes=354101976111
+TXbytes=405551778809
+```
+
+, and dvdt state file:
+
+```
+cat obd/eth0/dvdt/state
+datetime=2020-02-13 13:24:23
+timezone=+0000
+timestamp=1581600263
+system=oci_box1
+source=ifconfig
+device=eth0
+RXpackets=122
+RXerrors=0
+RXdropped=0
+RXoverruns=0
+RXframe=0
+TXpackets=158
+TXerrors=0
+TXdropped=0
+TXoverruns=0
+TXcarrier=0
+collisions=0
+txqueuelen=0
+RXbytes=23381
+TXbytes=136552
+```
+
+## Flags
+Flag makes it possible to mark some state of the resource. Most intuitive use to mark reaching thresholds, but it's just a marker with some name and timestmap, so may be used to anything.
+
+To raise flag use, .... flag utility.
+
+```
+flag eth0 raise TX_over_threshold
+```
+
+To check if flag is set use the same utility. Flag check returns flag information using error code.
+
+```
+flag eth0 check TX_over_threshold; echo $?
+1
+```
+
+You may raise flag several times. Check flag will inform about count of raises.
+
+```
+flag eth0 raise TX_over_threshold
+flag eth0 raise TX_over_threshold
+flag eth0 raise TX_over_threshold
+flag eth0 check TX_over_threshold; echo $?
+3
+```
+
+To clear the flag, use ... clear command.
+
+```
+flag eth0 clear TX_over_threshold
+flag eth0 check TX_over_threshold; echo $?
+0
+```
+
+As you see flag operation are per resource. 
+
+# Conditional operations
+Let's raise a flag when metric reached defined threshold...
+
+```
+when eth0/RXbytes gt 10000 flag raise TX_over_threshold
+flag eth0 check TX_over_threshold; echo $?
+1
+```
+
+, and clear it under other condition.
+
+```
+when eth0/RXbytes lt 8000 flag clear TX_over_threshold
+flag eth0 check TX_over_threshold; echo $?
+0
+```
+
+Let's run program when flag is raised
+
+```
+flag eth0 raise TX_over_threshold
+when eth0 flag TX_over_threshold gt 0 run ls -l obd/eth0/flags
+total 4
+-rw-rw-r-- 1 opc opc 1 Feb 13 17:25 TX_over_threshold
+```
+
+, or when flag is cleared.
+
+```
+flag eth0 clear TX_over_threshold
+when eth0 flag TX_over_threshold lt 1 run echo "All clear."
+All clear.
+```
+
+Note that to avoid blocking by long running program e.g. tcpdump, the execution is passed to new process. To avoid starting more than one process for given resource lock file is maintained.
+
+Let's simulate long running program with sleep.
+
+```
+cat >runlong <<EOF
+#!/bin/bash
+
+echo Runloooooooong started with parameters: \$@
+sleep 30
+echo Runloooooooong done.
+EOF
+chmod +x runlong
+```
+
+```
+flag eth0 raise TX_over_threshold
+when eth0 flag TX_over_threshold gt 0 run with context ./runlong
+Runloooooooong started with parameters: 17248 eth0 TX_over_threshold 3 0
+```
+
+when you will start the same before previous program finishes, umc will block process start.
+
+```
+when eth0 flag TX_over_threshold gt 0 run with context ./runlong
+Warning: runlong for attribute TX_over_threshold at eth0 is beeing executed. Info: cmd=runlong,attribute=TX_over_threshold,id=17248,pid=1200
+```
+
+File lock is stored in od/eth0/lock directory. Process identification is performed by attribute, PID, and random number applied to starting process with "with context" clause. Note that process takes arguments of: $seed, $resource, $flag, $value, $threshold. Prepare process wrapper to accommodate.
+
+You may start process without passing context, such technique may be used for programs exclusively running for the resource.
+
+
+```
+when eth0 flag TX_over_threshold gt 0 run ./runlong Hey
+[opc@oci_box1 rstyczynski]$ Runloooooooong started with parameters: Hey
+
+when eth0 flag TX_over_threshold gt 0 run ./runlong Hey
+Warning: runlong for attribute . at eth0 is beeing executed. Info: cmd=runlong,attribute=.,id=.,pid=3779,
+```
+
+, and
+
+```
+run eth0 ./runlong Hey
+Runloooooooong started with parameters: Hey
+
+run eth0 ./runlong Hey
+Warning: runlong for attribute . at eth0 is being executed. Info: cmd=runlong,attribute=.,id=.,pid=3848,
+```
+
+## Trigger condition after each measurement
+Condition check is a synchronous operation triggered by some action. Above all checks were triggered manually from command line. umc provides foreach tool which makes it possible to perform verification.
+
+
+
+```
+umc ifconfig collect 1 60 eth0 | csv2obd | dvdt | foreach line silently when eth0/dvdt/RXbytes gt 50000 print
+
+eth0/dvdt 2020-02-13 18:08:57,+0000,1581617337,oci_box1,ifconfig,eth0,632,0,0,0,0,339,0,0,0,0,0,0,3739172,111574 RXbytes 401279 50000
+eth0/dvdt 2020-02-13 18:08:57,+0000,1581617338,oci_box1,ifconfig,eth0,299,0,0,0,0,174,0,0,0,0,0,0,1638418,57656 RXbytes 3739172 50000
+eth0/dvdt 2020-02-13 18:08:59,+0000,1581617339,oci_box1,ifconfig,eth0,310,0,0,0,0,175,0,0,0,0,0,0,1834236,133274 RXbytes 1638418 50000
+eth0/dvdt 2020-02-13 18:09:00,+0000,1581617340,oci_box1,ifconfig,eth0,325,0,0,0,0,189,0,0,0,0,0,0,1869094,156622 RXbytes 1834236 50000
+```
+
+Above line triggered echo on eth0 read bytes rate bigger then threshold. Condition check was one for each received line from data collector and filters. Note that it's a trick similar to xargs. In cast after each lien 'when' command goes to obd/eth0/dvdt/state file to check value of RXbytes. Trick works as 'dvdt' filter before, updated state file for each received line. Note 'silently' clause which blocks regular scv data display. Such mode is rather used for debug, as normally filters should bass csv trough.
+
+Let's set flag each time the threshold is passed. 
+
+```
+umc ifconfig collect 1 15 eth0 | csv2obd | dvdt | foreach line silently when eth0/RXbytes dvdt gt 50000 flag raise RX_over_threshold
+
+flag eth0 check RX_over_threshold; echo $?
+5
+```
+
+Above shows that during 15 seconds of collecting data, data read on eth0 was faster than 50000 bytes/s during 5 seconds. Duringn other 10 seconds, eth0 was less utilized.
+
+
+
 # Oracle Middleware
 UMC collects data from: WebLogic, OSB, and SOA composite. WebLogic data is collected trough regular mBeans, OSB via wlst, and SOA uses DMS subsystem available in WebLogic. 
+
+
+## Configuration
+To configure UMC for Oracle Middleware, edit etc/umc.cfg to provide required information about home and domain directories. Note that providing WebLogic domain directory is important, as UMC probes are started from domain directory to bypass a need of authentication. 
+
+```
+vi umc/etc/umc.cfg
+
+#---------------------------------------------------------------------------------------
+#--- platform location & specific configuration
+#---------------------------------------------------------------------------------------
+
+#TODO configure below variables to used Oracle SOA data collectors
+export FMW_HOME=/oracle/fmwhome
+export SOA_HOME=$FMW_HOME/Oracle_SOA1
+export OSB_HOME=$FMW_HOME/Oracle_OSB1
+export WLS_HOME=$FMW_HOME/wlserver_10.3/server
+export DOMAIN_HOME=$FMW_HOME/user_projects/domains/dev_soasuite
+
+#---------------------------------------------------------------------------------------
+#--- reporting
+#---------------------------------------------------------------------------------------
+
+export CSVdelimiter=,
+```
 
 ## WebLogic ##
 WebLogic metrics are collected in several areas: socket, requests, threads, channel, jmsruntime, jmsserver, and datasource. Use --subsytem option to set which part should be harvested. By default it takes general set of data.
 
 
 Default set of data:
+
 ```
 umc wls collect 1 2
 
@@ -258,6 +676,7 @@ datetime,timezone,timestamp,system,source,domain,serverName,subsystem,sockets_op
 
 
 Data collected from channel:
+
 ```
 umc wls collect 1 2 --subsystem=channel
 
@@ -281,7 +700,8 @@ datetime,timezone,timestamp,system,source,domain,serverName,subsystem,channelNam
 ```
 
 JMS runtime:
-```
+
+```bash
 umc wls collect 1 2 --subsystem=jmsruntime
 
 datetime,timezone,timestamp,system,source,domain,serverName,subsystem,runtimeName,connections,connectionsHigh,connectionsTotal,servers,serversHigh,serversTotal
@@ -292,6 +712,7 @@ datetime,timezone,timestamp,system,source,domain,serverName,subsystem,runtimeNam
 ```
 
 JMS Servers:
+
 ```
 umc wls collect 1 2 --subsystem=jmsserver
 
@@ -315,6 +736,7 @@ datetime,timezone,timestamp,system,source,domain,serverName,subsystem,jmsServerN
 ```
 
 Data sources:
+
 ```
 umc wls collect 1 2 --subsystem=datasource
 
@@ -505,7 +927,7 @@ total 40
 -rw-r----- 1 vagrant vagrant  369 Mar 22 08:00 2018-03-22-080036_vmstat.log
 ```
 
-## special use ##
+## Special use ##
 To specify probes parameters use colon instead of spaces. To write data to another directory, use --logDir argument. To store files in a subdirectory - possibly to given test identifier, use --testId argument. Finally to run data collection in background use --nonblocking flag. 
 
 ```
@@ -585,7 +1007,7 @@ All clean.
 ```
 
 
-# Missing utility
+# When the utility is not available
 When the utility is missing umc will report the problem.
 
 ```
@@ -671,6 +1093,7 @@ datetime,timezone,timestamp,system,source,Device,tps,kB_read/s,kB_wrtn/s,kB_read
 UMC is based mainly on bash, however requires set of packages to work properly. Python 2.7 and perl are used by utility scripts supporting UMC in some aspects as reading yaml configuration, or prefixing stream with timestamps.
 
 Install packages for Ubuntu:
+
 ```bash
 apt-get clean
 apt-get update
@@ -681,6 +1104,14 @@ apt-get install -y locales
 apt-get install -y sysstat
 apt-get install -y net-tools
 locale-gen en_US.UTF-8
+```
+
+For Redhat:
+
+```bash
+sudo yum install -y git curl python \
+python-yaml perl locales sysstat net-tools
+
 ```
 
 If it's not possible to install python 2.7 due to lack of priviliges, you may install it in your home directory. Details at this blog: http://thelazylog.com/install-python-as-local-user-on-linux/
