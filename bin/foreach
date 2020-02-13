@@ -8,7 +8,16 @@ function FOREACH {
         line)
             while read line; do 
                 #echo $line
-                $@ $line
+                how=$1
+                case $how in
+                    pipeto)
+                        shift
+                        echo $line | $@
+                        ;;
+                    *)
+                        $@
+                        ;;
+                esac
             done
             ;;
         *)
