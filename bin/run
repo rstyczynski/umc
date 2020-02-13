@@ -71,6 +71,15 @@
 #####
 
 function RUN() {
+
+    context=ignore
+    if [ "$1" = "with" ]; then
+        if [ "$2" = "context" ]; then
+            shift; shift
+            context=pass
+        fi
+    fi
+
     resource=$1
     shift
     command_run=$1
@@ -134,7 +143,11 @@ function RUN() {
             echo "id=$command_id" >> $status_root/$resource/lock/$command\_$attribute
 
             # run command in other process. take the PID.
-            $command_run $command_id $resource $attribute $value $right_value $args &
+            if [ "$context" = pass ]; then
+                $command_run $command_id $resource $attribute $value $right_value $args &
+            else
+                $command_run &
+            fi
             command_pid=$!
 
             echo "pid=$command_pid" >> $status_root/$resource/lock/$command\_$attribute
