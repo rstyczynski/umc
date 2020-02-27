@@ -58,8 +58,11 @@ while line:
 
         header_src = herald_state + '/' + res_type + '/' + res_name + '/header'
         state_dst = herald_state + '/' + res_type + '/' + res_name + '/dvdt'
+
+        print(state_dst)
         if not os.path.exists(state_dst):
             os.makedirs(state_dst)
+            print('created.')
         
         if not header_printed:
             # prepare header / prefix
