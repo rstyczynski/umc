@@ -49,7 +49,7 @@ while line:
 
     if res_name.startswith('csv:'):
         res_name_column=int(res_name.split(':')[1])
-        res_name=line.split(separator)[res_name_column]
+        res_name=line.split(separator)[res_name_column-1]
 
         header_src = herald_state + '/' + res_type + '/' + res_name + '/header'
         state_dst = herald_state + '/' + res_type + '/' + res_name + '/dvdt'
