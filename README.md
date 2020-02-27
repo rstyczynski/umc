@@ -680,6 +680,20 @@ ll $log_root
 
 ```
 
+### Process files with OBD tools with resource names specified in CSV data stream
+
+Specify as resource "csv:999", where 999 is a number of column where odb tools find resource name.
+
+```
+ls $status_root 
+ls: cannot access /run/umc/obd: No such file or directory
+
+export resource=csv:6
+umc ifconfig collect 5 2 | csv2obd | dvdt
+
+ls $status_root 
+device  ens3  lo  tun101  vti101  vti102
+```
 
 # Oracle Middleware
 UMC collects data from: WebLogic, OSB, and SOA composite. WebLogic data is collected trough regular mBeans, OSB via wlst, and SOA uses DMS subsystem available in WebLogic. 
