@@ -39,8 +39,11 @@ data_prv_set = False
 
 header_printed = False
 
+data_now = dict()
+data_prv = dict()
+data_prv_set = dict()
+
 while line:
-    data_now = list()
     line = sys.stdin.readline()
 
     # skip header line
@@ -50,6 +53,8 @@ while line:
     if res_name.startswith('csv:'):
         res_name_column=int(res_name.split(':')[1])
         res_name=line.split(separator)[res_name_column-1]
+
+        data_now[res_name] = list()
 
         header_src = herald_state + '/' + res_type + '/' + res_name + '/header'
         state_dst = herald_state + '/' + res_type + '/' + res_name + '/dvdt'
@@ -88,13 +93,13 @@ while line:
             value = int(element)
         except:
             value = 0
-        data_now.append(value)
+        data_now[res_name].append(value)
 
-    if sum(data_now) == 0:
+    if sum(data_now[res_name]) == 0:
         continue
 
-    if data_prv_set == True and line: 
-        dv = map(int.__sub__, data_now, data_prv)
+    if data_prv_set[res_name] == True and line: 
+        dv = map(int.__sub__, data_now[res_name], data_prv[res_name])
         
         # print('--- start')
         # print(data_now)
@@ -140,5 +145,5 @@ while line:
             else:
                 raise Exception('out_format format unknown:' + out_format)
         
-    data_prv = data_now
+    data_prv[res_name] = data_now[res_name]
     data_prv_set = True
