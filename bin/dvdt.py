@@ -146,4 +146,4 @@ while line:
                 raise Exception('out_format format unknown:' + out_format)
         
     data_prv[res_name] = data_now[res_name]
-    data_prv_set[res_name] == True 
+    data_prv_set[res_name] = True 
