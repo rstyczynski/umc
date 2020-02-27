@@ -575,7 +575,7 @@ when you will start the same before previous program finishes, umc will block pr
 
 ```
 when eth0 flag TX_over_threshold gt 0 run with context ./runlong
-Warning: runlong for attribute TX_over_threshold at eth0 is beeing executed. Info: cmd=runlong,attribute=TX_over_threshold,id=17248,pid=1200
+Warning: runlong for attribute TX_over_threshold at eth0 is being executed. Info: cmd=runlong,attribute=TX_over_threshold,id=17248,pid=1200
 ```
 
 File lock is stored in obd/eth0/lock directory. Process identification is performed by attribute, PID, and random number applied to starting process with "with context" clause. Note that process takes arguments of: $seed, $resource, $flag, $value, $threshold. Prepare process wrapper to accommodate.
@@ -588,7 +588,7 @@ when eth0 flag TX_over_threshold gt 0 run ./runlong Hey
 [opc@oci_box1 rstyczynski]$ Runloooooooong started with parameters: Hey
 
 when eth0 flag TX_over_threshold gt 0 run ./runlong Hey
-Warning: runlong for attribute . at eth0 is beeing executed. Info: cmd=runlong,attribute=.,id=.,pid=3779,
+Warning: runlong for attribute . at eth0 is being executed. Info: cmd=runlong,attribute=.,id=.,pid=3779,
 ```
 
 , and
@@ -602,7 +602,7 @@ Warning: runlong for attribute . at eth0 is being executed. Info: cmd=runlong,at
 ```
 
 ## Trigger condition after each measurement
-Condition check is a synchronous operation triggered by some action. Above all checks were triggered manually from command line. umc provides foreach tool which makes it possible to perform verification.
+Condition check is a synchronous operation triggered by some action. Above all checks were triggered manually from command line. umc provides foreach tool which delivers ability to run checks when new measurement arrives.
 
 
 
@@ -615,7 +615,9 @@ eth0/dvdt 2020-02-13 18:08:59,+0000,1581617339,oci_box1,ifconfig,eth0,310,0,0,0,
 eth0/dvdt 2020-02-13 18:09:00,+0000,1581617340,oci_box1,ifconfig,eth0,325,0,0,0,0,189,0,0,0,0,0,0,1869094,156622 RXbytes 1834236 50000
 ```
 
-Above line triggered echo on eth0 read bytes rate bigger then threshold. Condition check was one for each received line from data collector and filters. Note that it's a trick similar to xargs. In cast after each lien 'when' command goes to obd/eth0/dvdt/state file to check value of RXbytes. Trick works as 'dvdt' filter before, updated state file for each received line. Note 'silently' clause which blocks regular scv data display. Such mode is rather used for debug, as normally filters should bass csv trough.
+Above line triggered echo on eth0 read bytes rate bigger then threshold. umc performs condition check for each received line from data collector/filters.
+
+Note that foreach uses a trick similar to xargs. In fact piped csv data is ignored, and after each line 'when' command goes to obd/eth0/dvdt/state file to get value of RXbytes and copare with given threshold. The trick works as 'dvdt' filter before, updates state file for each received line. Note 'silently' clause which blocks regular csv data display. Such mode is rather used for debug, as normally filters should pass csv trough.
 
 Let's set flag each time the threshold is passed. 
 
@@ -626,7 +628,7 @@ flag eth0 check RX_over_threshold; echo $?
 5
 ```
 
-Above shows that during 15 seconds of collecting data, data read on eth0 was faster than 50000 bytes/s during 5 seconds. Duringn other 10 seconds, eth0 was less utilized.
+Above shows that during 15 seconds of collecting data, data read on eth0 was faster than 50000 bytes/s 5 times, however it's not required that all 5 times created one stream of bursted data. Flag raised 5 times, just means that durign measurement 5 times threshold was reached.
 
 ## More complex example. Chaining real time conditional execution with real time conditional flag raise and clear.
 
@@ -634,9 +636,10 @@ During presented below oepration netowrk card received twice higer load. First t
 
 ```
 flag eth0 clear RX_over_threshold
-umc ifconfig collect 1 60 eth0 | csv2obd | dvdt | 
-> foreach line when eth0/RXbytes dvdt gt 50000 flag raise RX_over_threshold | 
-> foreach line when eth0/RXbytes dvdt lt 25000 flag clear RX_over_threshold | 
+umc ifconfig collect 1 60 eth0 | 
+csv2obd | dvdt | 
+foreach line when eth0/RXbytes dvdt gt 50000 flag raise RX_over_threshold | 
+foreach line when eth0/RXbytes dvdt lt 25000 flag clear RX_over_threshold | 
 > foreach line silently when eth0 flag RX_over_threshold gt 10 run echo
 
 
