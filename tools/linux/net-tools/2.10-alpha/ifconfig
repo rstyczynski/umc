@@ -10,7 +10,7 @@ fi
 
 #extract interface names
 if [ "$netlist" = "ALL" ]; then 
-  netlist=$(ifconfig | grep "^[a-zA-Z]" | cut -d ' ' -f1)
+  netlist=$(ifconfig | grep "^[a-zA-Z]" | cut -d ' ' -f1 | sed 's/:$//')
 fi
 
 #collect data for each interface
