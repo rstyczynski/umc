@@ -18,28 +18,59 @@ if not res_name.startswith('csv:'):
     if not os.path.exists(state_dst):
         os.makedirs(state_dst)
 
+    # prepare header / prefix
+    header_f = open(header_src, "r")
+    header_line = header_f.read()
+    header_f.close
+    #header_line = header_line.replace('\n', '_dvdt' + separator)
+    header_line = header_line.replace('\n', separator)
+    header_line = header_line.replace(' ', '')
+
+    if header_line.endswith(separator):
+        header_line = header_line[0:-1]
+
+    header = header_line.split(separator)
+
+    if out_data == 'compute' and out_format == 'csv':
+        print(header_line)
+
 line = 'start'
 data_prv_set = False
 
-# prepare header / prefix
-header_f = open(header_src, "r")
-header_line = header_f.read()
-header_f.close
-#header_line = header_line.replace('\n', '_dvdt' + separator)
-header_line = header_line.replace('\n', separator)
-header_line = header_line.replace(' ', '')
-
-if header_line.endswith(separator):
-    header_line = header_line[0:-1]
-
-header = header_line.split(separator)
-
-if out_data == 'compute' and out_format == 'csv':
-    print(header_line)
+header_printed = False
 
 while line:
     data_now = list()
     line = sys.stdin.readline()
+
+    if res_name.startswith('csv:'):
+        res_name=res_name.split(':')[1]
+
+        header_src = herald_state + '/' + res_type + '/' + res_name + '/header'
+        state_dst = herald_state + '/' + res_type + '/' + res_name + '/dvdt'
+        if not os.path.exists(state_dst):
+            os.makedirs(state_dst)
+        
+        if not header_printed:
+            # prepare header / prefix
+            header_f = open(header_src, "r")
+            header_line = header_f.read()
+            header_f.close
+            #header_line = header_line.replace('\n', '_dvdt' + separator)
+            header_line = header_line.replace('\n', separator)
+            header_line = header_line.replace(' ', '')
+            #
+            if header_line.endswith(separator):
+                header_line = header_line[0:-1]
+            #
+            header = header_line.split(separator)
+            #
+            if out_data == 'compute' and out_format == 'csv':
+                print(header_line)
+            #
+            header_printed = True
+
+
 
     # print inpute data in forward mode
     if out_data == 'forward':
