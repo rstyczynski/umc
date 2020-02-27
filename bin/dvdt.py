@@ -98,7 +98,7 @@ while line:
     if sum(data_now[res_name]) == 0:
         continue
 
-    if data_prv_set[res_name] == True and line: 
+    if (res_name in data_prv_set) and line: 
         dv = map(int.__sub__, data_now[res_name], data_prv[res_name])
         
         # print('--- start')
@@ -146,4 +146,4 @@ while line:
                 raise Exception('out_format format unknown:' + out_format)
         
     data_prv[res_name] = data_now[res_name]
-    data_prv_set = True
+    data_prv_set[res_name] == True 
