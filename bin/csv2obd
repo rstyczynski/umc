@@ -93,6 +93,7 @@ function dump_window {
   done
 }
 
+set -x
 
 #####
 ##### functions stop
@@ -101,6 +102,8 @@ function dump_window {
 if [[ $resource == csv:* ]]; then
 	resource_id_column=$(echo $resource | cut -d: -f2)
 else
+	unset resource_id_column
+
 	resource_id=$resource
 	tmp=$status_root/$resource_id/tmp
 	mkdir -p $status_root/$resource_id/log
@@ -110,9 +113,9 @@ fi
 while read -r line; do
 
     if [ ! -z "$resource_id_column" ]; then
-	    resource_id=$(echo $line | cut -d$CSVdelimiter -f$resource_id_column) 
+	    resource_id=$(echo $line | cut -d$CSVdelimiter -f$resource_id_column)
+	    tmp=$status_root/$resource_id/tmp
 	    if [ ! -d $status_root/$resource_id ]; then
-		tmp=$status_root/$resource_id/tmp
 		mkdir -p $status_root/$resource_id/log
 		mkdir -p $status_root/$resource_id/tmp
 	    fi
