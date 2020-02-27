@@ -3,7 +3,7 @@ import os
 
 
 res_type = sys.argv[1]     # os.environ['herald_res_type'] #'ens3'
-res_name = sys.argv[2]     # os.environ['herald_res_name'] #'ens3'
+res_name_parameter = sys.argv[2]     # os.environ['herald_res_name'] #'ens3'
 dt = int(sys.argv[3])
 dt_column = int(sys.argv[4])
 dataat = int(sys.argv[5])
@@ -12,7 +12,10 @@ out_data = sys.argv[7]     # compute | forward
 separator = sys.argv[8]
 herald_state = sys.argv[9]
 
-if not res_name.startswith('csv:'):
+if not res_name_parameter.startswith('csv:'):
+
+    res_name=res_name_parameter
+
     header_src = herald_state + '/' + res_type + '/' + res_name + '/header'
     state_dst = herald_state + '/' + res_type + '/' + res_name + '/dvdt'
     if not os.path.exists(state_dst):
@@ -51,8 +54,8 @@ while line:
         continue
 
     print(res_name)
-    if res_name.startswith('csv:'):
-        res_name_column=int(res_name.split(':')[1])
+    if res_name_parameter.startswith('csv:'):
+        res_name_column=int(res_name_parameter.split(':')[1])
         res_name=line.split(separator)[res_name_column-1]
 
         data_now[res_name] = list()
