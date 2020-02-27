@@ -630,17 +630,21 @@ flag eth0 check RX_over_threshold; echo $?
 
 Above shows that during 15 seconds of collecting data, data read on eth0 was faster than 50000 bytes/s 5 times, however it's not required that all 5 times created one stream of bursted data. Flag raised 5 times, just means that durign measurement 5 times threshold was reached.
 
-## More complex example. Chaining real time conditional execution with real time conditional flag raise and clear.
+## More complex examples
+
+### Chaining real time conditional execution with real time conditional flag raise and clear.
 
 During presented below oepration netowrk card received twice higer load. First time for 10+8 seconds, and second time for 10+3 seconds.
 
 ```
+# clear flag
 flag eth0 clear RX_over_threshold
+
 umc ifconfig collect 1 60 eth0 | 
 csv2obd | dvdt | 
 foreach line when eth0/RXbytes dvdt gt 50000 flag raise RX_over_threshold | 
 foreach line when eth0/RXbytes dvdt lt 25000 flag clear RX_over_threshold | 
-> foreach line silently when eth0 flag RX_over_threshold gt 10 run echo
+foreach line silently when eth0 flag RX_over_threshold gt 10 run echo
 
 
 2020-02-13 19:31:53,+0000,1581622313,oci_box1-wls-1,ifconfig,eth0,322,0,0,0,0,189,0,0,0,0,0,0,1869257,107270
@@ -656,6 +660,24 @@ foreach line when eth0/RXbytes dvdt lt 25000 flag clear RX_over_threshold |
 2020-02-13 19:32:26,+0000,1581622346,oci_box1-wls-1,ifconfig,eth0,319,0,0,0,0,193,0,0,0,0,0,0,1836562,58526
 2020-02-13 19:32:26,+0000,1581622347,oci_box1-wls-1,ifconfig,eth0,317,0,0,0,0,178,0,0,0,0,0,0,1868114,56472
 2020-02-13 19:32:28,+0000,1581622348,oci_box1-wls-1,ifconfig,eth0,311,0,0,0,0,195,0,0,0,0,0,0,1801902,151510
+```
+
+### Collect, log, compute rate, and log rate
+
+Logdirector is extended no with option -tee what makes it possible to use logger as an in pipe element. 
+
+```
+log_root=~/log; mkdir -p $log_root
+
+export resource= eth0
+umc ifconfig collect 1 5 eth0 |
+csv2obd |
+logdirector.pl -dir $log_root -name ifconfig_ eth0 -detectHeader -tee |
+dvdt |
+logdirector.pl -dir $log_root -name ifconfig_eth0_dvdt -detectHeader
+
+ll $log_root
+
 ```
 
 
