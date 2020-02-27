@@ -53,7 +53,6 @@ while line:
     if line.startswith('datetime'): 
         continue
 
-    print(res_name)
     if res_name_parameter.startswith('csv:'):
         res_name_column=int(res_name_parameter.split(':')[1])
         res_name=line.split(separator)[res_name_column-1]
