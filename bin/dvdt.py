@@ -55,17 +55,19 @@ while line:
 
     if res_name_parameter.startswith('csv:'):
         res_name_column=int(res_name_parameter.split(':')[1])
-        res_name=line.split(separator)[res_name_column-1]
 
+        try:
+            res_name=line.split(separator)[res_name_column-1]
+        except:
+            continue
+        
         data_now[res_name] = list()
 
         header_src = herald_state + '/' + res_type + '/' + res_name + '/header'
         state_dst = herald_state + '/' + res_type + '/' + res_name + '/dvdt'
 
-        print(state_dst)
         if not os.path.exists(state_dst):
             os.makedirs(state_dst)
-            print('created.')
         
         if not header_printed:
             # prepare header / prefix
