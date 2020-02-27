@@ -3,20 +3,23 @@ import os
 
 
 res_type = sys.argv[1]     # os.environ['herald_res_type'] #'ens3'
-res_name = sys.argv[2]     # os.environ['herald_res_name'] #'ens3'
-dt = int(sys.argv[3])
-dt_column = int(sys.argv[4])
-dataat = int(sys.argv[5])
-out_format = sys.argv[6]   # map | csv
-out_data = sys.argv[7]     # compute | forward
-separator = sys.argv[8]
-herald_state = sys.argv[9]
+res_name = res_type
 
+if len(sys.argv) > 1:
+    res_name = sys.argv[2]     # os.environ['herald_res_name'] #'ens3'
+    dt = int(sys.argv[3])
+    dt_column = int(sys.argv[4])
+    dataat = int(sys.argv[5])
+    out_format = sys.argv[6]   # map | csv
+    out_data = sys.argv[7]     # compute | forward
+    separator = sys.argv[8]
+    herald_state = sys.argv[9]
 
-header_src = herald_state + '/' + res_type + '/' + res_name + '/header'
-state_dst = herald_state + '/' + res_type + '/' + res_name + '/dvdt'
-if not os.path.exists(state_dst):
-    os.makedirs(state_dst)
+if not res_name.startswith('csv:'):
+    header_src = herald_state + '/' + res_type + '/' + res_name + '/header'
+    state_dst = herald_state + '/' + res_type + '/' + res_name + '/dvdt'
+    if not os.path.exists(state_dst):
+        os.makedirs(state_dst)
 
 line = 'start'
 data_prv_set = False

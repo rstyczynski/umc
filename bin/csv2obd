@@ -93,7 +93,6 @@ function dump_window {
   done
 }
 
-set -x
 
 #####
 ##### functions stop
@@ -135,6 +134,7 @@ while read -r line; do
 	    fi
     fi
 
+    # check if header is stroed in resource directory
     if [ ! -d $tmp/header ]; then
 	    echo $header | tr , '\n' | tr -d ' ' > $tmp/header
 	    echo $header > $status_root/$resource_id/log/header
