@@ -43,6 +43,10 @@ while line:
     data_now = list()
     line = sys.stdin.readline()
 
+    # skip header line
+    if line.startswith('datetime'): 
+        continue
+
     if res_name.startswith('csv:'):
         res_name_column=int(res_name.split(':')[1])
         res_name=line.split(separator)[res_name_column]
