@@ -111,7 +111,21 @@ else
 fi
  
 while read -r line; do
+    process_line=1
+    if [ "$header" != "external" ]; then
+        if [ "$header" == "instream" ]; then
+            header=$line
 
+
+            if [ "$display" == "yes" ]; then
+                echo $line
+            fi
+            process_line=0
+        fi
+    fi
+
+
+    # extact resource name from stream
     if [ ! -z "$resource_id_column" ]; then
 	    resource_id=$(echo $line | cut -d$CSVdelimiter -f$resource_id_column)
 	    tmp=$status_root/$resource_id/tmp
@@ -121,24 +135,10 @@ while read -r line; do
 	    fi
     fi
 
-
-    process_line=1
-    if [ "$header" != "external" ]; then
-        if [ "$header" == "instream" ]; then
-            header=$line
-            echo $header | tr , '\n' | tr -d ' ' > $tmp/header
-
-            echo $header > $status_root/$resource_id/log/header
-            echo $header > $status_root/$resource_id/header
-            #if [ ! -f $status_root/$resource_id/log/state ]; then
-              #echo $header > $status_root/$resource_id/log/state
-            #fi
-	      # display
-            if [ "$display" == "yes" ]; then
-                echo $line
-            fi
-            process_line=0
-        fi
+    if [ ! -d $tmp/header ]; then
+	    echo $header | tr , '\n' | tr -d ' ' > $tmp/header
+	    echo $header > $status_root/$resource_id/log/header
+	    echo $header > $status_root/$resource_id/header
     fi
 
     if [ $process_line -eq 1 ]; then
