@@ -30,6 +30,7 @@ my $sizePerLogParam;	 #to capture cmd line parameter
 my $sizePerLog;			 #maximum size of log file. meaning depends on rotate by. may be lines or bytes. used internally to initiate rotation
 my $rotateOnStart=0;	 #rotate on start. option specified by cmd line. Default yes - do on start rotation.
 my $logFlush=0;			 #auto flush the log - disable perl side buffering
+my $teemode=0;		 #act as tee writing to both log and stdout
 my $verbose=0;			 #verbose mode - print verbose information about processing
 my $timeRotationInThread=0; #  true for time rotation to happen in a separated thread
 my $man=0;		  	     #man flag
@@ -81,6 +82,7 @@ GetOptions ('dir=s'   	    => \$dstDir,      	# string
 		    'timeLimit=i'   => \$timePerLog,	# integer
             'flush'		    => \$logFlush,      # flag
  	       	'start'		    => \$rotateOnStart, # flag
+	    'tee' 	    => \$teemode, # flag
             'verbose'	    => \$verbose,      	# flag
             'timeRotationInThread' => \$timeRotationInThread,  # flag
             'rotateOnThreadEnd' => \$rotateOnThreadEnd, # flag
@@ -232,6 +234,10 @@ while ( ! $exit ) {
 			if ($verbose) { print "Duplicated header detected, not writing it out: $_"; }
 		} else {
 			print outfile $_;
+
+			if ($teemode) {
+				print $_;
+			}
 		}
 
 		#increment log size
@@ -538,6 +544,7 @@ logdirector.pl - stdout log director and rotation script.
  
  -identifier 	log process identifier to be used by administrator/scripts to locate log director running in background,
  -flush 	do not buffer output. flush each line. Default is to use buffering,
+ -tee           act as tee writing to both log and stdout
  
  -verbose	debug mode,
  -help 		this help,
