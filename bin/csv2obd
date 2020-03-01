@@ -117,9 +117,9 @@ while read -r line; do
 
             # check if header is stored in resource directory
             if [ ! -d $resource_tmp/header ]; then
-                stdbuf -oL echo $header | tr , '\n' | tr -d ' ' > $resource_tmp/header
-                stdbuf -oL echo $header > $status_root/$resource_id/log/header
-                stdbuf -oL echo $header > $status_root/$resource_id/header
+                stdbuf -oL printf "$header\n" | tr , '\n' | tr -d ' ' > $resource_tmp/header
+                stdbuf -oL printf "$header\n" > $status_root/$resource_id/log/header
+                stdbuf -oL printf "$header\n" > $status_root/$resource_id/header
             fi
 
             if [ "$display" == "yes" ]; then
