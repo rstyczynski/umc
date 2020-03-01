@@ -29,7 +29,7 @@ function doasroot {
 }
 
 FUNC=$(declare -f doasroot)
-sudo bash -c "$FUNC; doasroot"
+sudo bash -c "umc_src=$umc_src; $FUNC; doasroot"
 
 echo '#umc init' >>~/.bash_profile
 echo '. /opt/umc/bin/umc.h' >>~/.bash_profile
