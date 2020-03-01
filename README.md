@@ -943,7 +943,7 @@ To start 10 collections with 1 second interval use the following command:
 ```
 umc_collectAll.sh 1 10 "vmstat free top uptime meminfo tcpext netstattcp ifconfig iostat pingSocket" 
 
-Note: Oracle SOA not configured. Update etc/umc.cfg to be able to use SOA related components of the package.
+Note: Oracle SOA not configured. Update umc.conf (in /etc or ~/.umc) to be able to use SOA related components of the package.
 Universal Metrics Collector initialized.
 
 Batch UMC collector initializes data collection for following probes:
@@ -1004,7 +1004,7 @@ To specify probes parameters use colon instead of spaces. To write data to anoth
 ```
 umc_collectAll.sh 1 10 "iostat vmstat free uptime ifconfig:eth0" --logDir=/home/vagrant/perfdata --testId=A --nonblocking
 
-Note: Oracle SOA not configured. Update etc/umc.cfg to be able to use SOA related components of the package.
+Note: Oracle SOA not configured. Update umc.conf (in /etc or ~/.umc) to be able to use SOA related components of the package.
 Universal Metrics Collector initialized.
 
 Batch UMC collector initializes data collection for following probes:
@@ -1044,7 +1044,7 @@ To stop background data collection use umc_stopAll.sh
 ```
 umc_collectAll.sh 1 10 "iostat vmstat free uptime ifconfig:eth0" --logDir=/home/vagrant/perfdata --testId=A --nonblocking
 
-Note: Oracle SOA not configured. Update etc/umc.cfg to be able to use SOA related components of the package.
+Note: Oracle SOA not configured. Update umc.conf (in /etc or ~/.umc) to be able to use SOA related components of the package.
 Universal Metrics Collector initialized.
 
 Batch UMC collector initializes data collection for following probes:

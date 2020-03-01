@@ -8,10 +8,10 @@ function cfgCluster {
    clusterName=$1
 
    # configure user params
-   if [ ! -f ~/etc/umc_cluster_$1.cfg ]; then
+   if [ ! -f ~/.umc/umc_cluster_$1.conf ]; then
       echo Error! Cluster configuration does not found!
    else
-       . ~/etc/umc_cluster_$1.cfg
+       . ~/.umc/umc_cluster_$1.conf
 
        if [ ! -z "$OHS" ]; then
           echo "OHS servers: " $OHS
