@@ -10,7 +10,7 @@ function doasroot {
     #binaries, libraries, probes | keep it protected!
     mkdir -p /opt/umc
 
-    cp -raf $umc_src /opt/umc
+    cp -raf $umc_src/* /opt/umc
 
     chmod -R ugo+r /opt/umc
 
