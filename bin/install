@@ -6,7 +6,7 @@ export umc_src="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
 
 function doasroot {
     echo "Executing installation steps with root privileges. Provide your password if asked."
-    
+
     #binaries, libraries, probes | keep it protected!
     mkdir -p /opt/umc
 
@@ -32,16 +32,13 @@ function doasroot {
 
     #runtime
     mkdir -p /run/umc/obd
-    chmod -R 777 /run/umc/obd
-    
     mkdir -p /var/log/umc
-    chmod -R 777 /var/log/umc
 
-    #make all direc accessible for all
+    #make all directories accessible for all
     find /etc/umc -type d -exec chmod 755 {} +
     find /opt/umc -type d -exec chmod 755 {} +
-    find /run/umc -type d -exec chmod 755 {} +
-    find /var/log -type d -exec chmod 755 {} +
+    find /run/umc -type d -exec chmod 777 {} +
+    find /var/log -type d -exec chmod 777 {} +
 }
 
 # run function as root
