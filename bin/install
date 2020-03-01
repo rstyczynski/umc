@@ -37,7 +37,10 @@ function doasroot {
 FUNC=$(declare -f doasroot)
 sudo bash -c "umc_src=$umc_src; $FUNC; doasroot"
 
-echo '#umc init' >>~/.bash_profile
-echo '. /opt/umc/bin/umc.h' >>~/.bash_profile
+grep '# umc init' ~/.bash_profile
+if [ $? -ne 0 ]; then
+    echo '# umc init' >>~/.bash_profile
+    echo '. /opt/umc/bin/umc.h' >>~/.bash_profile
+fi
 
 echo 'Done.'
