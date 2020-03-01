@@ -176,6 +176,12 @@ if ($verbose) {
 $SIG{HUP}  = \&signal_handler_ROTATE;
 $SIG{INT}  = \&signal_handler_EXIT;
 
+# disable buffereing stdou / stderr
+select(STDERR);
+$| = 1;
+select(STDOUT);
+$| = 1;
+
 #REMOVE
 #rotate on start
 if ($rotateOnStart){
