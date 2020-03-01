@@ -5,7 +5,7 @@ echo 'umc installation script started.'
 export umc_src="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
 
 #binaries, libraries, probes | keep it protected!
-mkdir /opt/umc
+mkdir -p /opt/umc
 
 cp -r $umc_src /opt/umc
 
@@ -18,12 +18,12 @@ done
 cd -
 
 #configuration | keep it protected!
-mkdir /etc/umc
+mkdir -p /etc/umc
 cp -r $umc_src/etc/* /etc/umc
 chmod -R 444 /etc/umc
 
 #runtime
-mkdir /run/umc/obd; chmod 666 /run/umc/obd
-mkdir /var/log/umc; chmod 666 /var/log/umc
+mkdir -p /run/umc/obd; chmod 666 /run/umc/obd
+mkdir -p /var/log/umc; chmod 666 /var/log/umc
 
 echo 'Done.'
