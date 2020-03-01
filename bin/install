@@ -26,6 +26,12 @@ function doasroot {
     #runtime
     mkdir -p /run/umc/obd; chmod 666 /run/umc/obd
     mkdir -p /var/log/umc; chmod 666 /var/log/umc
+
+    #make all direc accessible for all
+    find /etc/umc -type d -exec chmod 755 {} +
+    find /opt/umc -type d -exec chmod 755 {} +
+    find /run/umc -type d -exec chmod 755 {} +
+    find /var/log -type d -exec chmod 755 {} +
 }
 
 FUNC=$(declare -f doasroot)
