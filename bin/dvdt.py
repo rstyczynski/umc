@@ -1,7 +1,6 @@
 import sys
 import os
 
-
 res_type = sys.argv[1]     # os.environ['herald_res_type'] #'ens3'
 res_name_parameter = sys.argv[2]     # os.environ['herald_res_name'] #'ens3'
 dt = int(sys.argv[3])
@@ -33,28 +32,28 @@ if not res_name_parameter.startswith('csv:'):
     if not os.path.exists(state_dst):
         os.makedirs(state_dst)
 
-    # prepare header / prefix
-    header_f = open(header_src, "r")
-    header_line = header_f.read()
-    header_f.close
-    #header_line = header_line.replace('\n', '_dvdt' + separator)
-    header_line = header_line.replace('\n', separator)
-    header_line = header_line.replace(' ', '')
-
-    if header_line.endswith(separator):
-        header_line = header_line[0:-1]
-
-    header = header_line.split(separator)
-
-    if out_data == 'compute' and out_format == 'csv':
-        print(header_line)
-
-
 while line:
     line = sys.stdin.readline()
 
     # skip header line
     if line.startswith('datetime'): 
+
+        # prepare header / prefix
+        #header_f = open(header_src, "r")
+        #header_line = header_f.read()
+        #header_f.close
+        header_line = line
+        header_line = header_line.replace('\n', separator)
+        header_line = header_line.replace(' ', '')
+
+        if header_line.endswith(separator):
+            header_line = header_line[0:-1]
+        
+        header = header_line.split(separator)
+
+        if out_data == 'compute' and out_format == 'csv':
+            print(header_line)
+
         continue
 
     if res_name_parameter.startswith('csv:'):
