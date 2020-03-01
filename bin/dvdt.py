@@ -25,8 +25,6 @@ if not res_name_parameter.startswith('csv:'):
 
     res_name=res_name_parameter
 
-    data_now[res_name] = list()
-
     header_src = herald_state + '/' + res_type + '/' + res_name + '/header'
     state_dst = herald_state + '/' + res_type + '/' + res_name + '/dvdt'
     if not os.path.exists(state_dst):
@@ -34,31 +32,28 @@ if not res_name_parameter.startswith('csv:'):
 
 while line:
     line = sys.stdin.readline()
-
+    #
     # skip header line
     if line.startswith('datetime'): 
-
-        # prepare header / prefix
-        #header_f = open(header_src, "r")
-        #header_line = header_f.read()
-        #header_f.close
         header_line = line
         header_line = header_line.replace('\n', separator)
         header_line = header_line.replace(' ', '')
-
+        #
         if header_line.endswith(separator):
-            header_line = header_line[0:-1]
-        
+           header_line = header_line[0:-1]
+        #
         header = header_line.split(separator)
-
+        #
         if out_data == 'compute' and out_format == 'csv':
             print(header_line)
-
+        
+        header_printed = True
+        
         continue
 
     if res_name_parameter.startswith('csv:'):
         res_name_column=int(res_name_parameter.split(':')[1])
-
+        #
         try:
             res_name=line.split(separator)[res_name_column-1]
         except:
@@ -90,6 +85,8 @@ while line:
                 print(header_line)
             #
             header_printed = True
+    else:
+        data_now[res_name] = list()
 
     # print inpute data in forward mode
     if out_data == 'forward':
@@ -135,18 +132,19 @@ while line:
         # write dvdt data to stdout if needed
         if out_data == 'compute':
             if out_format == 'csv':
-                for i in range(len(header)-1):
+                for i in range(len(header)-2):
                     if i < dataat:
                         sys.stdout.write(str(line_asis[i]) + ',')
                     else:
                         sys.stdout.write(str(dvdt[i]) + ',')
-                print(str(dvdt[len(header)-1]))
+                # print last element w/o separator
+                sys.stdout.write(str(dvdt[i+1]) + '\n')
 
                 # print(str(header))
                 # print(str(dvdt))
 
             elif out_format == 'map':
-                for i in range(len(header)):
+                for i in range(len(header)-1):
                     if i < dataat:
                         print(header[i] + '=' + str(line_asis[i]))
                     else:
@@ -155,4 +153,4 @@ while line:
                 raise Exception('out_format format unknown:' + out_format)
         
     data_prv[res_name] = data_now[res_name]
-    data_prv_set[res_name] = True 
+    data_prv_set[res_name] = True
