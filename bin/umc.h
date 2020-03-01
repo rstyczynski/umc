@@ -18,15 +18,26 @@ export status_root=~/obd
 # mandatory paramters
 export CSVdelimiter=','
 
-# configure user params
-if [ -f ~/etc/umc.cfg ]; then
-    . ~/etc/umc.cfg
-else
-    . $umcRoot/etc/umc.cfg
+#
+# configure umc
+#
+
+# 1. load configuration from binary distribution - default values
+. $umcRoot/etc/umc.conf
+
+# 2. load configuration from /etc
+if [ -d /etc/umc/umc.conf ]; then
+  . /etc/umc/umc.conf 
 fi
 
-# configure global params
-. $toolsBin/global.cfg
+# 3. configure user params
+if [ -f ~/.umc/umc.conf ]; then
+  . ~/.umc/umc.conf
+fi
+
+# 4. configure global params - global params overwrite  
+. $toolsBin/global.conf
+
 
 #prepare secret directory
 if [ ! -d ~/.umc ]; then
