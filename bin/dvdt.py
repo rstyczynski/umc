@@ -16,6 +16,8 @@ if not res_name_parameter.startswith('csv:'):
 
     res_name=res_name_parameter
 
+    data_now[res_name] = list()
+
     header_src = herald_state + '/' + res_type + '/' + res_name + '/header'
     state_dst = herald_state + '/' + res_type + '/' + res_name + '/dvdt'
     if not os.path.exists(state_dst):
@@ -87,8 +89,6 @@ while line:
                 print(header_line)
             #
             header_printed = True
-    else:
-        data_now[res_name] = list()
 
     # print inpute data in forward mode
     if out_data == 'forward':
@@ -124,7 +124,7 @@ while line:
 
         # wriote dvdt state file
         state_f = open(state_dst + '/state', "w")
-        for i in range(len(header)):
+        for i in range(len(header)-1):
             if i < dataat:
                 state_f.write(header[i] + '=' + str(line_asis[i]) + '\n')
             else:
