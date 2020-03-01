@@ -87,7 +87,7 @@ while line:
                 print(header_line)
             #
             header_printed = True
-    else
+    else:
         data_now[res_name] = list()
 
     # print inpute data in forward mode
