@@ -5,6 +5,8 @@ echo 'umc installation script started.'
 export umc_src="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
 
 function doasroot {
+    echo "Executing installation steps with root privileges. Provide your password if asked."
+
     #binaries, libraries, probes | keep it protected!
     mkdir -p /opt/umc
 
@@ -34,10 +36,11 @@ function doasroot {
     find /var/log -type d -exec chmod 755 {} +
 }
 
+# run function as root
 FUNC=$(declare -f doasroot)
 sudo bash -c "umc_src=$umc_src; $FUNC; doasroot"
 
-grep '# umc init' ~/.bash_profile
+grep '# umc init' ~/.bash_profile >/dev/null
 if [ $? -ne 0 ]; then
     echo '# umc init' >>~/.bash_profile
     echo '. /opt/umc/bin/umc.h' >>~/.bash_profile
