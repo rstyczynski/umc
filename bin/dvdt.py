@@ -12,6 +12,16 @@ out_data = sys.argv[7]     # compute | forward
 separator = sys.argv[8]
 herald_state = sys.argv[9]
 
+
+line = 'start'
+data_prv_set = False
+
+header_printed = False
+
+data_now = dict()
+data_prv = dict()
+data_prv_set = dict()
+
 if not res_name_parameter.startswith('csv:'):
 
     res_name=res_name_parameter
@@ -39,14 +49,6 @@ if not res_name_parameter.startswith('csv:'):
     if out_data == 'compute' and out_format == 'csv':
         print(header_line)
 
-line = 'start'
-data_prv_set = False
-
-header_printed = False
-
-data_now = dict()
-data_prv = dict()
-data_prv_set = dict()
 
 while line:
     line = sys.stdin.readline()
