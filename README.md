@@ -51,7 +51,7 @@ datetime,timezone,timestamp,system,source,ProcessRunQueue, ProcessBlocked, MemSw
 Universal Collector is written in Bash with some scripts in Python. The package consist of:
 1. umc.h - set of routines to handle all required interaction with generic data sources,
 2. set of utilities to handle yaml, text, etc., 
-3. umc.cfg - configuration file,
+3. umc.conf - configuration file,
 4. set of sensor wrappers to handle regular utilities,
 5. set of sensor meta-information to describe regular utilities.
 
@@ -168,7 +168,7 @@ businessservice:Testing compatibility of /home/oracle/ttMetrics/tools/linux/java
 
 In case of errors you may need to do three things:
 1. install missing package
-2. configure Oracle Middleware directories in etc/umc.cfg
+2. configure Oracle Middleware directories in etc/umc.conf
 
 In the worst case you need to prepare a new version of probe. It's described in separated part of the manual.
 
@@ -700,10 +700,16 @@ UMC collects data from: WebLogic, OSB, and SOA composite. WebLogic data is colle
 
 
 ## Configuration
-To configure UMC for Oracle Middleware, edit etc/umc.cfg to provide required information about home and domain directories. Note that providing WebLogic domain directory is important, as UMC probes are started from domain directory to bypass a need of authentication. 
+To configure UMC for Oracle Middleware, edit umc.conf to provide required information about home and domain directories. Note that providing WebLogic domain directory is important, as UMC probes are started from domain directory to bypass a need of authentication. 
+
+Note that confioguration file is stored in /etc (if umc is installed on host) or in ~/.umc. You can still use etc/umc.conf from distribution, but it should be done only is quick and dirty aka test installations.
 
 ```
-vi umc/etc/umc.cfg
+vi /etc/umc/umc.conf 
+
+, or
+
+vi ~/.umc/umc.conf 
 
 #---------------------------------------------------------------------------------------
 #--- platform location & specific configuration

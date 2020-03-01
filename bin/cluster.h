@@ -117,7 +117,7 @@ function copyCfg {
     error=NO
     echo -n "Copy SOA cfg..."
     ssh $SOA_ADMIN "if [ ! -d etc ]; then mkdir etc; fi"
-    echo "$SOA_CFG" | ssh $SOA_ADMIN "cat >etc/umc.cfg"
+    echo "$SOA_CFG" | ssh $SOA_ADMIN "cat >etc/umc.conf"
     if [ $? -eq 0 ]; then
         echo "Done."
     else
@@ -127,7 +127,7 @@ function copyCfg {
     
     echo -n "Copy OSB cfg..."
     ssh $OSB_ADMIN "if [ ! -d etc ]; then mkdir etc; fi"
-    echo "$OSB_CFG" | ssh $OSB_ADMIN "cat >etc/umc.cfg"
+    echo "$OSB_CFG" | ssh $OSB_ADMIN "cat >etc/umc.conf"
     if [ $? -eq 0 ]; then
         echo "Done."
     else
@@ -195,7 +195,7 @@ function removeUmc {
     for host in $HOSTS; do
 
     commandToExecute="
-    rm etc/umc.cfg
+    rm etc/umc.conf
     rmdir etc
 
     mkdir DELETE.ME
