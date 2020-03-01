@@ -122,13 +122,6 @@ while read -r line; do
 	    fi
     fi
 
-    # check if header is stored in resource directory
-    if [ ! -d $tmp/header ]; then
-	    echo $header | tr , '\n' | tr -d ' ' > $tmp/header
-	    echo $header > $status_root/$resource_id/log/header
-	    echo $header > $status_root/$resource_id/header
-    fi
-
     # process header
     if [ "$header" != "external" ]; then
         if [ "$header" == "instream" ]; then
@@ -140,6 +133,14 @@ while read -r line; do
             process_line=0
         fi
     fi
+
+    # check if header is stored in resource directory
+    if [ ! -d $tmp/header ]; then
+	    echo $header | tr , '\n' | tr -d ' ' > $tmp/header
+	    echo $header > $status_root/$resource_id/log/header
+	    echo $header > $status_root/$resource_id/header
+    fi
+
 
     if [ $process_line -eq 1 ]; then
       # append to log
