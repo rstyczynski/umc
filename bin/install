@@ -16,9 +16,14 @@ function doasroot {
 
     cd /opt/umc/bin
     for file in *.sh *.pl *.py csv2obd dvdt flag foreach get when run start-* stop-* umcpushd umcrunner umcrunnerd; do 
-    chmod 555 $file
+        chmod ugo+rx $file
     done
     cd - > /dev/null
+
+    find /opt/umc/tools -type f ! -name "*.*"  -exec chmod ugo+rx {} +
+    find /opt/umc/tools -type f -name *.sh  -exec chmod ugo+rx {} +
+    find /opt/umc/tools -type f -name *.py  -exec chmod ugo+rx {} +
+    find /opt/umc/tools -type f -name *.pl  -exec chmod ugo+rx {} +
 
     #configuration | keep it protected!
     mkdir -p /etc/umc
