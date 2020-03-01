@@ -104,7 +104,7 @@ else
 	unset resource_id_column
 
 	resource_id=$resource
-	tmp=$status_root/$resource_id/tmp
+	resource_tmp=$status_root/$resource_id/tmp
 	mkdir -p $status_root/$resource_id/log
 	mkdir -p $status_root/$resource_id/tmp
 fi
@@ -116,10 +116,10 @@ while read -r line; do
             header=$line
 
             # check if header is stored in resource directory
-            if [ ! -d $tmp/header ]; then
-                echo $header | tr , '\n' | tr -d ' ' > $tmp/header
-                echo $header > $status_root/$resource_id/log/header
-                echo $header > $status_root/$resource_id/header
+            if [ ! -d $resource_tmp/header ]; then
+                stdbuf -oL echo $header | tr , '\n' | tr -d ' ' > $resource_tmp/header
+                stdbuf -oL echo $header > $status_root/$resource_id/log/header
+                stdbuf -oL echo $header > $status_root/$resource_id/header
             fi
 
             if [ "$display" == "yes" ]; then
@@ -133,7 +133,7 @@ while read -r line; do
     # extact resource name from stream
     if [ ! -z "$resource_id_column" ]; then
 	    resource_id=$(echo $line | cut -d$CSVdelimiter -f$resource_id_column)
-	    tmp=$status_root/$resource_id/tmp
+	    resource_tmp=$status_root/$resource_id/tmp
 	    if [ ! -d $status_root/$resource_id ]; then
 		mkdir -p $status_root/$resource_id/log
 		mkdir -p $status_root/$resource_id/tmp
@@ -164,8 +164,8 @@ while read -r line; do
       fi
 
       # save to state line; use mv/cat? for atomic file change
-      echo $line | tr , '\n' >$tmp/line
-      paste -d = $tmp/header $tmp/line | tr -d ' ' >$status_root/$resource_id/tmp/state.new
+      echo $line | tr , '\n' >$resource_tmp/line
+      paste -d = $resource_tmp/header $resource_tmp/line | tr -d ' ' >$status_root/$resource_id/tmp/state.new
       cat $status_root/$resource_id/tmp/state.new > $status_root/$resource_id/state
     fi
 done
