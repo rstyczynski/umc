@@ -4,26 +4,33 @@ echo 'umc installation script started.'
 
 export umc_src="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
 
-#binaries, libraries, probes | keep it protected!
-mkdir -p /opt/umc
+function doasroot {
+    #binaries, libraries, probes | keep it protected!
+    mkdir -p /opt/umc
 
-cp -r $umc_src /opt/umc
+    cp -r $umc_src /opt/umc
 
-chmod -R 444 /opt/umc
+    chmod -R 444 /opt/umc
 
-cd /opt/umc/bin
-for file in *.sh *.pl *.py csv2obd dvdt flag foreach get when run start-* stop-* umcpushd umcrunner umcrunnerd; do 
-   chmod 555 $file
-done
-cd - > /dev/null
+    cd /opt/umc/bin
+    for file in *.sh *.pl *.py csv2obd dvdt flag foreach get when run start-* stop-* umcpushd umcrunner umcrunnerd; do 
+    chmod 555 $file
+    done
+    cd - > /dev/null
 
-#configuration | keep it protected!
-mkdir -p /etc/umc
-cp -r $umc_src/etc/* /etc/umc
-chmod -R 444 /etc/umc
+    #configuration | keep it protected!
+    mkdir -p /etc/umc
+    cp -r $umc_src/etc/* /etc/umc
+    chmod -R 444 /etc/umc
 
-#runtime
-mkdir -p /run/umc/obd; chmod 666 /run/umc/obd
-mkdir -p /var/log/umc; chmod 666 /var/log/umc
+    #runtime
+    mkdir -p /run/umc/obd; chmod 666 /run/umc/obd
+    mkdir -p /var/log/umc; chmod 666 /var/log/umc
+}
+
+sudo doasroot
+
+echo '#umc init' >>~/.bash_profile
+echo '. /opt/umc/bin/umc.h' >>~/.bash_profile
 
 echo 'Done.'
