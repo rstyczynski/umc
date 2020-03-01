@@ -26,7 +26,7 @@ function doasroot {
     chmod -R ugo+r /etc/umc
 
     #runtime
-    mkdir -p /run/umc/obd; chmod -R 777/run/umc/obd
+    mkdir -p /run/umc/obd; chmod -R 777 /run/umc/obd
     mkdir -p /var/log/umc; chmod -R 777 /var/log/umc
 
     #make all direc accessible for all
