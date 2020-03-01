@@ -26,7 +26,7 @@ export CSVdelimiter=','
 . $umcRoot/etc/umc.conf
 
 # 2. load configuration from /etc
-if [ -d /etc/umc/umc.conf ]; then
+if [ -f /etc/umc/umc.conf ]; then
   . /etc/umc/umc.conf 
 fi
 
