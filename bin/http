@@ -1,0 +1,28 @@
+#!/bin/bash
+
+umc_http_port=6502
+
+function umc_http() {
+    what=$1
+    umc_http_port=$2
+    
+    if [ -z $umc_http_port ]; then umc_http_port=6502; fi
+
+    case $what in
+    log) cd $log_root ;;
+    obd) cd $status_root ;;
+    *)
+        echo "Error. Specify what to expose: obd or log"
+        return 1
+        ;;
+    esac
+
+    case $(python --version 2>&1 | cut -d. -f1 | cut -f2 -d' ') in
+    2) python -m SimpleHTTPServer $umc_http_port 2>&1 | logdirector.pl -dir $log_root -name umc_http ;;
+    3) python -m http.server $umc_http_port 2>&1 | logdirector.pl -dir $log_root -name umc_http ;;
+    esac
+    cd -
+}
+
+umc_http $@
+
