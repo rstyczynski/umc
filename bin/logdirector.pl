@@ -418,7 +418,23 @@ sub openLogFile {
 		$dstDateSubDir = "$year-$mon-$mday";
 		$dstEffectiveDir = "$dstDir/$dstDateSubDir";
         
-        unless(-e $dstEffectiveDir or mkdir $dstEffectiveDir) { die "logdirector.pl: Unable to create $dstEffectiveDir\n"; }
+		# TODO: race condition when multiple parallel logdirectors creates directory
+		#unless(-e $dstEffectiveDir or mkdir $dstEffectiveDir) { die "logdirector.pl: Unable to create $dstEffectiveDir\n"; }
+		$retry_limit = 3;
+		$retry=0
+		while ( $retry < $retry_limit) {
+			if ( ! -e dstEffectiveDir ) {
+				select(undef, undef, undef, rand(0.5));
+				mkdir $dstEffectiveDir
+				$retry++;
+			} else {
+				$retry = $retry_limit
+			}
+		}
+		if ( ! -e $dstEffectiveDir ){
+			die "logdirector.pl: Unable to create $dstEffectiveDir\n";
+		}
+        
 	} else {
 		$dstEffectiveDir = "$dstDir";
 	}
