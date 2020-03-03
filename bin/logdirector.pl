@@ -425,10 +425,10 @@ sub openLogFile {
 		while ( $retry < $retry_limit ) {
 			if ( ! -e dstEffectiveDir ) {
 				select(undef, undef, undef, rand(0.5));
-				mkdir $dstEffectiveDir
+				mkdir $dstEffectiveDir;
 				$retry++;
 			} else {
-				$retry = $retry_limit
+				$retry = $retry_limit;
 			}
 		}
 		if ( ! -e $dstEffectiveDir ){
