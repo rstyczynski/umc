@@ -114,7 +114,7 @@ while line:
         # print('--- stop')
 
         if dt_column:
-            dt = dv[dt_column]
+            dt = int(dv[dt_column])
             if dt == 0: 
                 dt = 1
 
