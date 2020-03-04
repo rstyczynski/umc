@@ -94,7 +94,7 @@ fi
 export BUFFERED=no
 
 function availableSensors {
-    cat $umcRoot/bin/global.cfg | grep "_layer=" | cut -f1 -d'=' | cut -f2 -d' ' | cut -f1 -d'_'
+    cat $toolsBin/global.conf | grep "_layer=" | cut -f1 -d'=' | cut -f2 -d' ' | cut -f1 -d'_'
 }
 
 function usage {
