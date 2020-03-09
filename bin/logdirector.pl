@@ -188,6 +188,10 @@ if ($rotateOnStart){
 	moveLogFile();
 }
 
+# keep start day to rotate on day change
+my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
+my $mday_previous = $mday
+
 #$exit may be set only by INT signal
 #this variable is used in the rotation thread too
 my $exit :shared = 0;
@@ -263,6 +267,14 @@ while ( ! $exit ) {
 		# evaluate time rotation if not done in thread
 		if (!$timeRotationInThread) {
 			$rotate = evalTimeRoatation();
+		}
+
+		# rotate on day change i.e. at midnight
+		my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
+		if ( $mday > $mday_previous){
+			$rotate = 1;
+
+			$mday_previous = $mday;
 		}
 
 		if ($rotate) {
@@ -389,6 +401,7 @@ sub moveLogFile {
             $dstEffectiveDir = "$dstDir/$dstDateSubDir";
 
             unless(-e $dstEffectiveDir or mkdir $dstEffectiveDir) { die "logdirector.pl: Unable to create $dstEffectiveDir\n"; }
+
         } else {
             $dstEffectiveDir = "$dstDir";
         }
@@ -418,12 +431,12 @@ sub openLogFile {
 		$dstDateSubDir = "$year-$mon-$mday";
 		$dstEffectiveDir = "$dstDir/$dstDateSubDir";
         
-		# TODO: race condition when multiple parallel logdirectors creates directory
-		#unless(-e $dstEffectiveDir or mkdir $dstEffectiveDir) { die "logdirector.pl: Unable to create $dstEffectiveDir\n"; }
+		# race condition when multiple parallel logdirectors creates directory
+		# implemented retry with random backoff
 		my $retry_limit = 3;
 		my $retry=0;
 		while ( $retry < $retry_limit ) {
-			if ( ! -e dstEffectiveDir ) {
+			if ( ! -e $dstEffectiveDir ) {
 				select(undef, undef, undef, rand(0.5));
 				mkdir $dstEffectiveDir;
 				$retry++;
@@ -512,7 +525,24 @@ sub generateRotatedLogName {
 		$dstDateSubDir = "$year-$mon-$mday";
 		$dstEffectiveDir = "$dstDir/$dstDateSubDir";
         
-        unless(-e $dstEffectiveDir or mkdir $dstEffectiveDir) { die "logdirector.pl: Unable to create $dstEffectiveDir\n"; }
+        #unless(-e $dstEffectiveDir or mkdir $dstEffectiveDir) { die "logdirector.pl: Unable to create $dstEffectiveDir\n"; }
+		# race condition when multiple parallel logdirectors creates directory
+		# implemented retry with random backoff
+		my $retry_limit = 3;
+		my $retry=0;
+		while ( $retry < $retry_limit ) {
+			if ( ! -e $dstEffectiveDir ) {
+				select(undef, undef, undef, rand(0.5));
+				mkdir $dstEffectiveDir;
+				$retry++;
+			} else {
+				$retry = $retry_limit;
+			}
+		}
+		if ( ! -e $dstEffectiveDir ){
+			die "logdirector.pl: Unable to create $dstEffectiveDir\n";
+		}
+
 	} else {
 		$dstEffectiveDir = "$dstDir";
 	}
