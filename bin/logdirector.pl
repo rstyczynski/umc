@@ -190,7 +190,7 @@ if ($rotateOnStart){
 
 # keep start day to rotate on day change
 my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
-my $mday_previous = $mday
+my $mday_previous = $mday;
 
 #$exit may be set only by INT signal
 #this variable is used in the rotation thread too
