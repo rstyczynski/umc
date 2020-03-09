@@ -132,7 +132,7 @@ while line:
         # write dvdt data to stdout if needed
         if out_data == 'compute':
             if out_format == 'csv':
-                for i in range(len(header)-2):
+                for i in range(len(header)-1):
                     if i < dataat:
                         sys.stdout.write(str(line_asis[i]) + ',')
                     else:
