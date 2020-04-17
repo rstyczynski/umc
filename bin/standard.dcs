@@ -40,7 +40,7 @@ function start() {
 }
 
 function stop() {
-    kill $(ps aux | grep '/umc/' | grep $script_id | grep -v grep | tr -s ' ' | cut -d' ' -f2)
+    kill $(ps aux | grep '/umc/' | grep $script_id | grep -v "$script_id stop" | grep -v grep | tr -s ' ' | cut -d' ' -f2)
     kill $(ps aux | grep '/umc/' | grep 'vmstat' | grep -v grep | tr -s ' ' | cut -d' ' -f2)
     kill $(ps aux | grep '/umc/' | grep 'iostat' | grep -v grep | tr -s ' ' | cut -d' ' -f2)
     for if_name in $(ip a | grep -v LOOPBACK | grep '^[0-9][0-9]*:' | cut -f2 -d: | tr -d ' '); do
