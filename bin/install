@@ -15,7 +15,7 @@ function doasroot {
     chmod -R ugo+r /opt/umc
 
     cd /opt/umc/bin
-    for file in *.sh *.pl *.py csv2obd dvdt flag foreach get when run start-* stop-* umcpushd umcrunner umcrunnerd; do 
+    for file in *.sh *.pl *.py *.dcs csv2obd dvdt flag foreach get when run start-* stop-* umcpushd umcrunner umcrunnerd; do 
         chmod ugo+rx $file
     done
     cd - > /dev/null

@@ -1,0 +1,71 @@
+#!/bin/bash
+# chkconfig: 2345 20 80
+# description: umc standard collectors
+
+# Source function library.
+. /etc/init.d/functions
+
+export status_root=/run/umc/obd
+
+script_id=$(basename "$0")
+
+function start() {
+    if [ -z "$(ps aux | grep "$script_id" | grep -v "$script_id start" | grep -v grep | tr -s ' ' | cut -d' ' -f2)" ]; then
+
+        source /opt/umc/bin/umc.h
+
+        # prepare odb directory
+        sudo mkdir -p /run/umc/obd
+        sudo chmod 777 /run/umc
+        sudo chmod 777 /run/umc/obd
+
+        umc vmstat collect 5 2147483647 |
+            csv2obd --resource vmstat | logdirector.pl -addDateSubDir -dir /var/log/umc -name vmstat -detectHeader -flush -identifier $script_id &
+
+        umc iostat collect 5 2147483647 |
+            csv2obd --resource iostat | logdirector.pl -addDateSubDir -dir /var/log/umc -name iostat -detectHeader -flush -identifier $script_id &
+
+        for if_name in $(ip a | grep -v LOOPBACK | grep '^[0-9][0-9]*:' | cut -f2 -d: | tr -d ' ')
+        umc ifconfig collect 5 2147483647 $if_name |
+            csv2obd --resource $if_name | logdirector.pl -addDateSubDir -dir /var/log/umc -name ifconfig_$if_name -detectHeader -flush -identifier $script_id -tee |
+            dvdt --resource $if_name | logdirector.pl -addDateSubDir -dir /var/log/umc -name ifconfig_$if_name\_dt -detectHeader -flush -identifier $script_id &
+        done
+
+        exit_code=0
+
+    else
+        echo "Already started."
+        exit_code=1
+    fi
+}
+
+function stop() {
+    kill $(ps aux | grep '/umc/' | grep $script_id | grep -v grep | tr -s ' ' | cut -d' ' -f2)
+    kill $(ps aux | grep '/umc/' | grep 'vmstat' | grep -v grep | tr -s ' ' | cut -d' ' -f2)
+    kill $(ps aux | grep '/umc/' | grep 'iostat' | grep -v grep | tr -s ' ' | cut -d' ' -f2)
+    kill $(ps aux | grep '/umc/' | grep 'ifconfig eth0' | grep -v grep | tr -s ' ' | cut -d' ' -f2)
+    kill $(ps aux | grep '/umc/' | grep 'ifconfig eth1' | grep -v grep | tr -s ' ' | cut -d' ' -f2)
+    kill $(ps aux | grep "$script_id start" | grep -v grep | tr -s ' ' | cut -d' ' -f2)
+    exit_code=0
+}
+
+case "$1" in 
+    start)
+       start
+       ;;
+    stop)
+       stop
+       ;;
+    restart)
+       stop
+       start
+       ;;
+    status)
+       # code to check status of app comes here 
+       # example: status program_name
+       ;;
+    *)
+       echo "Usage: $0 {start|stop|status|restart}"
+esac
+
+exit $exit_code
