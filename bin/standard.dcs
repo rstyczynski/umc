@@ -40,7 +40,7 @@ function start() {
 }
 
 function stop() {
-    if [ -z "$(ps aux | grep "$script_id" | grep -v "$script_id start" | grep -v grep | tr -s ' ' | cut -d' ' -f2)" ]; then
+    if [ -z "$(ps aux | grep "$script_id" | grep -v "$script_id stop" | grep -v grep | tr -s ' ' | cut -d' ' -f2)" ]; then
         echo "Not started."
         exit_code=2
     else
