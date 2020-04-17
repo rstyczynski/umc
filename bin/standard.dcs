@@ -25,11 +25,11 @@ function start() {
         umc iostat collect 5 2147483647 |
             csv2obd --resource iostat | logdirector.pl -addDateSubDir -dir /var/log/umc -name iostat -detectHeader -flush -identifier $script_id &
 
-        for if_name in $(ip a | grep -v LOOPBACK | grep '^[0-9][0-9]*:' | cut -f2 -d: | tr -d ' ')
+        for if_name in $(ip a | grep -v LOOPBACK | grep '^[0-9][0-9]*:' | cut -f2 -d: | tr -d ' '); do
             umc ifconfig collect 5 2147483647 $if_name |
                 csv2obd --resource $if_name | logdirector.pl -addDateSubDir -dir /var/log/umc -name ifconfig_$if_name -detectHeader -flush -identifier $script_id -tee |
                 dvdt --resource $if_name | logdirector.pl -addDateSubDir -dir /var/log/umc -name ifconfig_$if_name\_dt -detectHeader -flush -identifier $script_id &
-            done
+        done
 
         exit_code=0
 
@@ -43,7 +43,7 @@ function stop() {
     kill $(ps aux | grep '/umc/' | grep $script_id | grep -v grep | tr -s ' ' | cut -d' ' -f2)
     kill $(ps aux | grep '/umc/' | grep 'vmstat' | grep -v grep | tr -s ' ' | cut -d' ' -f2)
     kill $(ps aux | grep '/umc/' | grep 'iostat' | grep -v grep | tr -s ' ' | cut -d' ' -f2)
-    for if_name in $(ip a | grep -v LOOPBACK | grep '^[0-9][0-9]*:' | cut -f2 -d: | tr -d ' ')
+    for if_name in $(ip a | grep -v LOOPBACK | grep '^[0-9][0-9]*:' | cut -f2 -d: | tr -d ' '); do
         kill $(ps aux | grep '/umc/' | grep "ifconfig $if_name" | grep -v grep | tr -s ' ' | cut -d' ' -f2)
     done
     kill $(ps aux | grep '/umc/' | grep 'ifconfig eth1' | grep -v grep | tr -s ' ' | cut -d' ' -f2)
@@ -66,7 +66,7 @@ case "$1" in
        ps aux | grep '/umc/' | grep $script_id 
        ps aux | grep '/umc/' | grep 'vmstat'
        ps aux | grep '/umc/' | grep 'iostat' 
-        for if_name in $(ip a | grep -v LOOPBACK | grep '^[0-9][0-9]*:' | cut -f2 -d: | tr -d ' ')
+        for if_name in $(ip a | grep -v LOOPBACK | grep '^[0-9][0-9]*:' | cut -f2 -d: | tr -d ' '); do
             ps aux | grep '/umc/' | grep "ifconfig $if_name"
         done
        ;;
