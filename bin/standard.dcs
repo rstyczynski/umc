@@ -50,7 +50,6 @@ function stop() {
         for if_name in $(ip a | grep -v LOOPBACK | grep '^[0-9][0-9]*:' | cut -f2 -d: | tr -d ' '); do
             kill $(ps aux | grep '/umc/' | grep "ifconfig $if_name" | grep -v grep | tr -s ' ' | cut -d' ' -f2)
         done
-        kill $(ps aux | grep '/umc/' | grep 'ifconfig eth1' | grep -v grep | tr -s ' ' | cut -d' ' -f2)
         kill $(ps aux | grep "$script_id start" | grep -v grep | tr -s ' ' | cut -d' ' -f2)
         exit_code=0
     fi
@@ -62,9 +61,9 @@ function status() {
             echo "Not started."
             exit_code=1
         else
-        ps aux | grep '/umc/' | grep $script_id 
-        ps aux | grep '/umc/' | grep 'vmstat'
-        ps aux | grep '/umc/' | grep 'iostat' 
+            ps aux | grep '/umc/' | grep $script_id 
+            ps aux | grep '/umc/' | grep 'vmstat'
+            ps aux | grep '/umc/' | grep 'iostat' 
             for if_name in $(ip a | grep -v LOOPBACK | grep '^[0-9][0-9]*:' | cut -f2 -d: | tr -d ' '); do
                 ps aux | grep '/umc/' | grep "ifconfig $if_name"
             done
