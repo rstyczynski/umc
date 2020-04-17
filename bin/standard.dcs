@@ -56,6 +56,23 @@ function stop() {
     fi
 }
 
+function status() {
+
+        if [ -z "$(ps aux | grep "$script_id" | grep -v "$script_id status" | grep -v grep | tr -s ' ' | cut -d' ' -f2)" ]; then
+            echo "Not started."
+            exit_code=1
+        else
+        ps aux | grep '/umc/' | grep $script_id 
+        ps aux | grep '/umc/' | grep 'vmstat'
+        ps aux | grep '/umc/' | grep 'iostat' 
+            for if_name in $(ip a | grep -v LOOPBACK | grep '^[0-9][0-9]*:' | cut -f2 -d: | tr -d ' '); do
+                ps aux | grep '/umc/' | grep "ifconfig $if_name"
+            done
+        fi
+        exit_code=0
+
+}
+
 case "$1" in 
     start)
        start
@@ -68,18 +85,7 @@ case "$1" in
        start
        ;;
     status)
-        if [ -z "$(ps aux | grep "$script_id" | grep -v "$script_id start" | grep -v grep | tr -s ' ' | cut -d' ' -f2)" ]; then
-            echo "Not started."
-            exit_code=1
-        else
-        ps aux | grep '/umc/' | grep $script_id 
-        ps aux | grep '/umc/' | grep 'vmstat'
-        ps aux | grep '/umc/' | grep 'iostat' 
-            for if_name in $(ip a | grep -v LOOPBACK | grep '^[0-9][0-9]*:' | cut -f2 -d: | tr -d ' '); do
-                ps aux | grep '/umc/' | grep "ifconfig $if_name"
-            done
-        fi
-        exit_code=0
+        status
        ;;
     *)
        echo "Usage: $0 {start|stop|status|restart}"
