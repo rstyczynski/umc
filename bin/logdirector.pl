@@ -241,7 +241,7 @@ while ( ! $exit ) {
 		#this only checks duplicates against the first line in the log which is supposed to be the header, it will not check for
 		#duplcates in case the header will arrive more than once from stdin
 
-		if ($verbos) {
+		if ($verbose) {
 			print "checkHeaderDups:  $checkHeaderDups\n";
 			print "autoDetectHeader: $autoDetectHeader\n";
 			print "headerAlreadyDetected: $headerAlreadyDetected\n";
