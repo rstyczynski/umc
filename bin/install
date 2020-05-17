@@ -26,9 +26,13 @@ function doasroot {
     find /opt/umc/tools -type f -name *.pl  -exec chmod ugo+rx {} +
 
     #configuration | keep it protected!
-    mkdir -p /etc/umc
-    cp -r $umc_src/etc/* /etc/umc
-    chmod -R ugo+r /etc/umc
+    if [ ! -d '/etc/umc' ]; then
+        mkdir -p /etc/umc
+        cp -r $umc_src/etc/* /etc/umc
+        chmod -R ugo+r /etc/umc
+    else
+        echo "Warning. Default config skipped. Cause: already exist."
+    fi
 
     #runtime
     mkdir -p /run/umc/obd
