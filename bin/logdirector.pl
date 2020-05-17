@@ -464,7 +464,7 @@ sub openLogFile {
 	$firstLineHeader = "";
 	if ($checkHeaderDups && -e "$dstEffectiveDir/$logNameExt") {
 		open(inf, "<", "$dstEffectiveDir/$logNameExt");
-		$firstLine=<inf>
+		$firstLine=<inf>;
 		if ($firstLine =~ /^datetime,/ ) {
 			$firstLineHeader = $firstLine;
 			$headerAlreadyDetected=1;
