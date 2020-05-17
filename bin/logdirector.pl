@@ -481,7 +481,7 @@ open(outfile, ">>", "$dstEffectiveDir/$logNameExt") || die "logdirector.pl: Cann
 if ($verbose) {print "Opened log file $dstEffectiveDir/$logNameExt\n"; }
 
 # add file header only if enabled and the header is not already in the file (if header duplicate checking is enabled)
-if ( $fileHeader && $firstLineHeader) {
+if ( $fileHeader && ! $firstLineHeader) {
 	if ( $autoDetectHeader ) {
 		#autodetected header is already with new line character
 		print outfile $fileHeader;
