@@ -463,6 +463,8 @@ sub openLogFile {
 		$firstLineHeader = <inf>;
 		close(inf);
 
+		#TODO above code does not detect header. It must be implemented.
+
 		if ($verbose) { 
 			if ($firstLineHeader ne "") {
 				print "The file containts header: $firstLineHeader";
