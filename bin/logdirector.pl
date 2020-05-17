@@ -240,13 +240,20 @@ while ( ! $exit ) {
 		#if checking header duplicates is enabled and the line is header while the header is already in the file, then ignore this
 		#this only checks duplicates against the first line in the log which is supposed to be the header, it will not check for
 		#duplcates in case the header will arrive more than once from stdin
+
+		if ($verbos) {
+			print "checkHeaderDups:  $checkHeaderDups\n";
+			print "autoDetectHeader: $autoDetectHeader\n";
+			print "headerAlreadyDetected: $headerAlreadyDetected\n";
+			print "firstLineHeader: $firstLineHeader\n";
+			print "current line: $_\n";
+		}
+
 		if ($checkHeaderDups && $autoDetectHeader && $headerAlreadyDetected && $firstLineHeader eq $_) {
 			if ($verbose) { print "Duplicated header detected, not writing it out: $_"; }
 
 		} else {
 			
-			print "Writing row....";
-
 			print outfile $_;
 
 			if ($teemode) {
