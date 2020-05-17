@@ -460,12 +460,11 @@ sub openLogFile {
 $firstLineHeader = 0;
 if ($checkHeaderDups && -e "$dstEffectiveDir/$logNameExt") {
 	open(inf, "<", "$dstEffectiveDir/$logNameExt");
-	if (<inf> =~ m/^datetime,/) {
+	my $regex = qr//mp;
+	if (<inf> =~ /^datetime,/ ) {
 		$firstLineHeader = 1;
 	}
 	close(inf);
-
-	#TODO above code does not detect header. It must be implemented.
 
 	if ($verbose) { 
 		if ($firstLineHeader) {
@@ -481,12 +480,14 @@ open(outfile, ">>", "$dstEffectiveDir/$logNameExt") || die "logdirector.pl: Cann
 if ($verbose) {print "Opened log file $dstEffectiveDir/$logNameExt\n"; }
 
 # add file header only if enabled and the header is not already in the file (if header duplicate checking is enabled)
-if ( $fileHeader && ! $firstLineHeader) {
-	if ( $autoDetectHeader ) {
-		#autodetected header is already with new line character
-		print outfile $fileHeader;
-	} else {
-		print outfile $fileHeader . "\n";
+if ( $firstLineHeader == 0 ) {
+	if ( $fileHeader) {
+		if ( $autoDetectHeader ) {
+			#autodetected header is already with new line character
+			print outfile $fileHeader;
+		} else {
+			print outfile $fileHeader . "\n";
+		}
 	}
 }
     
