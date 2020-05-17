@@ -129,7 +129,7 @@ while read -r line; do
             header=$line
 
             # check if header is stored in resource directory
-            if [ ! -d $resource_tmp/header ]; then
+            if [ ! -d "$resource_tmp/header" ]; then
                 echo "$header" | tr , '\n' | tr -d ' ' > $resource_tmp/header
                 echo "$header" > $status_root/$resource_id/log/header
                 echo "$header" > $status_root/$resource_id/header
@@ -141,9 +141,6 @@ while read -r line; do
             process_line=0
         fi
     fi
-
-
-
 
 
     if [ $process_line -eq 1 ]; then
