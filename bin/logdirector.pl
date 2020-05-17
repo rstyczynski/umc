@@ -464,9 +464,9 @@ sub openLogFile {
 	$firstLineHeader = "";
 	if ($checkHeaderDups && -e "$dstEffectiveDir/$logNameExt") {
 		open(inf, "<", "$dstEffectiveDir/$logNameExt");
-		my $regex = qr//mp;
-		if (<inf> =~ /^datetime,/ ) {
-			$firstLineHeader = $_;
+		$firstLine=<inf>
+		if ($firstLine =~ /^datetime,/ ) {
+			$firstLineHeader = $firstLine;
 			$headerAlreadyDetected=1;
 		}
 		close(inf);
@@ -487,7 +487,7 @@ sub openLogFile {
 	# add file header only if enabled and the header is not already in the file (if header duplicate checking is enabled)
 	if ( $firstLineHeader eq "" ) {
 		
-		print "Writing header....";
+		print "Writing header.... $firstLineHeader";
 
 		if ( $fileHeader) {
 			if ( $autoDetectHeader ) {
