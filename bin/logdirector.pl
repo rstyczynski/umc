@@ -242,7 +242,11 @@ while ( ! $exit ) {
 		#duplcates in case the header will arrive more than once from stdin
 		if ($checkHeaderDups && $autoDetectHeader && $headerAlreadyDetected && $firstLineHeader eq $_) {
 			if ($verbose) { print "Duplicated header detected, not writing it out: $_"; }
+
 		} else {
+			
+			print "Writing row...."
+
 			print outfile $_;
 
 			if ($teemode) {
@@ -482,6 +486,7 @@ sub openLogFile {
 
 	# add file header only if enabled and the header is not already in the file (if header duplicate checking is enabled)
 	if ( $firstLineHeader eq "" ) {
+		print "Writing header...."
 		if ( $fileHeader) {
 			if ( $autoDetectHeader ) {
 				#autodetected header is already with new line character
