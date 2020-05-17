@@ -117,7 +117,7 @@ while read -r line; do
     if [ ! -z "$resource_id_column" ]; then
 	    resource_id=$(echo $line | cut -d$CSVdelimiter -f$resource_id_column)
 	    resource_tmp=$status_root/$resource_id/tmp
-	    if [ ! -d $status_root/$resource_id ]; then
+	    if [ ! -d "$status_root/$resource_id" ]; then
             mkdir -p $status_root/$resource_id/log
             mkdir -p $status_root/$resource_id/tmp
 	    fi
