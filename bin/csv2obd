@@ -6,35 +6,40 @@
 
 function usage() {
     echo -n "Usage: $(basename $0) "
-    cat $0 | grep -v '/# parameters - start/,/# parameters - stop/p' | 
-    sed -n '/# parameters - start/,/# parameters - stop/p' | 
-    grep '\--' | cut -f1 -d ')' | tr -s ' ' | tr '\n' ' '
+    cat $0 | grep -v '/# parameters - start/,/# parameters - stop/p' |
+        sed -n '/# parameters - start/,/# parameters - stop/p' |
+        grep '\--' | cut -f1 -d ')' | tr -s ' ' | tr '\n' ' '
     echo
 
     echo
     echo "Mandatory parameters: "
-    cat $0 | grep -v '/# mandatory parameters - start/,/# mandatory parameters - stop/p' | 
-    sed -n '/# mandatory parameters - start/,/# mandatory parameters - stop/p' | 
-    grep '\[ -z'  | sed 's/|/;/g' | cut -f2 -d ';' | sed 's/"$//g' | nl
+    cat $0 | grep -v '/# mandatory parameters - start/,/# mandatory parameters - stop/p' |
+        sed -n '/# mandatory parameters - start/,/# mandatory parameters - stop/p' |
+        grep '\[ -z' | sed 's/|/;/g' | cut -f2 -d ';' | sed 's/"$//g' | nl
     echo
 
     echo
     echo "Parameter defaults: "
-    cat $0 | grep -v '/# parameters defaults - start/,/# parameters defaults - stop/p' | 
-    sed -n '/# parameters defaults - start/,/# parameters defaults - stop/p' | 
-    grep '\[ -z' | sed 's/&& /;/g' | cut -f2 -d ';' | nl
+    cat $0 | grep -v '/# parameters defaults - start/,/# parameters defaults - stop/p' |
+        sed -n '/# parameters defaults - start/,/# parameters defaults - stop/p' |
+        grep '\[ -z' | sed 's/&& /;/g' | cut -f2 -d ';' | nl
     echo
 }
 
 # parameters - start
-while [ $# -gt 0 ]; do opt="$1"; shift
+while [ $# -gt 0 ]; do
+    opt="$1"
+    shift
     case $opt in
-        --resource) resource=$1 ;;
-        --header) header=$1 ;;
-        --display) display=$1 ;;
-        --max_lines) max_lines=$1 ;;
-        --status_root) status_root=$1 ;;
-        -h|--help)  usage; exit ;;
+    --resource) resource=$1 ;;
+    --header) header=$1 ;;
+    --display) display=$1 ;;
+    --max_lines) max_lines=$1 ;;
+    --status_root) status_root=$1 ;;
+    -h | --help)
+        usage
+        exit
+        ;;
     esac
     shift
 done
@@ -56,7 +61,7 @@ if [ "$error" != "" ]; then
     echo -n "Error. Mandatory arguments missing:"
     echo "$error" | tr '|' '\n' | nl
     echo '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
-    echo 
+    echo
     usage
     exit 1
 fi
@@ -66,72 +71,52 @@ fi
 ##### parameter seciton stop
 #####
 
-
 #####
 ##### functions start
 #####
 
 # Credits: https://www.unix.com/unix-for-dummies-questions-and-answers/181419-sliding-window-variables.html
-function add_line {
-  typeset i=0
+function add_line() {
+    typeset i=0
 
-  i=${#data_window[@]}
-  if (( $i >= $max_lines )); then
-      i=$(( $max_lines - 1 ))
-  fi
-  for (( ; i > 0; i-- )); do
-      data_window[$i]=${data_window[$(($i-1))]}
-  done
+    i=${#data_window[@]}
+    if (($i >= $max_lines)); then
+        i=$(($max_lines - 1))
+    fi
+    for (( ; i > 0; i--)); do
+        data_window[$i]=${data_window[$(($i - 1))]}
+    done
 
-  data_window[0]=$1
+    data_window[0]=$1
 }
 
-function dump_window {
-  i=${#data_window[@]}
-  for (( ; i > 0; i-- )); do
-      echo ${data_window[$(($i-1))]}
-  done
+function dump_window() {
+    i=${#data_window[@]}
+    for (( ; i > 0; i--)); do
+        echo ${data_window[$(($i - 1))]}
+    done
 }
-
 
 #####
 ##### functions stop
 #####
 
 if [[ $resource == csv:* ]]; then
-	resource_id_column=$(echo $resource | cut -d: -f2)
+    resource_id_column=$(echo $resource | cut -d: -f2)
 else
-	unset resource_id_column
+    unset resource_id_column
 
-	resource_id=$resource
-	resource_tmp=$status_root/$resource_id/tmp
-	mkdir -p $status_root/$resource_id/log
-	mkdir -p $status_root/$resource_id/tmp
+    resource_id=$resource
+    resource_tmp=$status_root/$resource_id/tmp
+    mkdir -p $status_root/$resource_id/log
+    mkdir -p $status_root/$resource_id/tmp
 fi
- 
+
 while read -r line; do
-
-    # extact resource name from stream
-    if [ ! -z "$resource_id_column" ]; then
-	    resource_id=$(echo $line | cut -d$CSVdelimiter -f$resource_id_column)
-	    resource_tmp=$status_root/$resource_id/tmp
-	    if [ ! -d "$status_root/$resource_id" ]; then
-            mkdir -p $status_root/$resource_id/log
-            mkdir -p $status_root/$resource_id/tmp
-	    fi
-    fi
-
     process_line=1
     if [ "$header" != "external" ]; then
         if [ "$header" == "instream" ]; then
             header=$line
-
-            # check if header is stored in resource directory
-            if [ ! -f "$resource_tmp/header" ]; then
-                echo "$header" | tr , '\n' | tr -d ' ' > $resource_tmp/header
-                echo "$header" > $status_root/$resource_id/log/header
-                echo "$header" > $status_root/$resource_id/header
-            fi
 
             if [ "$display" == "yes" ]; then
                 echo $line
@@ -140,32 +125,49 @@ while read -r line; do
         fi
     fi
 
-
     if [ $process_line -eq 1 ]; then
-      # append to log
-      echo $line >> $status_root/$resource_id/log/state
 
-      # keep data history in bash array as sliding window
-      add_line "$line"
+        # extact resource name from stream
+        if [ ! -z "$resource_id_column" ]; then
+            resource_id=$(echo $line | cut -d$CSVdelimiter -f$resource_id_column | tr -d ' ')
+            resource_tmp=$status_root/$resource_id/tmp
+            if [ ! -d "$status_root/$resource_id" ]; then
+                mkdir -p $status_root/$resource_id/log
+                mkdir -p $status_root/$resource_id/tmp
+            fi
+        fi
 
-      echo $header > $status_root/$resource_id/log/state
-      dump_window >> $status_root/$resource_id/log/state
+        # check if header is stored in resource directory
+        if [ ! -f "$resource_tmp/header" ]; then
+            echo "$header" | tr , '\n' | tr -d ' ' >$resource_tmp/header
+            echo "$header" >$status_root/$resource_id/log/header
+            echo "$header" >$status_root/$resource_id/header
+        fi
 
-      # limit log to N lines; use mv/cat? for atomic file change
-      # if [ $max_lines -gt 0 ]; then
-      #   tail -$max_lines $status_root/$resource_id/log/state > $status_root/$resource_id/tmp/state.max_lines
-      #   #echo $header > $status_root/$resource_id/log/state
-      #   cat $status_root/$resource_id/tmp/state.max_lines > $status_root/$resource_id/log/state
-      # fi
+        # append to log
+        echo $line >>$status_root/$resource_id/log/state
 
-      # display
-      if [ "$display" == "yes" ]; then
-        echo $line
-      fi
+        # keep data history in bash array as sliding window
+        add_line "$line"
 
-      # save to state line; use mv/cat? for atomic file change
-      echo $line | tr , '\n' >$resource_tmp/line
-      paste -d = $resource_tmp/header $resource_tmp/line | tr -d ' ' >$status_root/$resource_id/tmp/state.new
-      cat $status_root/$resource_id/tmp/state.new > $status_root/$resource_id/state
+        echo $header >$status_root/$resource_id/log/state
+        dump_window >>$status_root/$resource_id/log/state
+
+        # limit log to N lines; use mv/cat? for atomic file change
+        # if [ $max_lines -gt 0 ]; then
+        #   tail -$max_lines $status_root/$resource_id/log/state > $status_root/$resource_id/tmp/state.max_lines
+        #   #echo $header > $status_root/$resource_id/log/state
+        #   cat $status_root/$resource_id/tmp/state.max_lines > $status_root/$resource_id/log/state
+        # fi
+
+        # display
+        if [ "$display" == "yes" ]; then
+            echo $line
+        fi
+
+        # save to state line; use mv/cat? for atomic file change
+        echo $line | tr , '\n' >$resource_tmp/line
+        paste -d = $resource_tmp/header $resource_tmp/line | tr -d ' ' >$status_root/$resource_id/tmp/state.new
+        cat $status_root/$resource_id/tmp/state.new >$status_root/$resource_id/state
     fi
 done
