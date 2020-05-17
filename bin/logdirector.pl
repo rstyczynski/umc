@@ -461,7 +461,7 @@ $firstLineHeader = 0;
 if ($checkHeaderDups && -e "$dstEffectiveDir/$logNameExt") {
 	open(inf, "<", "$dstEffectiveDir/$logNameExt");
 	if (<inf> =~ m/^datetime,/) {
-		firstLineHeader=1
+		$firstLineHeader = 1;
 	}
 	close(inf);
 
