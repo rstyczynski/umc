@@ -245,7 +245,7 @@ while ( ! $exit ) {
 
 		} else {
 			
-			print "Writing row...."
+			print "Writing row....";
 
 			print outfile $_;
 
@@ -486,7 +486,9 @@ sub openLogFile {
 
 	# add file header only if enabled and the header is not already in the file (if header duplicate checking is enabled)
 	if ( $firstLineHeader eq "" ) {
-		print "Writing header...."
+		
+		print "Writing header....";
+
 		if ( $fileHeader) {
 			if ( $autoDetectHeader ) {
 				#autodetected header is already with new line character
