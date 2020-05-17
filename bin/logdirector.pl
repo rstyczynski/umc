@@ -456,37 +456,39 @@ sub openLogFile {
         $logNameExt=generateRotatedLogName();
     }
 	
-	# check header duplicates - read the first line from the file
-	$firstLineHeader = "";
-	if ($checkHeaderDups && -e "$dstEffectiveDir/$logNameExt") {
-		open(inf, "<", "$dstEffectiveDir/$logNameExt");
-		$firstLineHeader = <inf>;
-		close(inf);
+# check header duplicates - read the first line from the file
+$firstLineHeader = 0;
+if ($checkHeaderDups && -e "$dstEffectiveDir/$logNameExt") {
+	open(inf, "<", "$dstEffectiveDir/$logNameExt");
+	if (<inf> =~ m/^datetime,/) {
+		firstLineHeader=1
+	}
+	close(inf);
 
-		#TODO above code does not detect header. It must be implemented.
+	#TODO above code does not detect header. It must be implemented.
 
-		if ($verbose) { 
-			if ($firstLineHeader ne "") {
-				print "The file containts header: $firstLineHeader";
-			} else {
-				print "There is no header in the file.\n";					
-			}
+	if ($verbose) { 
+		if ($firstLineHeader) {
+			print "The file containts header: $firstLineHeader";
+		} else {
+			print "There is no header in the file.\n";					
 		}
 	}
+}
 
-	# open the file for writing
-	open(outfile, ">>", "$dstEffectiveDir/$logNameExt") || die "logdirector.pl: Cannot open output file: $dstEffectiveDir/$logNameExt, cause:$!";
-	if ($verbose) {print "Opened log file $dstEffectiveDir/$logNameExt\n"; }
-    
-    # add file header only if enabled and the header is not already in the file (if header duplicate checking is enabled)
-    if ( $fileHeader && $firstLineHeader eq "") {
-        if ( $autoDetectHeader ) {
-            #autodetected header is already with new line character
-            print outfile $fileHeader;
-        } else {
-            print outfile $fileHeader . "\n";
-        }
-    }
+# open the file for writing
+open(outfile, ">>", "$dstEffectiveDir/$logNameExt") || die "logdirector.pl: Cannot open output file: $dstEffectiveDir/$logNameExt, cause:$!";
+if ($verbose) {print "Opened log file $dstEffectiveDir/$logNameExt\n"; }
+
+# add file header only if enabled and the header is not already in the file (if header duplicate checking is enabled)
+if ( $fileHeader && $firstLineHeader) {
+	if ( $autoDetectHeader ) {
+		#autodetected header is already with new line character
+		print outfile $fileHeader;
+	} else {
+		print outfile $fileHeader . "\n";
+	}
+}
     
 	#make out_file hot - flush buffers immediately
 	if ($logFlush) {
