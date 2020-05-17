@@ -400,7 +400,7 @@ sub moveLogFile {
             $dstDateSubDir = "$year-$mon-$mday";
             $dstEffectiveDir = "$dstDir/$dstDateSubDir";
 
-            unless(-e $dstEffectiveDir or mkdir $dstEffectiveDir) { die "logdirector.pl: Unable to create $dstEffectiveDir\n"; }
+            unless(-e $dstEffectiveDir or mkdir $dstEffectiveDir, 0000) { die "logdirector.pl: Unable to create $dstEffectiveDir\n"; }
 
         } else {
             $dstEffectiveDir = "$dstDir";
@@ -438,7 +438,7 @@ sub openLogFile {
 		while ( $retry < $retry_limit ) {
 			if ( ! -e $dstEffectiveDir ) {
 				select(undef, undef, undef, rand(0.5));
-				mkdir $dstEffectiveDir;
+				mkdir $dstEffectiveDir, 0000;
 				$retry++;
 			} else {
 				$retry = $retry_limit;
@@ -475,7 +475,7 @@ sub openLogFile {
 	}
 
 	# open the file for writing
-	open(outfile, ">>", "$dstEffectiveDir/$logNameExt") || die "logdirector.pl: Cannot open output file: $!";
+	open(outfile, ">>", "$dstEffectiveDir/$logNameExt") || die "logdirector.pl: Cannot open output file: $dstEffectiveDir/$logNameExt, cause:$!";
 	if ($verbose) {print "Opened log file $dstEffectiveDir/$logNameExt\n"; }
     
     # add file header only if enabled and the header is not already in the file (if header duplicate checking is enabled)
@@ -535,7 +535,7 @@ sub generateRotatedLogName {
 		while ( $retry < $retry_limit ) {
 			if ( ! -e $dstEffectiveDir ) {
 				select(undef, undef, undef, rand(0.5));
-				mkdir $dstEffectiveDir;
+				mkdir $dstEffectiveDir, 0000;
 				$retry++;
 			} else {
 				$retry = $retry_limit;
