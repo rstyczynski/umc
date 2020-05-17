@@ -475,6 +475,10 @@ sub openLogFile {
 		if ($firstLine =~ /^datetime,/ ) {
 			$firstLineHeader = $firstLine;
 			$headerAlreadyDetected=1;
+
+			if ($teemode) {
+				print $firstLine;
+			}
 		}
 		close(inf);
 
@@ -494,8 +498,6 @@ sub openLogFile {
 	# add file header only if enabled and the header is not already in the file (if header duplicate checking is enabled)
 	if ( $firstLineHeader eq "" ) {
 		
-		print "Writing header.... $firstLineHeader";
-
 		if ( $fileHeader) {
 			if ( $autoDetectHeader ) {
 				#autodetected header is already with new line character
