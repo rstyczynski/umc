@@ -483,6 +483,7 @@ sub openLogFile {
 
 	# add file header only if enabled and the header is not already in the file (if header duplicate checking is enabled)
 	if ( $firstLineHeader == 0 ) {
+	print "$firstLineHeader\n";
 		if ( $fileHeader) {
 			if ( $autoDetectHeader ) {
 				#autodetected header is already with new line character
