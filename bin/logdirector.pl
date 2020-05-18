@@ -411,7 +411,7 @@ sub moveLogFile {
             $dstDateSubDir = "$year-$mon-$mday";
             $dstEffectiveDir = "$dstDir/$dstDateSubDir";
 
-            unless(-e $dstEffectiveDir or mkdir $dstEffectiveDir, 0000) { die "logdirector.pl: Unable to create $dstEffectiveDir\n"; }
+            unless(-e $dstEffectiveDir or mkdir $dstEffectiveDir, 0777) { die "logdirector.pl: Unable to create $dstEffectiveDir\n"; }
 
         } else {
             $dstEffectiveDir = "$dstDir";
@@ -449,7 +449,7 @@ sub openLogFile {
 		while ( $retry < $retry_limit ) {
 			if ( ! -e $dstEffectiveDir ) {
 				select(undef, undef, undef, rand(0.5));
-				mkdir $dstEffectiveDir, 0000;
+				mkdir $dstEffectiveDir, 0777;
 				$retry++;
 			} else {
 				$retry = $retry_limit;
@@ -555,7 +555,7 @@ sub generateRotatedLogName {
 		while ( $retry < $retry_limit ) {
 			if ( ! -e $dstEffectiveDir ) {
 				select(undef, undef, undef, rand(0.5));
-				mkdir $dstEffectiveDir, 0000;
+				mkdir $dstEffectiveDir, 0777;
 				$retry++;
 			} else {
 				$retry = $retry_limit;
