@@ -411,6 +411,7 @@ sub moveLogFile {
             $dstDateSubDir = "$year-$mon-$mday";
             $dstEffectiveDir = "$dstDir/$dstDateSubDir";
 
+			# TODO: fix this. create group umc 
 			umask 0777;
             unless(-e $dstEffectiveDir or mkdir $dstEffectiveDir) { die "logdirector.pl: Unable to create $dstEffectiveDir\n"; }
 
@@ -451,6 +452,7 @@ sub openLogFile {
 			if ( ! -e $dstEffectiveDir ) {
 				select(undef, undef, undef, rand(0.5));
 
+				# TODO: fix this. create group umc 
 				umask 0777;
 				mkdir $dstEffectiveDir;
 				$retry++;
@@ -558,6 +560,8 @@ sub generateRotatedLogName {
 		while ( $retry < $retry_limit ) {
 			if ( ! -e $dstEffectiveDir ) {
 				select(undef, undef, undef, rand(0.5));
+
+				# TODO: fix this. create group umc 
 				umask 0777;
 				mkdir $dstEffectiveDir;
 				$retry++;
