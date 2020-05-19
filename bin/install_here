@@ -85,10 +85,10 @@ cat > $umccfg/soa1.dses <<EOF
 #!/bin/bash
 
 function clean_stop() {
-    for kill_pid in \$(cat $umccfg/host1.pid); do
+    for kill_pid in \$(cat $umccfg/soa1.pid); do
        killtree.sh \$kill_pid
     done
-    rm $umccfg/host1.pid
+    rm $umccfg/soa1.pid
     exit
 }
 
@@ -98,7 +98,7 @@ if [ "\$1" == "stop" ]; then
     clean_stop
 fi
 
-if [ -f $umccfg/host1.pid ]; then
+if [ -f $umccfg/soa1.pid ]; then
   echo "Data collectors already running. Use stop to stop."
   exit 1
 fi
@@ -136,10 +136,10 @@ cat > $umccfg/wls1.dses <<EOF
 #!/bin/bash
 
 function clean_stop() {
-    for kill_pid in \$(cat $umccfg/host1.pid); do
+    for kill_pid in \$(cat $umccfg/wls1.pid); do
        killtree.sh \$kill_pid
     done
-    rm $umccfg/host1.pid
+    rm $umccfg/wls1.pid
     exit
 }
 
@@ -149,7 +149,7 @@ if [ "\$1" == "stop" ]; then
     clean_stop
 fi
 
-if [ -f $umccfg/host1.pid ]; then
+if [ -f $umccfg/wls1.pid ]; then
   echo "Data collectors already running. Use stop to stop."
   exit 1
 fi
