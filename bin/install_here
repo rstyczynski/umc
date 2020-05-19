@@ -1,0 +1,179 @@
+#!/bin/bash
+
+echo 'umc in place installation script started.'
+
+if [ ! -f umc/bin/umc.h ]; then 
+    echo "Error. umc is not in this direcotry. Cannot continue."
+    exit 1
+fi
+
+if [ -f /etc/umc/umc.conf ]; then
+  mkdir -p ~/.umc
+  cat mw.conf >> ~/.umc/umc.conf
+elif [ -f  ~/.umc/umc.conf ]; then
+  cat mw.conf >> ~/.umc/umc.conf
+else
+  cat ~/umc/umc.conf >> umc/etc/umc.conf
+fi
+
+. umc/bin/umc.h 
+
+# --- Prepare data collectors
+
+umccfg=$PWD/etc; mkdir -p $umccfg
+ifname=$(ip a | grep '2:' | head -1 | tr -d ' ' | cut -d: -f2)
+export status_root=$PWD/obd
+export umc_log=$PWD/log
+
+cat > $umccfg/host1.dses <<EOF
+#!/bin/bash
+
+
+function clean_stop() {
+    for kill_pid in \$(cat $umccfg/host1.pid); do
+       killtree.sh \$kill_pid
+    done
+    exit
+}
+
+trap clean_stop INT
+
+if [ "\$1" == "stop" ]; then
+    clean_stop
+fi
+
+source $PWD/umc/bin/umc.h
+
+# prepare log directory
+mkdir -p $umc_log
+chmod 777 $umc_log
+
+# prepare odb directory
+mkdir -p $status_root
+chmod 777 $status_root
+
+echo \$\$ >$umccfg/host1.pid
+
+(umc vmstat collect 5 2147483647  & echo \$! >&3) 3>>$umccfg/host1.pid | 
+csv2obd --resource vmstat | 
+logdirector.pl -addDateSubDir -dir $umc_log -name vmstat -detectHeader -checkHeaderDups -flush &
+
+
+(umc iostat collect 5 2147483647  & echo \$! >&3) 3>>$umccfg/host1.pid | 
+csv2obd --resource iostat | 
+logdirector.pl -addDateSubDir -dir $umc_log -name iostat -detectHeader -checkHeaderDups -flush &
+echo \$! >>$umccfg/host1.pid
+
+(umc ifconfig collect 5 2147483647  $ifname  & echo \$! >&3) 3>>$umccfg/host1.pid | 
+csv2obd --resource $ifname | 
+logdirector.pl -addDateSubDir -dir $umc_log -name ifconfig_$ifname -detectHeader -checkHeaderDups -flush -tee |
+dvdt --resource $ifname | 
+logdirector.pl -addDateSubDir -dir $umc_log -name ifconfig_$ifname\_dt -detectHeader -checkHeaderDups -flush &
+
+EOF
+chmod +x $umccfg/host1.dses
+
+
+cat > $umccfg/soa1.dses <<EOF
+#!/bin/bash
+
+function clean_stop() {
+    for kill_pid in \$(cat $umccfg/host1.pid); do
+       killtree.sh \$kill_pid
+    done
+    exit
+}
+
+trap clean_stop INT
+
+if [ "\$1" == "stop" ]; then
+    clean_stop
+fi
+
+source $PWD/umc/bin/umc.h
+export status_root=$PWD/obd
+export umc_log=$PDW/log
+
+# prepare log directory
+mkdir -p $umc_log
+chmod 777 $umc_log
+
+# prepare odb directory
+mkdir -p $status_root
+chmod 777 $status_root
+
+# check odb dir
+if [ ! -d $status_rootd ]; then
+  echo "Error. $status_root directory does not exist. System reboot? Create $status_root and start service."
+  exit 1
+fi
+
+echo \$\$ >$umccfg/soa1.pid
+
+(umc soabindings collect 60 1440 --url=t3://$(hostname -i):7001  & echo \$! >&3) 3>>$umccfg/soa1.pid | 
+csv2obd --resource csv:19 --status_root /run/umc/obd |
+logdirector.pl -addDateSubDir -dir $umc_log -name soabindings -detectHeader -checkHeaderDups -flush &
+
+EOF
+chmod +x $umccfg/soa1.dses
+
+
+cat > $umccfg/wls1.dses <<EOF
+#!/bin/bash
+
+
+
+function clean_stop() {
+    for kill_pid in \$(cat $umccfg/host1.pid); do
+       killtree.sh \$kill_pid
+    done
+    exit
+}
+
+trap clean_stop INT
+
+if [ "\$1" == "stop" ]; then
+    clean_stop
+fi
+
+source $PWD/umc/bin/umc.h
+export status_root=$PWD/obd
+export umc_log=$PDW/log
+
+# check odb dir
+if [ ! -d $status_root ]; then
+  echo "Error. $status_root directory does not exist. System reboot? Create $status_root and start service."
+  exit 1
+fi
+
+echo \$\$ >$umccfg/wls1.pid
+
+(umc wls collect 60 1440 --url=t3://$(hostname -i):7001  & echo \$! >&3) 3>>$umccfg/wls1.pid |  
+# csv2obd --resource csv:19 --status_root /run/umc/obd |
+logdirector.pl -addDateSubDir -dir $umc_log -name wls_general -detectHeader -checkHeaderDups -flush &
+echo \$! >>$umccfg/wls1.pid
+
+(umc wls collect 60 1440 --subsystem=channel --url=t3://$(hostname -i):7001  & echo \$! >&3) 3>>$umccfg/wls1.pid |  
+# csv2obd --resource csv:19 --status_root /run/umc/obd |
+logdirector.pl -addDateSubDir -dir $umc_log -name wls_channel -detectHeader -checkHeaderDups -flush &
+echo \$! >>$umccfg/wls1.pid
+
+(umc wls collect 60 1440 --subsystem=jmsruntime --url=t3://$(hostname -i):7001   & echo \$! >&3) 3>>$umccfg/wls1.pid |
+# csv2obd --resource csv:19 --status_root /run/umc/obd |
+logdirector.pl -addDateSubDir -dir $umc_log -name wls_jmsruntime -detectHeader -checkHeaderDups -flush &
+echo \$! >>$umccfg/wls1.pid
+
+(umc wls collect 60 1440 --subsystem=jmsserver --url=t3://$(hostname -i):7001   & echo \$! >&3) 3>>$umccfg/wls1.pid | 
+# csv2obd --resource csv:19 --status_root /run/umc/obd |
+logdirector.pl -addDateSubDir -dir $umc_log -name wls_jmsserver -detectHeader -checkHeaderDups -flush &
+echo \$! >>$umccfg/wls1.pid
+
+(umc wls collect 60 1440 --subsystem=datasource --url=t3://$(hostname -i):7001   & echo \$! >&3) 3>>$umccfg/wls1.pid | 
+# csv2obd --resource csv:19 --status_root /run/umc/obd |
+logdirector.pl -addDateSubDir -dir $umc_log -name wls_datasource -detectHeader -checkHeaderDups -flush &
+
+EOF
+chmod +x $umccfg/wls1.dses
+
+
+echo 'Done.'
