@@ -33,6 +33,7 @@ function clean_stop() {
     for kill_pid in \$(cat $umccfg/host1.pid); do
        killtree.sh \$kill_pid
     done
+    rm $umccfg/host1.pid
     exit
 }
 
@@ -40,6 +41,11 @@ trap clean_stop INT
 
 if [ "\$1" == "stop" ]; then
     clean_stop
+fi
+
+if [ -f $umccfg/host1.pid ]; then
+  echo "Data collectors already running. Use stop to stop."
+  exit 1
 fi
 
 source $PWD/umc/bin/umc.h
@@ -70,6 +76,7 @@ logdirector.pl -addDateSubDir -dir $umc_log -name ifconfig_$ifname -detectHeader
 dvdt --resource $ifname | 
 logdirector.pl -addDateSubDir -dir $umc_log -name ifconfig_$ifname\_dt -detectHeader -checkHeaderDups -flush &
 
+echo "Data collectors started in background. Execute with 'stop' to stop them"
 EOF
 chmod +x $umccfg/host1.dses
 
@@ -81,6 +88,7 @@ function clean_stop() {
     for kill_pid in \$(cat $umccfg/host1.pid); do
        killtree.sh \$kill_pid
     done
+    rm $umccfg/host1.pid
     exit
 }
 
@@ -88,6 +96,11 @@ trap clean_stop INT
 
 if [ "\$1" == "stop" ]; then
     clean_stop
+fi
+
+if [ -f $umccfg/host1.pid ]; then
+  echo "Data collectors already running. Use stop to stop."
+  exit 1
 fi
 
 source $PWD/umc/bin/umc.h
@@ -114,6 +127,7 @@ echo \$\$ >$umccfg/soa1.pid
 csv2obd --resource csv:19 --status_root /run/umc/obd |
 logdirector.pl -addDateSubDir -dir $umc_log -name soabindings -detectHeader -checkHeaderDups -flush &
 
+echo "Data collectors started in background. Execute with 'stop' to stop them"
 EOF
 chmod +x $umccfg/soa1.dses
 
@@ -121,12 +135,11 @@ chmod +x $umccfg/soa1.dses
 cat > $umccfg/wls1.dses <<EOF
 #!/bin/bash
 
-
-
 function clean_stop() {
     for kill_pid in \$(cat $umccfg/host1.pid); do
        killtree.sh \$kill_pid
     done
+    rm $umccfg/host1.pid
     exit
 }
 
@@ -134,6 +147,11 @@ trap clean_stop INT
 
 if [ "\$1" == "stop" ]; then
     clean_stop
+fi
+
+if [ -f $umccfg/host1.pid ]; then
+  echo "Data collectors already running. Use stop to stop."
+  exit 1
 fi
 
 source $PWD/umc/bin/umc.h
@@ -172,6 +190,7 @@ echo \$! >>$umccfg/wls1.pid
 # csv2obd --resource csv:19 --status_root /run/umc/obd |
 logdirector.pl -addDateSubDir -dir $umc_log -name wls_datasource -detectHeader -checkHeaderDups -flush &
 
+echo "Data collectors started in background. Execute with 'stop' to stop them"
 EOF
 chmod +x $umccfg/wls1.dses
 
