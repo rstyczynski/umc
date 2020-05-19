@@ -21,9 +21,9 @@ function doasroot {
     cd - > /dev/null
 
     find /opt/umc/tools -type f ! -name "*.*"  -exec chmod ugo+rx {} +
-    find /opt/umc/tools -type f -name *.sh  -exec chmod ugo+rx {} +
-    find /opt/umc/tools -type f -name *.py  -exec chmod ugo+rx {} +
-    find /opt/umc/tools -type f -name *.pl  -exec chmod ugo+rx {} +
+    find /opt/umc/tools -type f -name "*.sh"  -exec chmod ugo+rx {} +
+    find /opt/umc/tools -type f -name "*.py"  -exec chmod ugo+rx {} +
+    find /opt/umc/tools -type f -name "*.pl"  -exec chmod ugo+rx {} +
 
     #configuration | keep it protected!
     if [ ! -d '/etc/umc' ]; then
