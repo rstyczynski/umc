@@ -277,7 +277,7 @@ def getStats(targetSystem, targetPort):
             send=ms
 
             ## recv packet
-            buf = s.recv(BUFSIZE)
+            buf = s.recv(1500)
             ms = (time.time() - start_time ) * 1000
             response=ms
 
