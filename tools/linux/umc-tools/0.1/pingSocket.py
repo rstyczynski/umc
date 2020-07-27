@@ -79,7 +79,7 @@ def getStats(targetSystem, targetPort):
         # UDP
         if (monitor_transport == socket.SOCK_DGRAM):
             start_time = time.time()
-            sock.sendto(MESSAGE, (UDP_IP, UDP_PORT))
+            socket.sendto(MESSAGE, (UDP_IP, UDP_PORT))
             ms = (time.time() - start_time ) * 1000
             connect=ms
 
