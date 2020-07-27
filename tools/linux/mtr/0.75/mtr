@@ -2,5 +2,7 @@
 
 target=$@
 
-echo "$target,$(sudo mtr -c 1 --report --report-wide $target | tail -1 | tr -s ' ' | sed 's/^ //' | tr ' ' ',' | sed 's/.,/,/'"
+echo "$target,$(sudo mtr -c 1 --report --report-wide $target | tail -1 | tr -s ' ' | sed 's/^ //' | tr ' ' ',' | sed 's/.,/,/')"
+
+
 
