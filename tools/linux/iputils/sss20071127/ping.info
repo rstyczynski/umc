@@ -12,7 +12,7 @@ ping:
         method:     
         directive:  
     loop:
-        method:     
+        method:     external
         directive:  
     timestamp:
         method:     
