@@ -282,7 +282,7 @@ while ( ! $exit ) {
 
 		# rotate on day change i.e. at midnight
 		my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
-		if ( $mday > $mday_previous){
+		if ( $mday != $mday_previous or ){
 			$rotate = 1;
 
 			$mday_previous = $mday;
