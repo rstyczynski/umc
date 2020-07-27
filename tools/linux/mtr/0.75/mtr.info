@@ -3,7 +3,7 @@ mtr:
     layer:      OS
     subsystem:  kernel
     header: >-
-        hops,host,loss,snt,last,avg,best,wrst,stdev
+        address,hops,host,loss,snt,last,avg,best,wrst,stdev
     rawheader:
         method:     command
         directive:  sudo mtr -c 1 --report --report-wide localhost | head -1 | tr -s ' ' | sed 's/^ //' | tr ' ' ',' | sed 's/.,/,/'
