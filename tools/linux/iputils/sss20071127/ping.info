@@ -3,7 +3,7 @@ ping:
     layer:      OS
     subsystem:  kernel
     header: >-
-        min,avg,max,mdev
+        target,min,avg,max,mdev
     rawheader:
         method:     command
         directive:  ping -c1  localhost | tail -1 | cut -f1 -d= | tr '/' ' ' | cut -d' ' -f2-5  | tr ' ' ','
