@@ -38,7 +38,7 @@ def getStats(targetSystem, targetPort):
     errorStr='OK'
     #
     try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+        s = socket.socket(socket.AF_INET, monitor_transport) 
         s.settimeout(2)
         #
         start_time = time.time()
@@ -157,6 +157,11 @@ for opt, arg in opts:
         monitor_subsystems = arg.split(',')
     elif opt in ('--subsystem'):
         monitor_subsystems = arg
+    elif opt in ('--transport'):
+        if arg="udp":
+            monitor_transport = socket.SOCK_DGRAM
+        else:
+            monitor_transport = socket.SOCK_STREAM
     elif opt in ('--longResponse'):
         makeResponseShort = False
     elif opt in ('--timedelimiter'):
