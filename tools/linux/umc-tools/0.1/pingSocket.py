@@ -1,13 +1,14 @@
 #!/usr/bin/env python2
 
 import socket
-import os
 import time
 import datetime
 import time as pytime
 import csv
 import sys
 import getopt
+import os
+import struct
 
 from time import gmtime, strftime
 
