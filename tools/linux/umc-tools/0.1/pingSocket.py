@@ -254,7 +254,11 @@ def getStats(targetSystem, targetPort):
             s = socket.socket(socket.AF_INET, monitor_transport, socket.getprotobyname('icmp'))
             s.settimeout(2)
 
-            s.connect((addr,22))
+            # connect
+            start_time = time.time()
+            s.connect((addressStr,22))
+            ms = (time.time() - start_time ) * 1000
+            connect=ms
 
             os.setuid(os.getuid())
             process_id = os.getpid()
@@ -267,6 +271,9 @@ def getStats(targetSystem, targetPort):
 
             start_time = time.time()
             s.send(base_packet.packet)
+            ms = (time.time() - start_time ) * 1000
+            send=ms
+
             ## recv packet
             buf = s.recv(BUFSIZE)
             ms = (time.time() - start_time ) * 1000
@@ -362,7 +369,7 @@ for opt, arg in opts:
             monitor_transport = socket.SOCK_DGRAM
         if(arg == "icmp"):
             monitor_transport = socket.SOCK_RAW
-            
+
     elif opt in ('--longResponse'):
         makeResponseShort = False
     elif opt in ('--timedelimiter'):
