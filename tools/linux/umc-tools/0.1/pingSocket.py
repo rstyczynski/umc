@@ -158,7 +158,7 @@ for opt, arg in opts:
     elif opt in ('--subsystem'):
         monitor_subsystems = arg
     elif opt in ('--transport'):
-        if arg="udp":
+        if(arg == "udp"):
             monitor_transport = socket.SOCK_DGRAM
         else:
             monitor_transport = socket.SOCK_STREAM
