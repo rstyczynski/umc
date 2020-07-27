@@ -50,29 +50,39 @@ def getStats(targetSystem, targetPort):
         addressStr =  socket.gethostbyname(targetSystem) 
         ms = (time.time() - start_time ) * 1000
         resolv=ms
-        #
-        start_time = time.time()
-        s.connect((addressStr , targetPort))
-        ms = (time.time() - start_time ) * 1000
-        connect=ms
-        #
-        start_time = time.time()
-        s.sendall("GET / HTTP/1.1\r\nHost: " + targetSystem + "\r\n\r\n")
-        #s.sendall("\n")
-	ms = (time.time() - start_time ) * 1000
-        send=ms
-        #
-        start_time = time.time()
-        responseStr = s.recv(4096)
-        ms = (time.time() - start_time ) * 1000
-        response=ms
-        if makeResponseShort:
-            responseStr = responseStr[:10]
-        #
-        start_time = time.time()
-        s.close
-        ms = (time.time() - start_time ) * 1000
-        close=ms
+
+        # TCP
+        if (monitor_transport == socket.SOCK_STREAM):
+            start_time = time.time()
+            s.connect((addressStr , targetPort))
+            ms = (time.time() - start_time ) * 1000
+            connect=ms
+            #
+            start_time = time.time()
+            s.sendall("GET / HTTP/1.1\r\nHost: " + targetSystem + "\r\n\r\n")
+            #s.sendall("\n")
+            ms = (time.time() - start_time ) * 1000
+            send=ms
+            #
+            start_time = time.time()
+            responseStr = s.recv(4096)
+            ms = (time.time() - start_time ) * 1000
+            response=ms
+            if makeResponseShort:
+                responseStr = responseStr[:10]
+            #
+            start_time = time.time()
+            s.close
+            ms = (time.time() - start_time ) * 1000
+            close=ms
+
+        # UDP
+        if (monitor_transport == socket.SOCK_DGRAM):
+            start_time = time.time()
+            sock.sendto(MESSAGE, (UDP_IP, UDP_PORT))
+            ms = (time.time() - start_time ) * 1000
+            connect=ms
+
     except Exception as ex:
         errorStr = str(ex)
     #
