@@ -80,6 +80,7 @@ def getStats(targetSystem, targetPort):
         if (monitor_transport == socket.SOCK_DGRAM):
             start_time = time.time()
             s.sendto('Hello!', (addressStr, targetPort))
+            data, server = s.recvfrom(2048)
             ms = (time.time() - start_time ) * 1000
             connect=ms
 
