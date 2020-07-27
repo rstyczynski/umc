@@ -132,6 +132,7 @@ def usage():
 #
 #
 monitor_subsystem = 'oracle.com:80'
+monitor_transport = socket.SOCK_STREAM
 monitor_subsystems = ['oracle.com:80','google.com:80']
 monitor_count = 10
 monitor_interval = 5
@@ -170,8 +171,6 @@ for opt, arg in opts:
     elif opt in ('--transport'):
         if(arg == "udp"):
             monitor_transport = socket.SOCK_DGRAM
-        else:
-            monitor_transport = socket.SOCK_STREAM
     elif opt in ('--longResponse'):
         makeResponseShort = False
     elif opt in ('--timedelimiter'):
