@@ -288,7 +288,7 @@ def getStats(targetSystem, targetPort):
     #
     if(timestamp): 
         now = datetime.datetime.now()
-        writer.writerow([now.strftime('%d-%m-%Y' + timedelimiter + '%H:%M:%S'), strftime("%z", gmtime()), str(int(pytime.time())), system, source, 
+        writer.writerow([now.strftime('%Y-%m-%d' + timedelimiter + '%H:%M:%S'), strftime("%z", gmtime()), str(int(pytime.time())), system, source, 
                                       targetSystem, targetPort, addressStr, addressFullStr, resolv, resolvFull, connect, send, response, close, responseStr, errorStr])
     else:
         writer.writerow([targetSystem, targetPort, addressStr, addressFullStr, resolv, resolvFull, connect, send, response, close, 
@@ -309,7 +309,7 @@ def printStats(monitor_subsystems, monitor_count, monitor_interval):
             time.sleep(monitor_interval)
 
 def printHeader():
-    if(timestamp): 
+    if(timestamp == True): 
         header=globalheader.split(delimiter)
         header.extend(['targetName', 'targetPort', 'address', 'dnsInfo', 'resolve', 'resolveFull', 'connect', 'send', 'response', 'close',
             'response', 'error'

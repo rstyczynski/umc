@@ -1,0 +1,176 @@
+<html>
+
+<head>
+    <script type="text/javascript" src="lib/dygraph.js"></script>
+    <link rel="stylesheet" src="lib/dygraph.css" />
+    <style type="text/css">
+        /*
+      NOTE: dygraphs does set some properties on the built-in legend, e.g.
+      background-color and left. If you wish to override these, you can add
+      "!important" to your CSS styles, as below.
+
+      The full list of styles for which this is necessary are listed in
+      plugins/legend.js. They are:
+      o position
+      o font-size
+      o z-index
+      o width
+      o top
+      o left
+      o background
+      o line-height
+      o text-align
+      o overflow
+      */
+
+        #graphdiv1 .dygraph-legend {
+            width: 1000px;
+            background-color: transparent !important;
+            left: 0px !important;
+            font-size: 20;
+        }
+
+        /* to keep chart aligned at X axis */
+        .verticalText {
+            text-align: center;
+            white-space: nowrap;
+            width: 150px;
+        }
+
+        body {
+            background-color: #dfbf9f;
+            color: #0000 !important;
+            text-shadow: 1px 1px #444;
+        }
+
+        #chart-legend {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background-color: hsla(170, 58%, 86%, 0.932); /* with opacity */
+            z-index: 2;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div id="chart-legend"></div>
+    
+    <title id='main_title'>Service network metrics</title>
+    <h1 id='body_title' align="center">Service network metrics</h1>
+
+    <p align="center">
+    <a id='link_rdw'>previous</a><text id='data_date'></text><a id='link_fwd'>next</a>
+    </p>
+
+    <!-- ping tcp host -->
+    <h2>Host</h2>
+    <table width='1300px'>
+        <tr>
+            <td rowspan="1" class="verticalText">tcp</td>
+            <td>
+                <!-- connect, response -->
+                <div id="chart-socket-service" style="width:800px; height:150px;"></div>
+            </td>
+            <td>
+                <!-- dns resolve, dns full info -->
+                <div id="chart-socket-service-dns" style="width:400px; height:150px;"></div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- ping tcp internet -->
+    <h2>Internet</h2>
+    <table width='1300px'>
+        <tr>
+            <td rowspan="1" class="verticalText">tcp</td>
+            <td>
+                <!-- connect, response -->
+                <div id="chart-socket-internet" style="width:800px; height:150px;"></div>
+            </td>
+            <td>
+                <!-- dns resolve, dns full info -->
+                <div id="chart-socket-internet-dns" style="width:400px; height:150px;"></div>
+            </td>
+        </tr>
+    </table>
+
+
+    <script type="text/javascript">
+
+        function date2text(date_obj) {
+            dd = String(date_obj.getDate()).padStart(2, '0');
+            mm = String(date_obj.getMonth() + 1).padStart(2, '0');
+            yyyy = date_obj.getFullYear();
+
+            date_txt = yyyy + '-' + mm + '-' + dd;
+            return date_txt;
+        }
+
+        params = (new URL(document.location)).searchParams;
+
+        svc_name = params.get('service_name');
+        document.getElementById('main_title').textContent = "Service network metrics - " + svc_name;
+        document.getElementById('body_title').textContent = "Service network metrics - " + svc_name;
+
+        csv_date = params.get('date');
+        if (!csv_date) {
+            today = new Date();
+            csv_date = date2text(today);
+        }
+        document.getElementById('data_date').textContent = " | " + csv_date + " | ";
+        csv_date_rwd = new Date(csv_date);
+        csv_date_rwd.setDate(csv_date_rwd.getDate() - 1 );
+
+        csv_date_fwd = new Date(csv_date);
+        csv_date_fwd.setDate(csv_date_fwd.getDate() + 1 );
+
+        link_rdw = location.protocol + '//' + location.host + location.pathname + '?service_name=' + svc_name + '&date=' + date2text(csv_date_rwd);
+        link_fwd = location.protocol + '//' + location.host + location.pathname + '?service_name=' + svc_name + '&date=' + date2text(csv_date_fwd);
+
+        document.getElementById("link_rdw").setAttribute("href",link_rdw);
+        document.getElementById("link_rdw").textContent = date2text(csv_date_rwd);
+        document.getElementById("link_fwd").setAttribute("href",link_fwd);
+        document.getElementById("link_fwd").textContent = date2text(csv_date_fwd);
+
+
+        var g100 = new Dygraph(document.getElementById("chart-socket-service"),
+            "/umc/log/" + csv_date + "/socket_" + svc_name + "_service.log", {
+            labelsDiv: "chart-legend",
+            visibility: [false, false, false, false,         // timezone,timestamp,system,source
+                         false, false, false, false,         // targetName,targetPort,address,dnsInfo
+                         true, true, true, true, true, true, // resolve,resolveFull,connect,send,response,close
+                         false, false]                       // response,error
+        });
+        var g101 = new Dygraph(document.getElementById("chart-socket-service-dns"),
+            "/umc/log/" + csv_date + "/socket_" + svc_name + "_service.log", {
+            labelsDiv: "chart-legend",
+            visibility: [false, false, false, false,         // timezone,timestamp,system,source
+                         false, false, false, false,         // targetName,targetPort,address,dnsInfo
+                         true, true, true, true, true, true, // resolve,resolveFull,connect,send,response,close
+                         false, false]                       // response,error
+        });
+
+        var g200 = new Dygraph(document.getElementById("chart-socket-internet"),
+            "/umc/log/" + csv_date + "/socket_" + svc_name + "_internet.log", {
+            labelsDiv: "chart-legend",
+            visibility: [false, false, false, false,         // timezone,timestamp,system,source
+                         false, false, false, false,         // targetName,targetPort,address,dnsInfo
+                         true, true, true, true, true, true, // resolve,resolveFull,connect,send,response,close
+                         false, false]                       // response,error
+        });
+        var g201 = new Dygraph(document.getElementById("chart-socket-internet-dns"),
+            "/umc/log/" + csv_date + "/socket_" + svc_name + "_internet.log", {
+            labelsDiv: "chart-legend",
+            visibility: [false, false, false, false,         // timezone,timestamp,system,source
+                         false, false, false, false,         // targetName,targetPort,address,dnsInfo
+                         true, true, true, true, true, true, // resolve,resolveFull,connect,send,response,close
+                         false, false]                       // response,error
+        });
+ 
+    </script>
+
+</body>
+
+</html>
