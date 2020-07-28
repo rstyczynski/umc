@@ -197,7 +197,7 @@ def getStats(targetSystem, targetPort):
     try:
         #
         start_time = time.time()
-        addressFullStr=socket.getaddrinfo(targetSystem, targetPort)
+        addressFullStr = str(socket.getaddrinfo(targetSystem, targetPort))
         addressFullStr = addressFullStr.replace(',', ';') # to make easy conversion to CSV
         ms = (time.time() - start_time ) * 1000
         resolvFull=ms
