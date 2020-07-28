@@ -81,8 +81,8 @@ GetOptions ('dir=s'   	    => \$dstDir,      	# string
 		    'rotateByTime=s'=> \$rotateByTime,	# string
 		    'timeLimit=i'   => \$timePerLog,	# integer
             'flush'		    => \$logFlush,      # flag
- 	       	'start'		    => \$rotateOnStart, # flag
-	    'tee' 	    => \$teemode, # flag
+ 	       	'rotateOnStart'		=> \$rotateOnStart, # flag
+	   		'tee' 	    => \$teemode, # flag
             'verbose'	    => \$verbose,      	# flag
             'timeRotationInThread' => \$timeRotationInThread,  # flag
             'rotateOnThreadEnd' => \$rotateOnThreadEnd, # flag
@@ -188,6 +188,7 @@ if ($rotateOnStart){
 	moveLogFile();
 }
 
+
 # keep start day to rotate on day change
 my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
 my $mday_previous = $mday;
@@ -283,7 +284,13 @@ while ( ! $exit ) {
 		# rotate on day change i.e. at midnight
 		my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
 		if ( $mday != $mday_previous ){
-			$rotate = 1;
+			# Do not rotate!
+			# $rotate = 1;
+
+			# Move to new dirctory only! 
+			lock($logfilerotationlock);
+			close(outfile);
+	        openLogFile();
 
 			$mday_previous = $mday;
 		}
@@ -342,7 +349,6 @@ sub timeRotationThread {
 			} else {
 				if ($verbose) { print "File was not rotated in thread as there were no lines writen to the current file.\n"; }
 			}
-
 		}
 	}
 }
@@ -380,6 +386,7 @@ sub signal_handler_ROTATE {
 sub signal_handler_EXIT {
 	$exit = 1;
 }
+
 
 sub rotateLogFile {
 	{
@@ -615,7 +622,7 @@ logdirector.pl - stdout log director and rotation script.
  -limit 	number of lines or bytes in single log file. Default values are 100 k lines and 50 mega bytes. Value provided as integer,
  -rotateByTime	rotation done by clock of process run time. Default is clock,
  -timeLimit	time limit in seconds. Default is 86400 (1 day),
- -startup 	rotate on startup. By default doesn't rotate on startup,
+ -rotateOnStart 	rotate on start. By default doesn't rotate on start,
 
  -timeRotationInThread 
                 enable time rotation in thread. Useful when time rotation needs to be independent of data coming from stdin,
