@@ -4,5 +4,5 @@ delay=$1
 count=$2
 shift; shift
 
-df -T -P $@ | sed -n $sedBUFFER '2,$p' | sed $sedBUFFER "s/  */$CSVDelimiter/g;s/^ $CSVDelimiter//;s/$CSVDelimiter $//"
+df -T -P $@ | sed -n $sedBUFFER '2,$p' | sed $sedBUFFER "s/  */$CSVdelimiter/g;s/^ $CSVdelimiter//;s/$CSVdelimiter $//"
 
