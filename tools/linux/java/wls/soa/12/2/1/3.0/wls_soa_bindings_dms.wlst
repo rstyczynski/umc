@@ -413,7 +413,8 @@ for opt, arg in opts:
         usage()
         sys.exit(2)
 
-#
+# w/o password: https://docs.oracle.com/cd/E11035_01/wls100/config_scripting/reference.html#wp1005383
+# Use the credentials that are stored in the Administration Server’s boot.properties file. 
 connect(url=admin_url, adminServerName=admin_name)
 
 if printrawheader==true:
@@ -424,8 +425,3 @@ else:
 #
 disconnect()
 exit()
-
-
-
-
-
