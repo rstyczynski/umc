@@ -2,5 +2,5 @@
 
 file=$1
 
-df -T -P $file | sed -n $sedBUFFER '2,$p' | sed $sedBUFFER "s/  */$CSVdelimiter/g;s/^ $CSVdelimiter//;s/$CSVdelimiter $//"
+df -T -P $file | sed -n $sedBUFFER '2,$p' | sed $sedBUFFER "s/  */$CSVdelimiter/g;s/^ $CSVdelimiter//;s/$CSVdelimiter $//;s/%//"
 
