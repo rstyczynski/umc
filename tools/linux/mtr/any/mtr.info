@@ -1,0 +1,25 @@
+mtr:
+    version:    1.0
+    layer:      OS
+    subsystem:  kernel
+    header: >-
+        address,hops,host,loss,snt,last,avg,best,wrst,stdev
+    rawheader:
+        method:     command
+        directive:  sudo mtr -c 1 --report --report-wide localhost | head -1 | tr -s ' ' | sed 's/^ //' | tr ' ' ',' | sed 's/.,/,/'
+        expected:   "HOST,preprdmftcs-wls-1,Loss%,Snt,Last,Avg,Best,Wrst,StDev"
+    availability:
+        method:     
+        directive:  
+    loop:
+        method:     external
+        directive:  
+    timestamp:
+        method:     
+        directive:  
+    metrics:
+        rtt:
+            min:
+            avg:
+            max:
+            mdev:
