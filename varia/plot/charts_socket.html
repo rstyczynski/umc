@@ -140,7 +140,7 @@
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false,         // timezone,timestamp,system,source
                          false, false, false, false,         // targetName,targetPort,address,dnsInfo
-                         true, true, true, true, true, true, // resolve,resolveFull,connect,send,response,close
+                         false, false, true, true, true, true, // resolve,resolveFull,connect,send,response,close
                          false, false]                       // response,error
         });
         var g101 = new Dygraph(document.getElementById("chart-socket-service-dns"),
@@ -148,7 +148,7 @@
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false,         // timezone,timestamp,system,source
                          false, false, false, false,         // targetName,targetPort,address,dnsInfo
-                         true, true, true, true, true, true, // resolve,resolveFull,connect,send,response,close
+                         true, true, false, false, false, false, // resolve,resolveFull,connect,send,response,close
                          false, false]                       // response,error
         });
 
@@ -157,7 +157,7 @@
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false,         // timezone,timestamp,system,source
                          false, false, false, false,         // targetName,targetPort,address,dnsInfo
-                         true, true, true, true, true, true, // resolve,resolveFull,connect,send,response,close
+                         false, false, true, true, true, true, // resolve,resolveFull,connect,send,response,close
                          false, false]                       // response,error
         });
         var g201 = new Dygraph(document.getElementById("chart-socket-internet-dns"),
@@ -165,7 +165,7 @@
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false,         // timezone,timestamp,system,source
                          false, false, false, false,         // targetName,targetPort,address,dnsInfo
-                         true, true, true, true, true, true, // resolve,resolveFull,connect,send,response,close
+                         true, true, false, false, false, false, // resolve,resolveFull,connect,send,response,close
                          false, false]                       // response,error
         });
  
