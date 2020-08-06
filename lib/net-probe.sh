@@ -107,8 +107,8 @@ function stop() {
 
 function register_inetd() {
     cat >/tmp/umc_net-probe_$svc_name.sh <<EOF
-#/bin/bash
-$umc_home/lib/net_probe.sh $svc_name $1
+#!/bin/bash
+$umc_home/lib/net_probe.sh $svc_name \$1
 EOF
 
 chmod +x /tmp/umc_net-probe_$svc_name.sh 
