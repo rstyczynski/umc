@@ -18,8 +18,13 @@ mtr:
         method:     
         directive:  
     metrics:
+        quality:
+            loss:
+        counter:
+            snt:
         rtt:
-            min:
+            last:
             avg:
-            max:
-            mdev:
+            best:
+            wrst:
+            stdev       
