@@ -9,7 +9,7 @@ EOF
 umc_svc_def=$1
 
 case $2 in
-start | stop | check | restart)
+start | stop | check | restart | register)
     operation=$2
     shift
     ;;
@@ -153,6 +153,9 @@ restart)
     stop
     sleep 1
     start
+    ;;
+register)
+    register
     ;;
 *)
     exit 1
