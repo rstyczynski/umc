@@ -32,8 +32,9 @@ fi
 
 script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
+
 umc_home=$script_dir/..
-umccfg=~/.umc
+umccfg=$umc_home/../.umc
 umc_log=/var/log/umc
 
 source $umc_home/bin/umc.h
