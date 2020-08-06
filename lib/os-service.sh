@@ -159,7 +159,7 @@ done
 
 function stop() {
     for tmp_umc_pid in $(cat $umc_run/$svc_name.pid); do
-        sudo killtree.sh $tmp_umc_pid
+        sudo $umc_home/bin/killtree.sh $tmp_umc_pid
     done
     rm $umc_run/$svc_name.pid
 }
@@ -217,7 +217,6 @@ sudo cat /var/log/messages
 EOF
 
 }
-
 
 
 case $operation in
