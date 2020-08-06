@@ -71,7 +71,7 @@ function start() {
                     csv2obd --resource socket_$service_name\_$target_name |
                     logdirector.pl -dir /var/log/umc -addDateSubDir -name socket_$service_name\_$target_name -detectHeader -checkHeaderDups -flush
             ) &
-            echo $! >>$umc_run/$umc_svc_def.pid
+            echo $! >>$umc_run/$svc_name.pid
 
         done
 
@@ -87,14 +87,14 @@ function start() {
                     csv2obd --resource ping_$service_name\_$target_name |
                     logdirector.pl -dir /var/log/umc -addDateSubDir -name ping_$service_name\_$target_name -detectHeader -checkHeaderDups -flush
             ) &
-            echo $! >>$umc_run/$umc_svc_def.pid
+            echo $! >>$umc_run/$svc_name.pid
 
             (
                 umc mtr collect 300 288 $address |
                     csv2obd --resource mtr_$service_name\_$target_name |
                     logdirector.pl -dir /var/log/umc -addDateSubDir -name mtr_$service_name\_$target_name -detectHeader -checkHeaderDups -flush
             ) &
-            echo $! >>$umc_run/$umc_svc_def.pid
+            echo $! >>$umc_run/$svc_name.pid
         done
 
         cat >$umc_log/ping_$service_name.html <<EOF
@@ -175,7 +175,7 @@ start)
     if [ ! -f $umc_run/$umc_svc_def.pid ]; then
         start
     else
-        echo "Already running. Info: $(cat $umc_run/$umc_svc_def.pid)"
+        echo "Already running. Info: $(cat $umc_run/$svc_name.pid)"
         exit 1
     fi
     ;;
@@ -183,11 +183,11 @@ stop)
     stop
     ;;
 status)
-    if [ ! -f $umc_run/$umc_svc_def.pid ]; then
+    if [ ! -f $umc_run/$svc_name.pid ]; then
         echo "Not running"
         exit 1
     else
-        echo "Running. Info: $(cat $umc_run/$umc_svc_def.pid)"
+        echo "Running. Info: $(cat $umc_run/$svc_name.pid)"
     fi
     ;;
 restart)
