@@ -1,6 +1,6 @@
 #/bin/bash
 
-function usage () {
+function usage() {
     cat <<EOF
 Usage: net_prob.sh svc_def [start|stop|check|restart] 
 EOF
@@ -9,8 +9,9 @@ EOF
 umc_svc_def=$1
 
 case $2 in
-start|stop|check|restart) 
-    operation=$2; shift
+start | stop | check | restart)
+    operation=$2
+    shift
     ;;
 *)
     usage
@@ -29,11 +30,10 @@ umc_log=/var/log/umc
 
 source $umc_home/bin/umc.h
 
-
-
 umcpid=$umccfg/pid
 mkdir -p $umcpid
 
+svc_name=$(cat umc_svc_def | cut -d. -f1)
 
 function y2j() {
     python -c "import json, sys, yaml ; y=yaml.safe_load(sys.stdin.read()) ; print(json.dumps(y))"
@@ -98,6 +98,34 @@ function stop() {
     rm $umcpid/$umc_svc_def.pid
 }
 
+function register() {
+
+    sudo cat >/etc/systemd/system/umc_net-probe_$svc_name.service <<EOF
+[Unit]
+Description=umc data collector - net_probe - $svc_name
+
+[Service]
+User=$(whomai)
+TimeoutStartSec=infinity
+
+ExecStart=$umc_root/lib/net_probe.sh $svc_name start
+ExecStop=$umc_root/lib/net_probe.sh $svc_name stop
+
+Restart=always
+RemainAfterExit=yes
+  
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    sudo systemctl daemon-reload
+
+    sudo systemctl enable umc_net-probe_$svc_name.service
+    sudo systemctl restart umc_net-probe_$svc_name.service
+    sudo cat /var/log/messages
+
+}
+
 case $operation in
 start)
     if [ ! -f $umcpid/$umc_svc_def.pid ]; then
@@ -127,4 +155,3 @@ restart)
     exit 1
     ;;
 esac
-
