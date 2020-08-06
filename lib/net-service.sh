@@ -91,9 +91,8 @@ function start() {
             ) &
             echo $! >>$umc_run/$svc_name.pid
 
-            #set -x
             (
-                umc mtr collect 300 288 $address |
+                umc mtr collect 5 288 $address |
                     $umc_bin/csv2obd --resource mtr_$service_name-$target_name |
                     $umc_bin/logdirector.pl -dir /var/log/umc -addDateSubDir -name mtr_$service_name-$target_name -detectHeader -checkHeaderDups -flush
             ) &
