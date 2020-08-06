@@ -80,7 +80,7 @@ for system in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r "keys[]"); do
                                 umc df collect 15 5760 $mount_point |
                                     $umc_bin/csv2obd --resource disk:space\-$mount_point_name |
                                     $umc_bin/logdirector.pl -dir /var/log/umc -addDateSubDir -name disk:space\-$mount_point_name -detectHeader -checkHeaderDups -flush -tee |
-                                    $umc_bin/dvdt --resource disk:space\-$mount_point_name | 
+                                    $umc_bin/dvdt --resource disk:space\-$mount_point_name --dataat 8 | 
                                     $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name disk:space\-$mount_point_name\_dt -detectHeader -checkHeaderDups -flush
                             ) &
                             echo $! >>$umc_run/$svc_name.pid
@@ -93,7 +93,7 @@ for system in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r "keys[]"); do
                                 umc ifconfig collect 5 2147483647 $key | 
                                     $umc_bin/csv2obd --resource network:if\-$key | 
                                     $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name network:if\-$key -detectHeader -checkHeaderDups -flush -tee |
-                                    $umc_bin/dvdt --resource network:if\-$key | 
+                                    $umc_bin/dvdt --resource network:if\-$key --dataat 7 | 
                                     $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name network:if\-$key\_dt -detectHeader -checkHeaderDups -flush
                             ) &
                             echo $! >>$umc_run/$svc_name.pid
@@ -107,7 +107,7 @@ for system in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r "keys[]"); do
                                     umc netstattcp collect 5 2147483647 | 
                                         $umc_bin/csv2obd --resource network:tcp:netstattcp | 
                                         $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name network:tcp:netstattcp -detectHeader -checkHeaderDups -flush -tee |
-                                        $umc_bin/dvdt --resource network:tcp:netstattcp  | 
+                                        $umc_bin/dvdt --resource network:tcp:netstattcp --dataat 7 | 
                                         $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name network:tcp:netstattcp\_dt -detectHeader -checkHeaderDups -flush
                                 ) &
                                 echo $! >>$umc_run/$svc_name.pid         
