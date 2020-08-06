@@ -33,7 +33,7 @@ source $umc_home/bin/umc.h
 umc_pid=$umccfg/pid
 mkdir -p $umc_pid
 
-svc_name=$(cat $umc_svc_def | cut -d. -f1)
+svc_name=$(cat $umccfg/$umc_svc_def | cut -d. -f1)
 
 function y2j() {
     python -c "import json, sys, yaml ; y=yaml.safe_load(sys.stdin.read()) ; print(json.dumps(y))"
