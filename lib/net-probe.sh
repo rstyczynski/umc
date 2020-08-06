@@ -30,7 +30,9 @@ if [ ! $umccfg/$umc_svc_def ]; then
     exit 1
 fi
 
-umc_home=~/umc
+script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+umc_home=$script_dir/..
 umccfg=~/.umc
 umc_log=/var/log/umc
 
