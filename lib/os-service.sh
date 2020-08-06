@@ -222,7 +222,9 @@ EOF
 
     echo "Service registered. Start the service:"
     cat <<EOF
+sudo systemctl start umc_$service_type-$svc_name.service
 sudo systemctl restart umc_$service_type-$svc_name.service
+sudo systemctl stop umc_$service_type-$svc_name.service
 sudo cat /var/log/messages
 EOF
 

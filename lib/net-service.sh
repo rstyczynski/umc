@@ -1,4 +1,17 @@
-#/bin/bash
+#!/bin/bash
+
+script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+service_type=$(basename "$0" | cut -d. -f1)
+
+export umc_home=$script_dir/..
+export umc_bin=$umc_home/bin
+export umc_cfg=$umc_home/../.umc
+export umc_log=/var/log/umc
+export umc_run=$umc_cfg/pid
+mkdir -p $umc_run
+
+source $umc_home/bin/umc.h
 
 function usage() {
     cat <<EOF
@@ -30,17 +43,6 @@ if [ ! $umccfg/$umc_svc_def ]; then
     exit 1
 fi
 
-script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-
-
-umc_home=$script_dir/..
-umccfg=$umc_home/../.umc
-umc_log=/var/log/umc
-
-source $umc_home/bin/umc.h
-
-umc_run=$umccfg/pid
-mkdir -p $umc_run
 
 # umc obd; is here as /run is a ramdisk
 export status_root=/run/umc/obd
@@ -68,8 +70,8 @@ function start() {
 
             (
                 umc pingSocket collect 15 5760 --subsystem $address |
-                    csv2obd --resource socket_$service_name\_$target_name |
-                    logdirector.pl -dir /var/log/umc -addDateSubDir -name socket_$service_name\_$target_name -detectHeader -checkHeaderDups -flush
+                    csv2obd --resource socket_$service_name-$target_name |
+                    logdirector.pl -dir /var/log/umc -addDateSubDir -name socket_$service_name-$target_name -detectHeader -checkHeaderDups -flush
             ) &
             echo $! >>$umc_run/$svc_name.pid
 
@@ -84,15 +86,15 @@ function start() {
 
             (
                 umc ping collect 15 5760 $address |
-                    csv2obd --resource ping_$service_name\_$target_name |
-                    logdirector.pl -dir /var/log/umc -addDateSubDir -name ping_$service_name\_$target_name -detectHeader -checkHeaderDups -flush
+                    csv2obd --resource ping_$service_name-$target_name |
+                    logdirector.pl -dir /var/log/umc -addDateSubDir -name ping_$service_name-$target_name -detectHeader -checkHeaderDups -flush
             ) &
             echo $! >>$umc_run/$svc_name.pid
 
             (
                 umc mtr collect 300 288 $address |
-                    csv2obd --resource mtr_$service_name\_$target_name |
-                    logdirector.pl -dir /var/log/umc -addDateSubDir -name mtr_$service_name\_$target_name -detectHeader -checkHeaderDups -flush
+                    csv2obd --resource mtr_$service_name-$target_name |
+                    logdirector.pl -dir /var/log/umc -addDateSubDir -name mtr_$service_name-$target_name -detectHeader -checkHeaderDups -flush
             ) &
             echo $! >>$umc_run/$svc_name.pid
         done
@@ -110,45 +112,51 @@ EOF
 }
 
 function stop() {
-    for tmp_umc_pid in $(cat $umc_run/$svc_name.pid); do
-        sudo killtree.sh $tmp_umc_pid
-    done
-    rm $umc_run/$svc_name.pid
+    if [ -f $umc_run/$svc_name.pid ]; then
+        for tmp_umc_pid in $(cat $umc_run/$svc_name.pid); do
+            sudo $umc_bin/killtree.sh $tmp_umc_pid
+        done
+        rm $umc_run/$svc_name.pid
+    fi
 }
 
 
 function register_inetd() {
-    cat >/tmp/umc_net-probe_$svc_name <<EOF
+    cat >/tmp/umc_$service_type-$svc_name <<EOF
 #!/bin/bash
-$umc_home/lib/net-probe.sh $svc_name.yml \$1
+#
+# chkconfig:   12345 01 99
+# description: umc $service_type for $svc_name
+#
+$umc_home/lib/$service_type.sh $svc_name.yml \$1
 EOF
 
-chmod +x /tmp/umc_net-probe_$svc_name 
-sudo mv /tmp/umc_net-probe_$svc_name /etc/init.d/umc_net-probe_$svc_name
 
-sudo chkconfig --add umc_net-probe_$svc_name 
-sudo chkconfig --level 2345 umc_net-probe_$svc_name on 
+chmod +x /tmp/umc_$service_type-$svc_name 
+sudo mv /tmp/umc_$service_type-$svc_name /etc/init.d/umc_$service_type-$svc_name
+
+sudo chkconfig --add umc_$service_type-$svc_name 
 
     echo echo "Service registered. Start the service:"
     cat <<EOF
-sudo service umc_net-probe_$svc_name start
-sudo service umc_net-probe_$svc_name status
-sudo service umc_net-probe_$svc_name stop
+sudo service umc_$service_type-$svc_name start
+sudo service umc_$service_type-$svc_name status
+sudo service umc_$service_type-$svc_name stop
 EOF
 }
 
 function register_systemd() {
 
-    sudo cat >/etc/systemd/system/umc_net-probe_$svc_name.service <<EOF
+    sudo cat >/etc/systemd/system/umc_$service_type-$svc_name.service <<EOF
 [Unit]
-Description=umc data collector - net_probe - $svc_name
+Description=umc data collector - $service_type - $svc_name
 
 [Service]
 User=$(whomai)
 TimeoutStartSec=infinity
 
-ExecStart=$umc_root/lib/net_probe.sh $svc_name start
-ExecStop=$umc_root/lib/net_probe.sh $svc_name stop
+ExecStart=$umc_root/lib/$service_type.sh $svc_name start
+ExecStop=$umc_root/lib/$service_type.sh $svc_name stop
 
 Restart=always
 RemainAfterExit=yes
@@ -158,16 +166,17 @@ WantedBy=multi-user.target
 EOF
 
     sudo systemctl daemon-reload
-    sudo systemctl enable umc_net-probe_$svc_name.service
+    sudo systemctl enable umc_$service_type-$svc_name.service
 
     echo "Service registered. Start the service:"
     cat <<EOF
-sudo systemctl restart umc_net-probe_$svc_name.service
+sudo systemctl start umc_$service_type-$svc_name.service
+sudo systemctl restart umc_$service_type-$svc_name.service
+sudo systemctl stop umc_$service_type-$svc_name.service
 sudo cat /var/log/messages
 EOF
 
 }
-
 
 
 case $operation in
