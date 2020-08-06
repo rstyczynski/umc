@@ -5,6 +5,7 @@ script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 service_type=$(basename "$0" | cut -d. -f1)
 
 umc_home=$script_dir/..
+umc_bin=$umc_home/bin
 umc_cfg=$umc_home/../.umc
 umc_log=/var/log/umc
 
@@ -69,45 +70,51 @@ for system in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r "keys[]"); do
         
         keys=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem[] | keys[]" 2>/dev/null) 
         if [ ! -z "$keys" ]; then
-            for component in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem | keys[]"); do
-                
-                for key in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem.$component[]"); do
-
+            for component in $(cat $umc_cfg/$umc_svc_def.yml | y2j | jq -r ".$system[].os.$subsystem | keys[]"); do
+                            
                     echo "    - $subsystem:$component:$key"
                     case $subsystem:$component in
                     disk:space)
-                        (
-                            umc pingSocket collect 15 5760 --subsystem $address |
-                                csv2obd --resource socket_$service_name\_$target_name |
-                                logdirector.pl -dir /var/log/umc -addDateSubDir -name socket_$service_name\_$target_name -detectHeader -checkHeaderDups -flush
-                        ) &
-                        echo $! >>$umc_run/$svc_name.pid
+                        for mount_point_id in $(cat $umc_cfg/$umc_svc_def.yml | y2j | jq -r ".$system[].os.disk.space | keys[]"); do
+                            mount_point_name=$(cat $umc_cfg/$umc_svc_def.yml | y2j | jq -r ".$system[].os.disk.space[$mount_point_id].name")
+                            mount_point=$(cat $umc_cfg/$umc_svc_def.yml | y2j | jq -r ".$system[].os.disk.space[$mount_point_id].point")
+                            (
+                                umc df collect 15 5760 $mount_point |
+                                    csv2obd --resource disk:space:$mount_point_name |
+                                    logdirector.pl -dir /var/log/umc -addDateSubDir -name disk:space:$mount_point_name -detectHeader -checkHeaderDups -flush -tee |
+                                    dvdt --resource disk:space:$mount_point_name | 
+                                    logdirector.pl -addDateSubDir -dir /var/log/umc -name disk:space:$mount_point_name\_dt -detectHeader -checkHeaderDups -flush
+                            ) &
+                            echo $! >>$umc_run/$svc_name.pid
+                        done
                         ;;
                     network:if)
-                        (
-                            umc ifconfig collect 5 2147483647 network:if:$key | 
-                                csv2obd --resource network:if:$key | 
-                                logdirector.pl -addDateSubDir -dir /var/log/umc -name network:if:$key -detectHeader -checkHeaderDups -flush -tee |
-                                dvdt --resource network:if:$key | 
-                                logdirector.pl -addDateSubDir -dir /var/log/umc -name network:if:$key\_dt -detectHeader -checkHeaderDups -flush
-                        ) &
-                        echo $! >>$umc_run/$svc_name.pid
+                        for key in $(cat $umc_cfg/$umc_svc_def.yml | y2j | jq -r ".$system[].os.$subsystem.$component[]"); do
+                            (
+                                umc ifconfig collect 5 2147483647 network:if:$key | 
+                                    csv2obd --resource network:if:$key | 
+                                    logdirector.pl -addDateSubDir -dir /var/log/umc -name network:if:$key -detectHeader -checkHeaderDups -flush -tee |
+                                    dvdt --resource network:if:$key | 
+                                    logdirector.pl -addDateSubDir -dir /var/log/umc -name network:if:$key\_dt -detectHeader -checkHeaderDups -flush
+                            ) &
+                            echo $! >>$umc_run/$svc_name.pid
+                        done 
                         ;;
                     network:tcp)
-                        if [ $key == "stats"]; then
-                            (
-                                umc netstattcp collect 5 2147483647 | 
-                                    csv2obd --resource network:tcp:netstattcp | 
-                                    logdirector.pl -addDateSubDir -dir /var/log/umc -name network:tcp:netstattcp -detectHeader -checkHeaderDups -flush -tee |
-                                    dvdt --resource network:tcp:netstattcp  | 
-                                    logdirector.pl -addDateSubDir -dir /var/log/umc -name network:tcp:netstattcp\_dt -detectHeader -checkHeaderDups -flush
-                            ) &
-                            echo $! >>$umc_run/$svc_name.pid         
-                        fi             
+                        for key in $(cat $umc_cfg/$umc_svc_def.yml | y2j | jq -r ".$system[].os.$subsystem.$component[]"); do
+                            if [ $key == "stats"]; then
+                                (
+                                    umc netstattcp collect 5 2147483647 | 
+                                        csv2obd --resource network:tcp:netstattcp | 
+                                        logdirector.pl -addDateSubDir -dir /var/log/umc -name network:tcp:netstattcp -detectHeader -checkHeaderDups -flush -tee |
+                                        dvdt --resource network:tcp:netstattcp  | 
+                                        logdirector.pl -addDateSubDir -dir /var/log/umc -name network:tcp:netstattcp\_dt -detectHeader -checkHeaderDups -flush
+                                ) &
+                                echo $! >>$umc_run/$svc_name.pid         
+                            fi       
+                        done      
                         ;;
                     esac
-
-                done
             done
         else
             for component in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem[]"); do
@@ -117,35 +124,35 @@ for system in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r "keys[]"); do
                 system:vmstat)
                     (
                         umc vmstat collect 5 2147483647 | 
-                            csv2obd --resource $subsystem:$component | 
-                            logdirector.pl -addDateSubDir -dir /var/log/umc -name $subsystem:$component-detectHeader -checkHeaderDups -flush
+                            $umc_bin/csv2obd --resource $subsystem:$component | 
+                            $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name $subsystem:$component-detectHeader -checkHeaderDups -flush
                     ) &
                     echo $! >>$umc_run/$svc_name.pid     
                     ;;
                 system:uptime)
                     (
                         umc uptime collect 5 2147483647 | 
-                            csv2obd --resource $subsystem:$component | 
-                            logdirector.pl -addDateSubDir -dir /var/log/umc -name $subsystem:$component-detectHeader -checkHeaderDups -flush
+                            $umc_bin/csv2obd --resource $subsystem:$component | 
+                            $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name $subsystem:$component-detectHeader -checkHeaderDups -flush
                     ) &
                     echo $! >>$umc_run/$svc_name.pid                        
                     ;;
                 memory:meminfo)
                      (
                         umc meminfo collect 5 2147483647 | 
-                            csv2obd --resource $subsystem:$component | 
-                            logdirector.pl -addDateSubDir -dir /var/log/umc -name $subsystem:$component-detectHeader -checkHeaderDups -flush -tee |
-                            dvdt --resource $subsystem:$component  | 
-                            logdirector.pl -addDateSubDir -dir /var/log/umc -name $subsystem:$component\_dt -detectHeader -checkHeaderDups -flush
+                            $umc_bin/csv2obd --resource $subsystem:$component | 
+                            $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name $subsystem:$component-detectHeader -checkHeaderDups -flush -tee |
+                            $umc_bin/dvdt --resource $subsystem:$component  | 
+                            $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name $subsystem:$component\_dt -detectHeader -checkHeaderDups -flush
                     ) &                   
                     ;;
                 memory:free)
                     (
                         umc free collect 5 2147483647 | 
-                            csv2obd --resource $subsystem:$component | 
-                            logdirector.pl -addDateSubDir -dir /var/log/umc -name $subsystem:$component-detectHeader -checkHeaderDups -flush -tee |
-                            dvdt --resource $subsystem:$component  | 
-                            logdirector.pl -addDateSubDir -dir /var/log/umc -name $subsystem:$component\_dt -detectHeader -checkHeaderDups -flush
+                            $umc_bin/csv2obd --resource $subsystem:$component | 
+                            $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name $subsystem:$component-detectHeader -checkHeaderDups -flush -tee |
+                            $umc_bin/dvdt --resource $subsystem:$component  | 
+                            $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name $subsystem:$component\_dt -detectHeader -checkHeaderDups -flush
                     ) &
                     ;;
                 esac
@@ -160,7 +167,7 @@ done
 function stop() {
     if [ -f $umc_run/$svc_name.pid ]; then
         for tmp_umc_pid in $(cat $umc_run/$svc_name.pid); do
-            sudo $umc_home/bin/killtree.sh $tmp_umc_pid
+            sudo $umc_bin/killtree.sh $tmp_umc_pid
         done
         rm $umc_run/$svc_name.pid
     fi
