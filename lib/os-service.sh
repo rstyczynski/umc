@@ -1,4 +1,7 @@
-#/bin/bash
+#!/bin/sh
+#
+# chkconfig: 12345 01 99
+# description: umc os stats collector
 
 script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
@@ -184,7 +187,6 @@ chmod +x /tmp/umc_$service_type-$svc_name
 sudo mv /tmp/umc_$service_type-$svc_name /etc/init.d/umc_$service_type-$svc_name
 
 sudo chkconfig --add umc_$service_type-$svc_name 
-sudo chkconfig --level 2345 umc_$service_type-$svc_name on 
 
     echo echo "Service registered. Start the service:"
     cat <<EOF
