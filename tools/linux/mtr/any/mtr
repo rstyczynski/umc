@@ -2,7 +2,6 @@
 
 target=$@
 
-set -x
 echo "$target,$(mtr -c 5 --report --report-wide $target | 
 tail -1 | 
 tr -s ' ' | 
