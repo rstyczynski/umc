@@ -114,10 +114,14 @@ EOF
 chmod +x /tmp/umc_net-probe_$svc_name 
 sudo mv /tmp/umc_net-probe_$svc_name /etc/init.d/umc_net-probe_$svc_name
 
-    echo "Service registered. Execute to enable, start, etc:"
+sudo chkconfig --add umc_net-probe_$svc_name 
+sudo chkconfig --level 2345 umc_net-probe_$svc_name on 
+
+    echo echo "Service registered. Start the service:"
     cat <<EOF
-chkconfig --add umc_net-probe_$svc_name 
-chkconfig --level 2345 umc_net-probe_$svc_name on 
+sudo service umc_net-probe_$svc_name start
+sudo service umc_net-probe_$svc_name status
+sudo service umc_net-probe_$svc_name stop
 EOF
 }
 
@@ -142,10 +146,10 @@ WantedBy=multi-user.target
 EOF
 
     sudo systemctl daemon-reload
+    sudo systemctl enable umc_net-probe_$svc_name.service
 
-    echo "Service registered. Execute to enable, start, etc:"
+    echo "Service registered. Start the service:"
     cat <<EOF
-sudo systemctl enable umc_net-probe_$svc_name.service
 sudo systemctl restart umc_net-probe_$svc_name.service
 sudo cat /var/log/messages
 EOF
