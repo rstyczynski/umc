@@ -45,11 +45,10 @@ function doasroot {
     find /var/log -type d -exec chmod 777 {} +
 
     # special probes
-    chown root /opt/umc/tools/linux/mtr/any/mtr
-    chmod u+s /opt/umc/tools/linux/mtr/any/mtr
-
-    chown root umc/tools/linux/mtr/any/mtr
-    chmod u+s umc/tools/linux/mtr/any/mtr
+    echo ">> setting mtr as root tool"
+    chown root $(which mtr)
+    echo ">> setting mtr suid bit"
+    chmod u+s $(which mtr)
 }
 
 # run function as root
