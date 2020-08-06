@@ -10,6 +10,7 @@ umc_log=/var/log/umc
 
 source $umc_home/bin/umc.h
 PATH=$PATH:$umc_home/bin
+export PATH
 
 umc_run=$umc_cfg/pid
 mkdir -p $umc_run
