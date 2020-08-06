@@ -7,7 +7,7 @@ shift
 
 target=$@
 
-echo "mtr: $delay, $count, $0"
+#echo "mtr: $delay, $count, $0"
 let cnt=0
 while [ "$cnt" -lt "$count" ]; do
     echo -n "$target,"
@@ -20,5 +20,5 @@ while [ "$cnt" -lt "$count" ]; do
         tr -d %
 
     cnt=$(( $cnt + 1 ))
-    echo "mtr: $cnt"
+    #echo "mtr: $cnt"
 done

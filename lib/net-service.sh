@@ -97,8 +97,9 @@ function start() {
             # echo $! >>$umc_run/$svc_name.pid
 
             (
-              umc mtr collect 1 1440 $address  >> /var/log/umc/mtr_test.log
-              #$umc_bin/logdirector.pl -dir /var/log/umc -addDateSubDir -name mtr_$service_name-$target_name -detectHeader -checkHeaderDups -flush
+              umc mtr collect 60 1440 $address  |
+              stdbuf -oL -eL $umc_bin/csv2obd --resource mtr_$service_name-$target_name |
+              $umc_bin/logdirector.pl -dir /var/log/umc -addDateSubDir -name mtr_$service_name-$target_name -detectHeader -checkHeaderDups -flush
             ) &
             echo $! >>$umc_run/$svc_name.pid
             ps aux | grep mtr | cut -d' ' -f2
