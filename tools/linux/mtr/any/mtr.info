@@ -6,8 +6,8 @@ mtr:
         address,hops,host,loss,snt,last,avg,best,wrst,stdev
     rawheader:
         method:     command
-        directive:  sudo mtr -c 1 --report --report-wide localhost | head -1 | tr -s ' ' | sed 's/^ //' | tr ' ' ',' | sed 's/.,/,/'
-        expected:   "HOST,preprdmftcs-wls-1,Loss%,Snt,Last,Avg,Best,Wrst,StDev"
+        directive:  mtr -c 1 --report --report-wide localhost | head -1 | tr -s ' ' | sed 's/^ //' | tr ' ' ',' | sed 's/.,/,/' | cut -d, -f3-9
+        expected:   "Loss%,Snt,Last,Avg,Best,Wrst,StDev"
     availability:
         method:     
         directive:  
