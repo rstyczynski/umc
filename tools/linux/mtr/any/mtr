@@ -2,11 +2,12 @@
 
 target=$@
 
-echo "$target,$(sudo stdbuf -oL -eL mtr -c 5 --report --report-wide $target | 
-stdbuf -oL -eL tail -1 | 
-stdbuf -oL -eL tr -s ' ' | 
-stdbuf -oL -eL sed 's/^ //' | 
-stdbuf -oL -eL tr ' ' ',' | 
-stdbuf -oL -eL sed 's/.,/,/' | 
-stdbuf -oL -eL tr -d %)"
+mtr_out=$(sudo mtr -c 5 --report --report-wide $target | 
+tail -1 | 
+tr -s ' ' | 
+sed 's/^ //' | 
+tr ' ' ',' | 
+sed 's/.,/,/' | 
+tr -d %)
 
+echo "$target,$mtr_out"
