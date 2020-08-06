@@ -69,32 +69,32 @@ for system in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r "keys[]"); do
         keys=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem[] | keys[]" 2>/dev/null) 
         if [ ! -z "$keys" ]; then
             for component in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem | keys[]"); do
-                    echo "    - $subsystem\-$component"
-                    case $subsystem\-$component in
-                    disk:space)
+                    echo "    - $subsystem-$component"
+                    case $subsystem-$component in
+                    disk-space)
                         for mount_point_id in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.disk.space | keys[]"); do
                             mount_point_name=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.disk.space[$mount_point_id].name")
                             mount_point=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.disk.space[$mount_point_id].point")
-                            echo "       - $mount_point_name\-$mount_point"
+                            echo "       - $mount_point_name-$mount_point"
                             (
                                 umc df collect 15 5760 $mount_point |
-                                    $umc_bin/csv2obd --resource disk:space\-$mount_point_name |
-                                    $umc_bin/logdirector.pl -dir /var/log/umc -addDateSubDir -name disk:space\-$mount_point_name -detectHeader -checkHeaderDups -flush -tee |
-                                    $umc_bin/dvdt --resource disk:space\-$mount_point_name --dataat 8 | 
-                                    $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name disk:space\-$mount_point_name\_dt -detectHeader -checkHeaderDups -flush
+                                    $umc_bin/csv2obd --resource disk-space-$mount_point_name |
+                                    $umc_bin/logdirector.pl -dir /var/log/umc -addDateSubDir -name disk-space-$mount_point_name -detectHeader -checkHeaderDups -flush -tee |
+                                    $umc_bin/dvdt --resource disk-space-$mount_point_name --dataat 8 | 
+                                    $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name disk-space-$mount_point_name\_dt -detectHeader -checkHeaderDups -flush
                             ) &
                             echo $! >>$umc_run/$svc_name.pid
                         done
                         ;;
-                    network:if)
+                    network-if)
                         for key in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem.$component[]"); do
                             echo "       - $key"
                             (
                                 umc ifconfig collect 5 2147483647 $key | 
-                                    $umc_bin/csv2obd --resource network:if\-$key | 
-                                    $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name network:if\-$key -detectHeader -checkHeaderDups -flush -tee |
-                                    $umc_bin/dvdt --resource network:if\-$key --dataat 7 | 
-                                    $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name network:if\-$key\_dt -detectHeader -checkHeaderDups -flush
+                                    $umc_bin/csv2obd --resource network-if-$key | 
+                                    $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name network-if-$key -detectHeader -checkHeaderDups -flush -tee |
+                                    $umc_bin/dvdt --resource network-if-$key --dataat 7 | 
+                                    $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name network-if-$key\_dt -detectHeader -checkHeaderDups -flush
                             ) &
                             echo $! >>$umc_run/$svc_name.pid
                         done 
@@ -105,9 +105,9 @@ for system in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r "keys[]"); do
                             if [ $key == "stats" ]; then
                                 (
                                     umc netstattcp collect 5 2147483647 | 
-                                        $umc_bin/csv2obd --resource network:tcp:netstattcp | 
-                                        $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name network:tcp:netstattcp -detectHeader -checkHeaderDups -flush -tee |
-                                        $umc_bin/dvdt --resource network:tcp:netstattcp --dataat 7 | 
+                                        $umc_bin/csv2obd --resource network-tcp-netstattcp | 
+                                        $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name network-tcp-netstattcp -detectHeader -checkHeaderDups -flush -tee |
+                                        $umc_bin/dvdt --resource network-tcp-netstattcp --dataat 7 | 
                                         $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name network:tcp:netstattcp\_dt -detectHeader -checkHeaderDups -flush
                                 ) &
                                 echo $! >>$umc_run/$svc_name.pid         
@@ -119,40 +119,40 @@ for system in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r "keys[]"); do
         else
             for component in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem[]"); do
                 
-                echo "  - $subsystem\-$component"
-                case $subsystem\-$component in
+                echo "  - $subsystem-$component"
+                case $subsystem-$component in
                 system:vmstat)
                     (
                         umc vmstat collect 5 2147483647 | 
-                            $umc_bin/csv2obd --resource $subsystem\-$component | 
-                            $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name $subsystem\-$component -detectHeader -checkHeaderDups -flush
+                            $umc_bin/csv2obd --resource $subsystem-$component | 
+                            $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name $subsystem-$component -detectHeader -checkHeaderDups -flush
                     ) &
                     echo $! >>$umc_run/$svc_name.pid     
                     ;;
                 system:uptime)
                     (
                         umc uptime collect 5 2147483647 | 
-                            $umc_bin/csv2obd --resource $subsystem\-$component | 
-                            $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name $subsystem\-$component -detectHeader -checkHeaderDups -flush
+                            $umc_bin/csv2obd --resource $subsystem-$component | 
+                            $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name $subsystem-$component -detectHeader -checkHeaderDups -flush
                     ) &
                     echo $! >>$umc_run/$svc_name.pid                        
                     ;;
                 memory:meminfo)
                      (
                         umc meminfo collect 5 2147483647 | 
-                            $umc_bin/csv2obd --resource $subsystem\-$component | 
-                            $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name $subsystem\-$component -detectHeader -checkHeaderDups -flush -tee |
-                            $umc_bin/dvdt --resource $subsystem\-$component  | 
-                            $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name $subsystem\-$component\_dt -detectHeader -checkHeaderDups -flush
+                            $umc_bin/csv2obd --resource $subsystem-$component | 
+                            $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name $subsystem-$component -detectHeader -checkHeaderDups -flush -tee |
+                            $umc_bin/dvdt --resource $subsystem-$component  | 
+                            $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name $subsystem-$component\_dt -detectHeader -checkHeaderDups -flush
                     ) &                   
                     ;;
                 memory:free)
                     (
                         umc free collect 5 2147483647 | 
-                            $umc_bin/csv2obd --resource $subsystem\-$component | 
-                            $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name $subsystem\-$component -detectHeader -checkHeaderDups -flush -tee |
-                            $umc_bin/dvdt --resource $subsystem\-$component  | 
-                            $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name $subsystem\-$component\_dt -detectHeader -checkHeaderDups -flush
+                            $umc_bin/csv2obd --resource $subsystem-$component | 
+                            $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name $subsystem-$component -detectHeader -checkHeaderDups -flush -tee |
+                            $umc_bin/dvdt --resource $subsystem-$component  | 
+                            $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name $subsystem-$component\_dt -detectHeader -checkHeaderDups -flush
                     ) &
                     ;;
                 esac
@@ -175,28 +175,28 @@ function stop() {
 
 
 function register_inetd() {
-    cat >/tmp/umc_$service_type\-$svc_name <<EOF
+    cat >/tmp/umc_$service_type-$svc_name <<EOF
 #!/bin/bash
 $umc_home/lib/$service_type.sh $svc_name.yml \$1
 EOF
 
-chmod +x /tmp/umc_$service_type\-$svc_name 
-sudo mv /tmp/umc_$service_type\-$svc_name /etc/init.d/umc_$service_type\-$svc_name
+chmod +x /tmp/umc_$service_type-$svc_name 
+sudo mv /tmp/umc_$service_type-$svc_name /etc/init.d/umc_$service_type-$svc_name
 
-sudo chkconfig --add umc_$service_type\-$svc_name 
-sudo chkconfig --level 2345 umc_$service_type\-$svc_name on 
+sudo chkconfig --add umc_$service_type-$svc_name 
+sudo chkconfig --level 2345 umc_$service_type-$svc_name on 
 
     echo echo "Service registered. Start the service:"
     cat <<EOF
-sudo service umc_$service_type\-$svc_name start
-sudo service umc_$service_type\-$svc_name status
-sudo service umc_$service_type\-$svc_name stop
+sudo service umc_$service_type-$svc_name start
+sudo service umc_$service_type-$svc_name status
+sudo service umc_$service_type-$svc_name stop
 EOF
 }
 
 function register_systemd() {
 
-    sudo cat >/etc/systemd/system/umc_$service_type\-$svc_name.service <<EOF
+    sudo cat >/etc/systemd/system/umc_$service_type-$svc_name.service <<EOF
 [Unit]
 Description=umc data collector - $service_type - $svc_name
 
@@ -215,11 +215,11 @@ WantedBy=multi-user.target
 EOF
 
     sudo systemctl daemon-reload
-    sudo systemctl enable umc_$service_type\-$svc_name.service
+    sudo systemctl enable umc_$service_type-$svc_name.service
 
     echo "Service registered. Start the service:"
     cat <<EOF
-sudo systemctl restart umc_$service_type\-$svc_name.service
+sudo systemctl restart umc_$service_type-$svc_name.service
 sudo cat /var/log/messages
 EOF
 
