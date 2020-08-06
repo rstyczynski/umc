@@ -106,10 +106,13 @@ function stop() {
 
 
 function register_inetd() {
-    cat | sudo tee /etc/init.d/umc_net-probe_$svc_name.sh <<EOF
+    cat >/tmp/umc_net-probe_$svc_name.sh <<EOF
 #/bin/bash
-$umc_root/lib/net_probe.sh $svc_name $1
+$umc_home/lib/net_probe.sh $svc_name $1
 EOF
+
+chmod +x /tmp/umc_net-probe_$svc_name.sh 
+sudo mv /tmp/umc_net-probe_$svc_name.sh /etc/init.d/umc_net-probe_$svc_name.sh
 
 }
 
