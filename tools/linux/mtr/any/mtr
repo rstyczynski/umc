@@ -12,5 +12,5 @@ tr -d % > /tmp/mtr.$target.tmp
 
 echo "$target,$(cat /tmp/mtr.$target.tmp)"
 
-rm /tmp/mtr.$target.tmp
+#rm /tmp/mtr.$target.tmp
 
