@@ -110,7 +110,7 @@ EOF
 }
 
 function stop() {
-    for tmp_umc_pid in $(cat $umc_run/$umc_svc_def.pid); do
+    for tmp_umc_pid in $(cat $umc_run/$svc_name.pid); do
         killtree.sh $tmp_umc_pid
     done
     rm $umc_run/$umc_svc_def.pid
