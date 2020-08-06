@@ -166,8 +166,7 @@ function stop() {
 
 
 function register_inetd() {
-    cat >/tmp/umc_$service_type\
-_$svc_name <<EOF
+    cat >/tmp/umc_$service_type\_$svc_name <<EOF
 #!/bin/bash
 $umc_home/lib/$service_type.sh $svc_name.yml \$1
 EOF
