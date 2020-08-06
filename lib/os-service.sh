@@ -166,22 +166,22 @@ function stop() {
 
 
 function register_inetd() {
-    cat >/tmp/umc_$service_type\_$svc_name <<EOF
+    cat >/tmp/umc_$service_type:$svc_name <<EOF
 #!/bin/bash
 $umc_home/lib/$service_type.sh $svc_name.yml \$1
 EOF
 
-chmod +x /tmp/umc_$service_type_$svc_name 
-sudo mv /tmp/umc_$service_type_$svc_name /etc/init.d/umc_$service_type_$svc_name
+chmod +x /tmp/umc_$service_type:$svc_name 
+sudo mv /tmp/umc_$service_type:$svc_name /etc/init.d/umc_$service_type:$svc_name
 
-sudo chkconfig --add umc_$service_type\_$svc_name 
-sudo chkconfig --level 2345 umc_$service_type\_$svc_name on 
+sudo chkconfig --add umc_$service_type:$svc_name 
+sudo chkconfig --level 2345 umc_$service_type:$svc_name on 
 
     echo echo "Service registered. Start the service:"
     cat <<EOF
-sudo service umc_$service_type\_$svc_name start
-sudo service umc_$service_type\_$svc_name status
-sudo service umc_$service_type\_$svc_name stop
+sudo service umc_$service_type:$svc_name start
+sudo service umc_$service_type:$svc_name status
+sudo service umc_$service_type:$svc_name stop
 EOF
 }
 
@@ -212,7 +212,7 @@ _$svc_name.service
 
     echo "Service registered. Start the service:"
     cat <<EOF
-sudo systemctl restart umc_$service_type\_$svc_name.service
+sudo systemctl restart umc_$service_type:$svc_name.service
 sudo cat /var/log/messages
 EOF
 
