@@ -4,7 +4,6 @@ script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 service_type=$(basename "$0" | cut -d. -f1)
 
-source $umc_home/bin/umc.h
 
 export umc_home=$script_dir/..
 export umc_bin=$umc_home/bin
@@ -12,6 +11,8 @@ export umc_cfg=$umc_home/../.umc
 export umc_log=/var/log/umc
 export umc_run=$umc_cfg/pid
 mkdir -p $umc_run
+
+source $umc_home/bin/umc.h
 
 function usage() {
     cat <<EOF
