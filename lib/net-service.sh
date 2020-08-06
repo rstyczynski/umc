@@ -93,7 +93,7 @@ function start() {
 
             rm -f $umc_run/mtr_$service_name-$target_name-$address
             mkfifo $umc_run/mtr_$service_name-$target_name-$address
-            umc mtr collect 65 1329 $address > $umc_run/mtr_$service_name-$target_name-$address &
+            umc mtr collect 7 1329 $address > $umc_run/mtr_$service_name-$target_name-$address &
             echo $! >>$umc_run/$svc_name.pid
 
             (

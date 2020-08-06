@@ -2,7 +2,7 @@
 
 target=$@
 
-echo "$target,$(sudo stdbuf -oL -eL mtr -c 60 --report --report-wide $target | 
+echo "$target,$(sudo stdbuf -oL -eL mtr -c 5 --report --report-wide $target | 
 stdbuf -oL -eL tail -1 | 
 stdbuf -oL -eL tr -s ' ' | 
 stdbuf -oL -eL sed 's/^ //' | 
