@@ -91,6 +91,7 @@ function start() {
             ) &
             echo $! >>$umc_run/$svc_name.pid
 
+            set -x
             (
                 umc mtr collect 300 288 $address |
                     $umc_bin/csv2obd --resource mtr_$service_name-$target_name |
