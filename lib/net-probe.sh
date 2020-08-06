@@ -39,8 +39,8 @@ umc_log=/var/log/umc
 
 source $umc_home/bin/umc.h
 
-umc_pid=$umccfg/pid
-mkdir -p $umc_pid
+umc_run=$umccfg/pid
+mkdir -p $umc_run
 
 svc_name=$(echo $umc_svc_def | cut -d. -f1)
 
@@ -49,6 +49,7 @@ function y2j() {
 }
 
 function start() {
+    set -x
     for service_name in $(cat $umccfg/$umc_svc_def | y2j | jq -r ".network[] | keys[]"); do
 
         for target_name in $(cat $umccfg/$umc_svc_def | y2j | jq -r ".network[].$service_name.tcp[] | keys[]"); do
@@ -62,7 +63,7 @@ function start() {
                     csv2obd --resource socket_$service_name\_$target_name |
                     logdirector.pl -dir /var/log/umc -addDateSubDir -name socket_$service_name\_$target_name -detectHeader -statusHeaderDups -flush
             ) &
-            echo $! >>$umc_pid/$umc_svc_def.pid
+            echo $! >>$umc_run/$umc_svc_def.pid
 
         done
 
@@ -78,14 +79,14 @@ function start() {
                     csv2obd --resource ping_$service_name\_$target_name |
                     logdirector.pl -dir /var/log/umc -addDateSubDir -name ping_$service_name\_$target_name -detectHeader -statusHeaderDups -flush
             ) &
-            echo $! >>$umc_pid/$umc_svc_def.pid
+            echo $! >>$umc_run/$umc_svc_def.pid
 
             (
                 umc mtr collect 300 288 $address |
                     csv2obd --resource mtr_$service_name\_$target_name |
                     logdirector.pl -dir /var/log/umc -addDateSubDir -name mtr_$service_name\_$target_name -detectHeader -statusHeaderDups -flush
             ) &
-            echo $! >>$umc_pid/$umc_svc_def.pid
+            echo $! >>$umc_run/$umc_svc_def.pid
         done
 
         cat >$umc_log/ping_$service_name.html <<EOF
@@ -101,10 +102,10 @@ EOF
 }
 
 function stop() {
-    for umc_pid in $(cat $umc_pid/$umc_svc_def.pid); do
+    for umc_pid in $(cat $umc_run/$umc_svc_def.pid); do
         killtree.sh $umc_pid
     done
-    rm $umc_pid/$umc_svc_def.pid
+    rm $umc_run/$umc_svc_def.pid
 }
 
 
@@ -163,10 +164,10 @@ EOF
 
 case $operation in
 start)
-    if [ ! -f $umc_pid/$umc_svc_def.pid ]; then
+    if [ ! -f $umc_run/$umc_svc_def.pid ]; then
         start
     else
-        echo "Already running. Info: $(cat $umc_pid/$umc_svc_def.pid)"
+        echo "Already running. Info: $(cat $umc_run/$umc_svc_def.pid)"
         exit 1
     fi
     ;;
@@ -174,11 +175,11 @@ stop)
     stop
     ;;
 status)
-    if [ ! -f $umc_pid/$umc_svc_def.pid ]; then
+    if [ ! -f $umc_run/$umc_svc_def.pid ]; then
         echo "Not running"
         exit 1
     else
-        echo "Running. Info: $(cat $umc_pid/$umc_svc_def.pid)"
+        echo "Running. Info: $(cat $umc_run/$umc_svc_def.pid)"
     fi
     ;;
 restart)
