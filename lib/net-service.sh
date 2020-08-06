@@ -96,10 +96,11 @@ function start() {
             umc mtr collect 7 1329 $address > $umc_run/mtr_$service_name-$target_name-$address &
             echo $! >>$umc_run/$svc_name.pid
 
+            echo XXX >>/var/log/umc/test_mtr.x1
             (
                 while read line <$umc_run/mtr_$service_name-$target_name-$address 
                 do
-                    echo $line >>/var/log/umc/test_mtr.xxx
+                    echo $line >>/var/log/umc/test_mtr.x2
                     echo $line | 
                     stdbuf -oL -eL $umc_bin/csv2obd --resource mtr_$service_name-$target_name |
                     $umc_bin/logdirector.pl -dir /var/log/umc -addDateSubDir -name mtr_$service_name-$target_name -detectHeader -checkHeaderDups -flush
