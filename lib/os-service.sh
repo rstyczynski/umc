@@ -70,14 +70,14 @@ for system in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r "keys[]"); do
         
         keys=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem[] | keys[]" 2>/dev/null) 
         if [ ! -z "$keys" ]; then
-            for component in $(cat $umc_cfg/$umc_svc_def.yml | y2j | jq -r ".$system[].os.$subsystem | keys[]"); do
-                            
+            for component in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem | keys[]"); do
+
                     echo "    - $subsystem:$component:$key"
                     case $subsystem:$component in
                     disk:space)
-                        for mount_point_id in $(cat $umc_cfg/$umc_svc_def.yml | y2j | jq -r ".$system[].os.disk.space | keys[]"); do
-                            mount_point_name=$(cat $umc_cfg/$umc_svc_def.yml | y2j | jq -r ".$system[].os.disk.space[$mount_point_id].name")
-                            mount_point=$(cat $umc_cfg/$umc_svc_def.yml | y2j | jq -r ".$system[].os.disk.space[$mount_point_id].point")
+                        for mount_point_id in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.disk.space | keys[]"); do
+                            mount_point_name=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.disk.space[$mount_point_id].name")
+                            mount_point=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.disk.space[$mount_point_id].point")
                             (
                                 umc df collect 15 5760 $mount_point |
                                     csv2obd --resource disk:space:$mount_point_name |
@@ -89,7 +89,7 @@ for system in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r "keys[]"); do
                         done
                         ;;
                     network:if)
-                        for key in $(cat $umc_cfg/$umc_svc_def.yml | y2j | jq -r ".$system[].os.$subsystem.$component[]"); do
+                        for key in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem.$component[]"); do
                             (
                                 umc ifconfig collect 5 2147483647 network:if:$key | 
                                     csv2obd --resource network:if:$key | 
@@ -101,7 +101,7 @@ for system in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r "keys[]"); do
                         done 
                         ;;
                     network:tcp)
-                        for key in $(cat $umc_cfg/$umc_svc_def.yml | y2j | jq -r ".$system[].os.$subsystem.$component[]"); do
+                        for key in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem.$component[]"); do
                             if [ $key == "stats"]; then
                                 (
                                     umc netstattcp collect 5 2147483647 | 
