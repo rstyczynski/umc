@@ -120,9 +120,10 @@ EOF
 
     sudo systemctl daemon-reload
 
-    sudo systemctl enable umc_net-probe_$svc_name.service
-    sudo systemctl restart umc_net-probe_$svc_name.service
-    sudo cat /var/log/messages
+    echo "Service registered"
+    # sudo systemctl enable umc_net-probe_$svc_name.service
+    # sudo systemctl restart umc_net-probe_$svc_name.service
+    # sudo cat /var/log/messages
 
 }
 
