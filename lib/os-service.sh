@@ -1,8 +1,4 @@
 #!/bin/bash
-#
-# chkconfig: 12345 01 99
-# description: umc os stats collector
-#
 
 script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
@@ -181,6 +177,10 @@ function stop() {
 function register_inetd() {
     cat >/tmp/umc_$service_type-$svc_name <<EOF
 #!/bin/bash
+#
+# chkconfig:   12345 01 99
+# description: umc $service_type for $svc_name
+#
 $umc_home/lib/$service_type.sh $svc_name.yml \$1
 EOF
 
