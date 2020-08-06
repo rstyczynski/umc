@@ -4,6 +4,15 @@ script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 service_type=$(basename "$0" | cut -d. -f1)
 
+umc_home=$script_dir/..
+umc_cfg=$umc_home/../.umc
+umc_log=/var/log/umc
+
+source $umc_home/bin/umc.h
+
+umc_run=$umc_cfg/pid
+mkdir -p $umc_run
+
 function usage() {
     cat <<EOF
 Usage: $service_type svc_def [start|stop|status|restart|register] 
@@ -29,20 +38,10 @@ start | stop | status | restart | register)
     ;;
 esac
 
-if [ ! $umccfg/$umc_svc_def ]; then
+if [ ! $umc_cfg/$umc_svc_def ]; then
     echo "Error. Service definition not found."
     exit 1
 fi
-
-
-umc_home=$script_dir/..
-umccfg=$umc_home/../.umc
-umc_log=/var/log/umc
-
-source $umc_home/bin/umc.h
-
-umc_run=$umccfg/pid
-mkdir -p $umc_run
 
 # umc obd; is here as /run is a ramdisk
 export status_root=/run/umc/obd
