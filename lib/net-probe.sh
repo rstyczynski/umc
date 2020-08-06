@@ -49,7 +49,7 @@ function y2j() {
 }
 
 function start() {
-    set -x
+
     for service_name in $(cat $umccfg/$umc_svc_def | y2j | jq -r ".network[] | keys[]"); do
 
         for target_name in $(cat $umccfg/$umc_svc_def | y2j | jq -r ".network[].$service_name.tcp[] | keys[]"); do
@@ -61,7 +61,7 @@ function start() {
             (
                 umc pingSocket collect 15 5760 --subsystem $address |
                     csv2obd --resource socket_$service_name\_$target_name |
-                    logdirector.pl -dir /var/log/umc -addDateSubDir -name socket_$service_name\_$target_name -detectHeader -statusHeaderDups -flush
+                    logdirector.pl -dir /var/log/umc -addDateSubDir -name socket_$service_name\_$target_name -detectHeader -checkHeaderDups -flush
             ) &
             echo $! >>$umc_run/$umc_svc_def.pid
 
@@ -77,14 +77,14 @@ function start() {
             (
                 umc ping collect 15 5760 $address |
                     csv2obd --resource ping_$service_name\_$target_name |
-                    logdirector.pl -dir /var/log/umc -addDateSubDir -name ping_$service_name\_$target_name -detectHeader -statusHeaderDups -flush
+                    logdirector.pl -dir /var/log/umc -addDateSubDir -name ping_$service_name\_$target_name -detectHeader -checkHeaderDups -flush
             ) &
             echo $! >>$umc_run/$umc_svc_def.pid
 
             (
                 umc mtr collect 300 288 $address |
                     csv2obd --resource mtr_$service_name\_$target_name |
-                    logdirector.pl -dir /var/log/umc -addDateSubDir -name mtr_$service_name\_$target_name -detectHeader -statusHeaderDups -flush
+                    logdirector.pl -dir /var/log/umc -addDateSubDir -name mtr_$service_name\_$target_name -detectHeader -checkHeaderDups -flush
             ) &
             echo $! >>$umc_run/$umc_svc_def.pid
         done
@@ -102,8 +102,8 @@ EOF
 }
 
 function stop() {
-    for umc_pid in $(cat $umc_run/$umc_svc_def.pid); do
-        killtree.sh $umc_pid
+    for tmp_umc_pid in $(cat $umc_run/$umc_svc_def.pid); do
+        killtree.sh $tmp_umc_pid
     done
     rm $umc_run/$umc_svc_def.pid
 }
