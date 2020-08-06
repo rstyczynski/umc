@@ -12,7 +12,6 @@ EOF
 
 umc_svc_def=$1
 
-
 os_release=$(cat /etc/os-release | grep '^VERSION=' | cut -d= -f2 | tr -d '"' | cut -d. -f1)
 
 if [ $os_release -eq 6 ]; then
@@ -62,16 +61,16 @@ function y2j() {
 function start() {
 
 
-for system in $(cat $umc_cfg/$umc_svc_def.yml | y2j | jq -r "keys[]"); do
+for system in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r "keys[]"); do
     echo $system
     for subsystem in $(cat $umc_cfg/$umc_svc_def.yml | y2j | jq -r ".$system[].os | keys[]"); do
         echo "- $subsystem"
         
-        keys=$(cat $umc_cfg/$umc_svc_def.yml | y2j | jq -r ".$system[].os.$subsystem[] | keys[]" 2>/dev/null) 
+        keys=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem[] | keys[]" 2>/dev/null) 
         if [ ! -z "$keys" ]; then
-            for component in $(cat $umc_cfg/$umc_svc_def.yml | y2j | jq -r ".$system[].os.$subsystem | keys[]"); do
+            for component in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem | keys[]"); do
                 
-                for key in $(cat $umc_cfg/$umc_svc_def.yml | y2j | jq -r ".$system[].os.$subsystem.$component[]"); do
+                for key in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem.$component[]"); do
 
                     echo "    - $subsystem:$component:$key"
                     case $subsystem:$component in
@@ -187,8 +186,7 @@ EOF
 
 function register_systemd() {
 
-    sudo cat >/etc/systemd/system/umc_$service_type\
-_$svc_name.service <<EOF
+    sudo cat >/etc/systemd/system/umc_$service_type:$svc_name.service <<EOF
 [Unit]
 Description=umc data collector - $service_type - $svc_name
 
@@ -207,8 +205,7 @@ WantedBy=multi-user.target
 EOF
 
     sudo systemctl daemon-reload
-    sudo systemctl enable umc_$service_type\
-_$svc_name.service
+    sudo systemctl enable umc_$service_type:$svc_name.service
 
     echo "Service registered. Start the service:"
     cat <<EOF
