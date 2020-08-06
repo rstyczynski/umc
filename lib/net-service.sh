@@ -92,21 +92,27 @@ function start() {
             echo mtr $service_name $target_name $address
 
             rm -f $umc_run/mtr_$service_name-$target_name-$address
-            mkfifo $umc_run/mtr_$service_name-$target_name-$address
-            umc mtr collect 7 1329 $address > $umc_run/mtr_$service_name-$target_name-$address &
-            echo $! >>$umc_run/$svc_name.pid
+            # mkfifo $umc_run/mtr_$service_name-$target_name-$address
+            # umc mtr collect 7 1329 $address > $umc_run/mtr_$service_name-$target_name-$address &
+            # echo $! >>$umc_run/$svc_name.pid
 
-            echo XXX >>/var/log/umc/test_mtr.x1
             (
-                while read line <$umc_run/mtr_$service_name-$target_name-$address 
-                do
-                    echo $line >>/var/log/umc/test_mtr.x2
-                    echo $line | 
-                    stdbuf -oL -eL $umc_bin/csv2obd --resource mtr_$service_name-$target_name |
-                    $umc_bin/logdirector.pl -dir /var/log/umc -addDateSubDir -name mtr_$service_name-$target_name -detectHeader -checkHeaderDups -flush
-                done
+              umc mtr collect 7 1329 $address  | 
+              $umc_bin/logdirector.pl -dir /var/log/umc -addDateSubDir -name mtr_$service_name-$target_name -detectHeader -checkHeaderDups -flush
             ) &
             echo $! >>$umc_run/$svc_name.pid
+
+            # echo XXX >>/var/log/umc/test_mtr.x1
+            # (
+            #     while read line <$umc_run/mtr_$service_name-$target_name-$address 
+            #     do
+            #         echo $line >>/var/log/umc/test_mtr.x2
+            #         echo $line | 
+            #         stdbuf -oL -eL $umc_bin/csv2obd --resource mtr_$service_name-$target_name |
+            #         $umc_bin/logdirector.pl -dir /var/log/umc -addDateSubDir -name mtr_$service_name-$target_name -detectHeader -checkHeaderDups -flush
+            #     done
+            # ) &
+            # echo $! >>$umc_run/$svc_name.pid
         done
 
         cat >$umc_log/ping_$service_name.html <<EOF
