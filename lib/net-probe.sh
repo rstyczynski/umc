@@ -106,14 +106,19 @@ function stop() {
 
 
 function register_inetd() {
-    cat >/tmp/umc_net-probe_$svc_name.sh <<EOF
+    cat >/tmp/umc_net-probe_$svc_name <<EOF
 #!/bin/bash
 $umc_home/lib/net_probe.sh $svc_name \$1
 EOF
 
-chmod +x /tmp/umc_net-probe_$svc_name.sh 
-sudo mv /tmp/umc_net-probe_$svc_name.sh /etc/init.d/umc_net-probe_$svc_name.sh
+chmod +x /tmp/umc_net-probe_$svc_name 
+sudo mv /tmp/umc_net-probe_$svc_name /etc/init.d/umc_net-probe_$svc_name
 
+    echo "Service registered. Execute to enable, start, etc:"
+    cat <<EOF
+chkconfig --add umc_net-probe_$svc_name 
+chkconfig --level 2345 umc_net-probe_$svc_name on 
+EOF
 }
 
 function register_systemd() {
