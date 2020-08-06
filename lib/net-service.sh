@@ -38,7 +38,7 @@ start | stop | status | restart | register)
     ;;
 esac
 
-if [ ! $umccfg/$umc_svc_def ]; then
+if [ ! $umc_cfg/$umc_svc_def ]; then
     echo "Error. Service definitino not found."
     exit 1
 fi
@@ -60,11 +60,11 @@ function y2j() {
 
 function start() {
 
-    for service_name in $(cat $umccfg/$umc_svc_def | y2j | jq -r ".network[] | keys[]"); do
+    for service_name in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".network[] | keys[]"); do
 
-        for target_name in $(cat $umccfg/$umc_svc_def | y2j | jq -r ".network[].$service_name.tcp[] | keys[]"); do
+        for target_name in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".network[].$service_name.tcp[] | keys[]"); do
 
-            address=$(cat $umccfg/$umc_svc_def | y2j | jq -r ".network[].$service_name.tcp[].$target_name.ip" | grep -v null)
+            address=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".network[].$service_name.tcp[].$target_name.ip" | grep -v null)
 
             echo $service_name $target_name $address
 
@@ -78,9 +78,9 @@ function start() {
         done
 
         # icmp
-        for target_name in $(cat $umccfg/$umc_svc_def | y2j | jq -r ".network[].$service_name.icmp[] | keys[]"); do
+        for target_name in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".network[].$service_name.icmp[] | keys[]"); do
 
-            address=$(cat $umccfg/$umc_svc_def | y2j | jq -r ".network[].$service_name.icmp[].$target_name.ip" | grep -v null)
+            address=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".network[].$service_name.icmp[].$target_name.ip" | grep -v null)
 
             echo $service_name $target_name $address
 
