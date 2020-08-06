@@ -2,14 +2,20 @@
 
 function usage() {
     cat <<EOF
-Usage: net_prob.sh svc_def [start|stop|check|restart] 
+Usage: net_prob.sh svc_def [start|stop|status|restart|register] 
 EOF
 }
 
 umc_svc_def=$1
 
+os_release=$(cat /etc/os-release | grep '^VERSION=' | cut -d= -f2 | tr -d '"' | cut -d. -f1)
+
+if [ $os_release -eq 6 ]; then
+    source /etc/init.d/functions
+fi
+
 case $2 in
-start | stop | check | restart | register)
+start | stop | status | restart | register)
     operation=$2
     shift
     ;;
@@ -33,7 +39,7 @@ source $umc_home/bin/umc.h
 umc_pid=$umccfg/pid
 mkdir -p $umc_pid
 
-svc_name=$(cat $umccfg/$umc_svc_def | cut -d. -f1)
+svc_name=$(echo $umccfg/$umc_svc_def | cut -d. -f1)
 
 function y2j() {
     python -c "import json, sys, yaml ; y=yaml.safe_load(sys.stdin.read()) ; print(json.dumps(y))"
@@ -51,7 +57,7 @@ function start() {
             (
                 umc pingSocket collect 15 5760 --subsystem $address |
                     csv2obd --resource socket_$service_name\_$target_name |
-                    logdirector.pl -dir /var/log/umc -addDateSubDir -name socket_$service_name\_$target_name -detectHeader -checkHeaderDups -flush
+                    logdirector.pl -dir /var/log/umc -addDateSubDir -name socket_$service_name\_$target_name -detectHeader -statusHeaderDups -flush
             ) &
             echo $! >>$umc_pid/$umc_svc_def.pid
 
@@ -67,14 +73,14 @@ function start() {
             (
                 umc ping collect 15 5760 $address |
                     csv2obd --resource ping_$service_name\_$target_name |
-                    logdirector.pl -dir /var/log/umc -addDateSubDir -name ping_$service_name\_$target_name -detectHeader -checkHeaderDups -flush
+                    logdirector.pl -dir /var/log/umc -addDateSubDir -name ping_$service_name\_$target_name -detectHeader -statusHeaderDups -flush
             ) &
             echo $! >>$umc_pid/$umc_svc_def.pid
 
             (
                 umc mtr collect 300 288 $address |
                     csv2obd --resource mtr_$service_name\_$target_name |
-                    logdirector.pl -dir /var/log/umc -addDateSubDir -name mtr_$service_name\_$target_name -detectHeader -checkHeaderDups -flush
+                    logdirector.pl -dir /var/log/umc -addDateSubDir -name mtr_$service_name\_$target_name -detectHeader -statusHeaderDups -flush
             ) &
             echo $! >>$umc_pid/$umc_svc_def.pid
         done
@@ -98,7 +104,16 @@ function stop() {
     rm $umc_pid/$umc_svc_def.pid
 }
 
-function register() {
+
+function register_inetd() {
+    cat | sudo tee /etc/init.d/umc_net-probe_$svc_name.sh <<EOF
+#/bin/bash
+$umc_root/lib/net_probe.sh $svc_name $1
+EOF
+
+}
+
+function register_systemd() {
 
     sudo cat >/etc/systemd/system/umc_net-probe_$svc_name.service <<EOF
 [Unit]
@@ -129,6 +144,8 @@ EOF
 
 }
 
+
+
 case $operation in
 start)
     if [ ! -f $umc_pid/$umc_svc_def.pid ]; then
@@ -141,7 +158,7 @@ start)
 stop)
     stop
     ;;
-check)
+status)
     if [ ! -f $umc_pid/$umc_svc_def.pid ]; then
         echo "Not running"
         exit 1
@@ -155,9 +172,22 @@ restart)
     start
     ;;
 register)
-    register
+    case $os_release in
+    6)
+        register_inetd
+        ;;
+    7)
+        register_systemd
+        ;;
+    *)
+        echo Error. Unsupported OS release.
+        exit 1
+        ;;
+    esac
     ;;
 *)
     exit 1
     ;;
 esac
+
+
