@@ -66,8 +66,7 @@ function start() {
 
             address=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".network[].$service_name.tcp[].$target_name.ip" | grep -v null)
 
-            echo $service_name $target_name $address
-
+            echo pingSocket $service_name $target_name $address
             (
                 umc pingSocket collect 15 5760 --subsystem $address |
                     $umc_bin/csv2obd --resource socket_$service_name-$target_name |
@@ -82,8 +81,7 @@ function start() {
 
             address=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".network[].$service_name.icmp[].$target_name.ip" | grep -v null)
 
-            echo $service_name $target_name $address
-
+            echo ping $service_name $target_name $address
             (
                 umc ping collect 15 5760 $address |
                     $umc_bin/csv2obd --resource ping_$service_name-$target_name |
@@ -91,10 +89,19 @@ function start() {
             ) &
             echo $! >>$umc_run/$svc_name.pid
 
+            echo mtr $service_name $target_name $address
+            
+            mkfifo $umc_run/mtr_$service_name-$target_name-$address
+            umc mtr collect 65 1329 $address > $umc_run/mtr_$service_name-$target_name-$address &
+            echo $! >>$umc_run/$svc_name.pid
+
             (
-                umc mtr collect 65 1329 $address |
+                while read line <$umc_run/mtr_$service_name-$target_name-$address 
+                do
+                    echo $line | 
                     $umc_bin/csv2obd --resource mtr_$service_name-$target_name |
                     $umc_bin/logdirector.pl -dir /var/log/umc -addDateSubDir -name mtr_$service_name-$target_name -detectHeader -checkHeaderDups -flush
+                done
             ) &
             echo $! >>$umc_run/$svc_name.pid
         done
