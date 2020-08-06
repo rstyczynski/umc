@@ -43,6 +43,13 @@ function doasroot {
     find /opt/umc -type d -exec chmod 755 {} +
     find /run/umc -type d -exec chmod 777 {} +
     find /var/log -type d -exec chmod 777 {} +
+
+    # special probes
+    chown root /opt/umc/tools/linux/mtr/any/mtr
+    chmod u+s /opt/umc/tools/linux/mtr/any/mtr
+
+    chown root umc/tools/linux/mtr/any/mtr
+    chmod u+s umc/tools/linux/mtr/any/mtr
 }
 
 # run function as root
