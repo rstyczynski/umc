@@ -99,7 +99,7 @@ function start() {
             (
                 while read line <$umc_run/mtr_$service_name-$target_name-$address 
                 do
-                    echo $line
+                    echo $line >>/var/log/umc/test_mtr.xxx
                     echo $line | 
                     stdbuf -oL -eL $umc_bin/csv2obd --resource mtr_$service_name-$target_name |
                     $umc_bin/logdirector.pl -dir /var/log/umc -addDateSubDir -name mtr_$service_name-$target_name -detectHeader -checkHeaderDups -flush
