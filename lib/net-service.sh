@@ -70,8 +70,8 @@ function start() {
 
             (
                 umc pingSocket collect 15 5760 --subsystem $address |
-                    csv2obd --resource socket_$service_name-$target_name |
-                    logdirector.pl -dir /var/log/umc -addDateSubDir -name socket_$service_name-$target_name -detectHeader -checkHeaderDups -flush
+                    $umc_bin/csv2obd --resource socket_$service_name-$target_name |
+                    $umc_bin/logdirector.pl -dir /var/log/umc -addDateSubDir -name socket_$service_name-$target_name -detectHeader -checkHeaderDups -flush
             ) &
             echo $! >>$umc_run/$svc_name.pid
 
@@ -86,15 +86,15 @@ function start() {
 
             (
                 umc ping collect 15 5760 $address |
-                    csv2obd --resource ping_$service_name-$target_name |
-                    logdirector.pl -dir /var/log/umc -addDateSubDir -name ping_$service_name-$target_name -detectHeader -checkHeaderDups -flush
+                    $umc_bin/csv2obd --resource ping_$service_name-$target_name |
+                    $umc_bin/logdirector.pl -dir /var/log/umc -addDateSubDir -name ping_$service_name-$target_name -detectHeader -checkHeaderDups -flush
             ) &
             echo $! >>$umc_run/$svc_name.pid
 
             (
                 umc mtr collect 300 288 $address |
-                    csv2obd --resource mtr_$service_name-$target_name |
-                    logdirector.pl -dir /var/log/umc -addDateSubDir -name mtr_$service_name-$target_name -detectHeader -checkHeaderDups -flush
+                    $umc_bin/csv2obd --resource mtr_$service_name-$target_name |
+                    $umc_bin/logdirector.pl -dir /var/log/umc -addDateSubDir -name mtr_$service_name-$target_name -detectHeader -checkHeaderDups -flush
             ) &
             echo $! >>$umc_run/$svc_name.pid
         done
