@@ -23,8 +23,13 @@ if [ ! $umccfg/$umc_svc_def ]; then
     exit 1
 fi
 
+umc_home=~/umc
 umccfg=~/.umc
 umc_log=/var/log/umc
+
+source $umc_home/bin/umc.h
+
+
 
 umcpid=$umccfg/pid
 mkdir -p $umcpid
@@ -89,8 +94,8 @@ EOF
 function stop() {
     for umc_pid in $(cat $umcpid/$umc_svc_def.pid); do
         killtree.sh $umc_pid
-        rm $umcpid/$umc_svc_def.pid
     done
+    rm $umcpid/$umc_svc_def.pid
 }
 
 case $operation in
@@ -99,7 +104,7 @@ start)
         start
     else
         echo "Already running. Info: $(cat $umcpid/$umc_svc_def.pid)"
-        return 1
+        exit 1
     fi
     ;;
 stop)
@@ -108,7 +113,7 @@ stop)
 check)
     if [ ! -f $umcpid/$umc_svc_def.pid ]; then
         echo "Not running"
-        return 1
+        exit 1
     else
         echo "Running. Info: $(cat $umcpid/$umc_svc_def.pid)"
     fi
