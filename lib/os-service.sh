@@ -1,7 +1,8 @@
-#!/bin/sh
+#!/bin/bash
 #
 # chkconfig: 12345 01 99
 # description: umc os stats collector
+#
 
 script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
