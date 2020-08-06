@@ -107,7 +107,7 @@ for system in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r "keys[]"); do
                                         $umc_bin/csv2obd --resource network-tcp-netstattcp | 
                                         $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name network-tcp-netstattcp -detectHeader -checkHeaderDups -flush -tee |
                                         $umc_bin/dvdt --resource network-tcp-netstattcp --dataat 7 | 
-                                        $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name network:tcp:netstattcp\_dt -detectHeader -checkHeaderDups -flush
+                                        $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name network-tcp-netstattcp\_dt -detectHeader -checkHeaderDups -flush
                                 ) &
                                 echo $! >>$umc_run/$svc_name.pid         
                             fi       
