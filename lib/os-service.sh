@@ -108,7 +108,7 @@ for system in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r "keys[]"); do
                 done
             done
         else
-            for component in $(cat $umc_cfg/$umc_svc_def.yml | y2j | jq -r ".$system[].os.$subsystem[]"); do
+            for component in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem[]"); do
                 
                 echo "  - $subsystem:$component"
                 case $subsystem:$component in
@@ -156,10 +156,12 @@ done
 }
 
 function stop() {
-    for tmp_umc_pid in $(cat $umc_run/$svc_name.pid); do
-        sudo $umc_home/bin/killtree.sh $tmp_umc_pid
-    done
-    rm $umc_run/$svc_name.pid
+    if [ -f $umc_run/$svc_name.pid ]; then
+        for tmp_umc_pid in $(cat $umc_run/$svc_name.pid); do
+            sudo $umc_home/bin/killtree.sh $tmp_umc_pid
+        done
+        rm $umc_run/$svc_name.pid
+    fi
 }
 
 
