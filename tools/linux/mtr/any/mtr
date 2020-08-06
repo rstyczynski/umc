@@ -9,13 +9,14 @@ target=$@
 
 let cnt=0
 while [ $cnt -lt $count ]; do
-    echo "$target,$(mtr -c $delay --report --report-wide $target |
+    echo -n "$target,"
+    mtr -c $delay --report --report-wide $target |
         tail -1 |
         tr -s ' ' |
         sed 's/^ //' |
         tr ' ' ',' |
         sed 's/.,/,/' |
-        tr -d %)"
+        tr -d %
 
     cnt=$(( $cnt + 1 ))
 
