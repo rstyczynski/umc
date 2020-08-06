@@ -165,10 +165,13 @@ done
 
 function stop() {
     if [ -f $umc_run/$svc_name.pid ]; then
+        echo -n ">> stopping service $svc_name"
         for tmp_umc_pid in $(cat $umc_run/$svc_name.pid); do
-            sudo $umc_bin/killtree.sh $tmp_umc_pid
+            sudo $umc_bin/killtree.sh $tmp_umc_pid >/dev/null
+            echo -n "."
         done
         rm $umc_run/$svc_name.pid
+        echo "Stopped."
     fi
 }
 
