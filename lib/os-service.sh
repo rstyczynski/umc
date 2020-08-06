@@ -62,7 +62,7 @@ function start() {
 
 for system in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r "keys[]"); do
     echo $system
-    for subsystem in $(cat $umc_cfg/$umc_svc_def.yml | y2j | jq -r ".$system[].os | keys[]"); do
+    for subsystem in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os | keys[]"); do
         echo "- $subsystem"
         
         keys=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem[] | keys[]" 2>/dev/null) 
