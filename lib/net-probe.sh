@@ -42,6 +42,14 @@ source $umc_home/bin/umc.h
 umc_run=$umccfg/pid
 mkdir -p $umc_run
 
+# umc obd; is here as /run is a ramdisk
+export status_root=/run/umc/obd
+# prepare odb directory
+sudo mkdir -p /run/umc/obd
+sudo chmod 777 /run/umc
+sudo chmod 777 /run/umc/obd
+
+
 svc_name=$(echo $umc_svc_def | cut -d. -f1)
 
 function y2j() {
