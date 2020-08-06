@@ -1,14 +1,22 @@
 #!/bin/bash
 
+delay=$1
+shift
+count=$1
+shift
+
 target=$@
 
-echo "$target,$(mtr -c 5 --report --report-wide $target | 
-tail -1 | 
-tr -s ' ' | 
-sed 's/^ //' | 
-tr ' ' ',' | 
-sed 's/.,/,/' | 
-tr -d % )"
+let cnt=0
+while [ $cnt -lt $count ]; do
+    echo "$target,$(mtr -c $delay --report --report-wide $target |
+        tail -1 |
+        tr -s ' ' |
+        sed 's/^ //' |
+        tr ' ' ',' |
+        sed 's/.,/,/' |
+        tr -d %)"
 
+    cnt=$(( $cnt + 1 ))
 
-
+done

@@ -12,7 +12,7 @@ mtr:
         method:     
         directive:  
     loop:
-        method:     external
+        method:
         directive:  
     timestamp:
         method:     
