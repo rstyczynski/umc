@@ -4,7 +4,6 @@ script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 service_type=$(basename "$0" | cut -d. -f1)
 
-
 export umc_home=$script_dir/..
 export umc_bin=$umc_home/bin
 export umc_cfg=$umc_home/../.umc
@@ -99,7 +98,7 @@ for system in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r "keys[]"); do
                             echo $! >>$umc_run/$svc_name.pid
                         done 
                         ;;
-                    network:tcp)
+                    network-tcp)
                         for key in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem.$component[]"); do
                             echo "       - $key"
                             if [ $key == "stats" ]; then
@@ -121,7 +120,7 @@ for system in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r "keys[]"); do
                 
                 echo "  - $subsystem-$component"
                 case $subsystem-$component in
-                system:vmstat)
+                system-vmstat)
                     (
                         umc vmstat collect 5 2147483647 | 
                             $umc_bin/csv2obd --resource $subsystem-$component | 
@@ -129,7 +128,7 @@ for system in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r "keys[]"); do
                     ) &
                     echo $! >>$umc_run/$svc_name.pid     
                     ;;
-                system:uptime)
+                system-uptime)
                     (
                         umc uptime collect 5 2147483647 | 
                             $umc_bin/csv2obd --resource $subsystem-$component | 
@@ -137,7 +136,7 @@ for system in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r "keys[]"); do
                     ) &
                     echo $! >>$umc_run/$svc_name.pid                        
                     ;;
-                memory:meminfo)
+                memory-meminfo)
                      (
                         umc meminfo collect 5 2147483647 | 
                             $umc_bin/csv2obd --resource $subsystem-$component | 
@@ -146,7 +145,7 @@ for system in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r "keys[]"); do
                             $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name $subsystem-$component\_dt -detectHeader -checkHeaderDups -flush
                     ) &                   
                     ;;
-                memory:free)
+                memory-free)
                     (
                         umc free collect 5 2147483647 | 
                             $umc_bin/csv2obd --resource $subsystem-$component | 
@@ -183,6 +182,7 @@ function register_inetd() {
 #
 $umc_home/lib/$service_type.sh $svc_name.yml \$1
 EOF
+
 
 chmod +x /tmp/umc_$service_type-$svc_name 
 sudo mv /tmp/umc_$service_type-$svc_name /etc/init.d/umc_$service_type-$svc_name
