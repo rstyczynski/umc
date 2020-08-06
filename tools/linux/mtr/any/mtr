@@ -7,8 +7,9 @@ shift
 
 target=$@
 
+echo "mtr: $delay, $count, $0"
 let cnt=0
-while [ $cnt -lt $count ]; do
+while [ "$cnt" -lt "$count" ]; do
     echo -n "$target,"
     mtr -c $delay --report --report-wide $target |
         tail -1 |
@@ -19,5 +20,5 @@ while [ $cnt -lt $count ]; do
         tr -d %
 
     cnt=$(( $cnt + 1 ))
-
+    echo "mtr: $cnt"
 done
