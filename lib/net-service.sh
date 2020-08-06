@@ -101,6 +101,7 @@ function start() {
               $umc_bin/logdirector.pl -dir /var/log/umc -addDateSubDir -name mtr_$service_name-$target_name -detectHeader -checkHeaderDups -flush
             ) &
             echo $! >>$umc_run/$svc_name.pid
+            ps aux | grep mtr | cut -d' ' -f1 
 
             # echo XXX >>/var/log/umc/test_mtr.x1
             # (

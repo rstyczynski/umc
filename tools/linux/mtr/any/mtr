@@ -2,12 +2,15 @@
 
 target=$@
 
-mtr_out=$(sudo mtr -c 5 --report --report-wide $target | 
+sudo mtr -c 5 --report --report-wide $target | 
 tail -1 | 
 tr -s ' ' | 
 sed 's/^ //' | 
 tr ' ' ',' | 
 sed 's/.,/,/' | 
-tr -d %)
+tr -d % > /tmp/mtr.$target.tmp
 
-echo "$target,$mtr_out"
+echo "$target,$(cat /tmp/mtr.$target.tmp)"
+
+rm /tmp/mtr.$target.tmp
+
