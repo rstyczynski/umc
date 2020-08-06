@@ -193,7 +193,7 @@ EOF
 
 case $operation in
 start)
-    if [ ! -f $umc_run/$umc_svc_def.pid ]; then
+    if [ ! -f $umc_run/$svc_name.pid ]; then
         start
     else
         echo "Already running. Info: $(cat $umc_run/$svc_name.pid)"
