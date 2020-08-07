@@ -251,6 +251,8 @@ register)
     7)
         register_systemd
         ;;
+    esac
+    ;;
 unregister)
     case $os_release in
     6)

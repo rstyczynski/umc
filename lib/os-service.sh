@@ -242,6 +242,7 @@ EOF
 
 }
 
+
 function unregister_systemd() {
 
     stop
@@ -252,7 +253,6 @@ function unregister_systemd() {
     
     echo "Service unregistered."
 }
-
 
 case $operation in
 start)
@@ -287,6 +287,8 @@ register)
     7)
         register_systemd
         ;;
+    esac
+    ;;
 unregister)
     case $os_release in
     6)
