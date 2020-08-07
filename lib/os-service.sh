@@ -15,7 +15,7 @@ source $umc_home/bin/umc.h
 
 function usage() {
     cat <<EOF
-Usage: $service_type svc_def [start|stop|status|restart|register] 
+Usage: $service_type svc_def [start|stop|status|restart|register|unregister] 
 EOF
 }
 
@@ -28,7 +28,7 @@ if [ $os_release -eq 6 ]; then
 fi
 
 case $2 in
-start | stop | status | restart | register)
+start | stop | status | restart | register | unregister)
     operation=$2
     shift
     ;;
