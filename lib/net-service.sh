@@ -1,6 +1,6 @@
 #!/bin/bash
 
-script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 service_type=$(basename "$0" | cut -d. -f1)
 
@@ -43,14 +43,12 @@ if [ ! $umc_cfg/$umc_svc_def ]; then
     exit 1
 fi
 
-
 # umc obd; is here as /run is a ramdisk
 export status_root=/run/umc/obd
 # prepare odb directory
 sudo mkdir -p /run/umc/obd
 sudo chmod 777 /run/umc
 sudo chmod 777 /run/umc/obd
-
 
 svc_name=$(echo $umc_svc_def | cut -d. -f1)
 
@@ -97,19 +95,19 @@ function start() {
             # echo $! >>$umc_run/$svc_name.pid
 
             (
-              umc mtr collect 60 1440 $address  |
-              stdbuf -oL -eL $umc_bin/csv2obd --resource mtr_$service_name-$target_name |
-              $umc_bin/logdirector.pl -dir /var/log/umc -addDateSubDir -name mtr_$service_name-$target_name -detectHeader -checkHeaderDups -flush
+                umc mtr collect 60 1440 $address |
+                    stdbuf -oL -eL $umc_bin/csv2obd --resource mtr_$service_name-$target_name |
+                    $umc_bin/logdirector.pl -dir /var/log/umc -addDateSubDir -name mtr_$service_name-$target_name -detectHeader -checkHeaderDups -flush
             ) &
             echo $! >>$umc_run/$svc_name.pid
             ps aux | grep mtr | cut -d' ' -f2
 
             # echo XXX >>/var/log/umc/test_mtr.x1
             # (
-            #     while read line <$umc_run/mtr_$service_name-$target_name-$address 
+            #     while read line <$umc_run/mtr_$service_name-$target_name-$address
             #     do
             #         echo $line >>/var/log/umc/test_mtr.x2
-            #         echo $line | 
+            #         echo $line |
             #         stdbuf -oL -eL $umc_bin/csv2obd --resource mtr_$service_name-$target_name |
             #         $umc_bin/logdirector.pl -dir /var/log/umc -addDateSubDir -name mtr_$service_name-$target_name -detectHeader -checkHeaderDups -flush
             #     done
@@ -136,7 +134,7 @@ function stop() {
             sudo $umc_bin/killtree.sh $tmp_umc_pid >/dev/null
             echo -n "."
         done
-        rm $umc_run/$svc_name.pid
+        rm -f $umc_run/$svc_name.pid
         echo "Stopped."
     fi
 }
@@ -151,11 +149,10 @@ function register_inetd() {
 $umc_home/lib/$service_type.sh $svc_name.yml \$1
 EOF
 
+    chmod +x /tmp/umc_$service_type-$svc_name
+    sudo mv /tmp/umc_$service_type-$svc_name /etc/init.d/umc_$service_type-$svc_name
 
-chmod +x /tmp/umc_$service_type-$svc_name 
-sudo mv /tmp/umc_$service_type-$svc_name /etc/init.d/umc_$service_type-$svc_name
-
-sudo chkconfig --add umc_$service_type-$svc_name 
+    sudo chkconfig --add umc_$service_type-$svc_name
 
     echo echo "Service registered. Start the service:"
     cat <<EOF
@@ -166,9 +163,9 @@ EOF
 }
 
 function unregister_inetd() {
-    
+
     stop
-    sudo chkconfig --del umc_$service_type-$svc_name 
+    sudo chkconfig --del umc_$service_type-$svc_name
     sudo rm -f /etc/init.d/umc_$service_type-$svc_name
 
     echo echo "Service unregistered."
@@ -211,10 +208,10 @@ function unregister_systemd() {
 
     stop
     sudo systemctl disable umc_$service_type-$svc_name.service
-    sudo rm -f /etc/systemd/system/umc_$service_type-$svc_name.service 
+    sudo rm -f /etc/systemd/system/umc_$service_type-$svc_name.service
 
     sudo systemctl daemon-reload
-    
+
     echo "Service unregistered."
 }
 
@@ -271,5 +268,3 @@ unregister)
     exit 1
     ;;
 esac
-
-

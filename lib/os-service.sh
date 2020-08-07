@@ -170,7 +170,7 @@ function stop() {
             sudo $umc_bin/killtree.sh $tmp_umc_pid >/dev/null
             echo -n "."
         done
-        rm $umc_run/$svc_name.pid
+        rm -f $umc_run/$svc_name.pid
         echo "Stopped."
     fi
 }
