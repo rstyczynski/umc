@@ -200,6 +200,15 @@ sudo service umc_$service_type-$svc_name stop
 EOF
 }
 
+function unregister_inetd() {
+    
+    stop
+    sudo chkconfig --del umc_$service_type-$svc_name 
+    sudo rm -f /etc/init.d/umc_$service_type-$svc_name
+
+    echo echo "Service unregistered."
+}
+
 function register_systemd() {
 
     sudo cat >/etc/systemd/system/umc_$service_type-$svc_name.service <<EOF
@@ -231,6 +240,17 @@ sudo systemctl stop umc_$service_type-$svc_name.service
 sudo cat /var/log/messages
 EOF
 
+}
+
+function unregister_systemd() {
+
+    stop
+    sudo systemctl disable umc_$service_type-$svc_name.service
+    sudo rm -f /etc/systemd/system/umc_$service_type-$svc_name.service 
+
+    sudo systemctl daemon-reload
+    
+    echo "Service unregistered."
 }
 
 
@@ -267,6 +287,14 @@ register)
     7)
         register_systemd
         ;;
+unregister)
+    case $os_release in
+    6)
+        unregister_inetd
+        ;;
+    7)
+        unregister_systemd
+        ;;
     *)
         echo Error. Unsupported OS release.
         exit 1
@@ -277,5 +305,7 @@ register)
     exit 1
     ;;
 esac
+
+
 
 
