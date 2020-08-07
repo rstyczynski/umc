@@ -168,7 +168,7 @@ function unregister_inetd() {
     sudo chkconfig --del umc_$service_type-$svc_name
     sudo rm -f /etc/init.d/umc_$service_type-$svc_name
 
-    echo echo "Service unregistered."
+    echo "Service unregistered."
 }
 
 function register_systemd() {
