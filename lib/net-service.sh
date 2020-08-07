@@ -64,7 +64,7 @@ function start() {
 
             address=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".network[].$service_name.tcp[].$target_name.ip" | grep -v null)
 
-            echo pingSocket $service_name $target_name $address
+            echo "pingSocket $service_name $target_name $address"
             (
                 umc pingSocket collect 15 5760 --subsystem $address |
                     $umc_bin/csv2obd --resource socket_$service_name-$target_name |
@@ -79,7 +79,7 @@ function start() {
 
             address=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".network[].$service_name.icmp[].$target_name.ip" | grep -v null)
 
-            echo ping $service_name $target_name $address
+            echo "ping $service_name $target_name $address"
             (
                 umc ping collect 15 5760 $address |
                     $umc_bin/csv2obd --resource ping_$service_name-$target_name |
@@ -87,32 +87,13 @@ function start() {
             ) &
             echo $! >>$umc_run/$svc_name.pid
 
-            echo mtr $service_name $target_name $address
-
-            rm -f $umc_run/mtr_$service_name-$target_name-$address
-            # mkfifo $umc_run/mtr_$service_name-$target_name-$address
-            # umc mtr collect 7 1329 $address > $umc_run/mtr_$service_name-$target_name-$address &
-            # echo $! >>$umc_run/$svc_name.pid
-
+            echo "mtr $service_name $target_name $address"
             (
                 umc mtr collect 60 1440 $address |
-                    stdbuf -oL -eL $umc_bin/csv2obd --resource mtr_$service_name-$target_name |
+                    $umc_bin/csv2obd --resource mtr_$service_name-$target_name |
                     $umc_bin/logdirector.pl -dir /var/log/umc -addDateSubDir -name mtr_$service_name-$target_name -detectHeader -checkHeaderDups -flush
             ) &
             echo $! >>$umc_run/$svc_name.pid
-            ps aux | grep mtr | cut -d' ' -f2
-
-            # echo XXX >>/var/log/umc/test_mtr.x1
-            # (
-            #     while read line <$umc_run/mtr_$service_name-$target_name-$address
-            #     do
-            #         echo $line >>/var/log/umc/test_mtr.x2
-            #         echo $line |
-            #         stdbuf -oL -eL $umc_bin/csv2obd --resource mtr_$service_name-$target_name |
-            #         $umc_bin/logdirector.pl -dir /var/log/umc -addDateSubDir -name mtr_$service_name-$target_name -detectHeader -checkHeaderDups -flush
-            #     done
-            # ) &
-            # echo $! >>$umc_run/$svc_name.pid
         done
 
         cat >$umc_log/ping_$service_name.html <<EOF
