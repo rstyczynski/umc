@@ -218,19 +218,19 @@
 
 
         var g100 = new Dygraph(document.getElementById("chart-ping-service"),
-            "/umc/log/" + csv_date + "/ping_" + svc_name + "_service.log", {
+            "/umc/log/" + csv_date + "/ping_" + svc_name + "-service.log", {
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false, false, 
                          true, true, true, false]
         });
         var g101 = new Dygraph(document.getElementById("chart-ping-service-stddev"),
-            "/umc/log/" + csv_date + "/ping_" + svc_name + "_service.log", {
+            "/umc/log/" + csv_date + "/ping_" + svc_name + "-service.log", {
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false, false, 
                          false, false, false, true]
         });
         var g102 = new Dygraph(document.getElementById("chart-mtr-service-hops"),
-            "/umc/log/" + csv_date + "/mtr_" + svc_name + "_service.log", {
+            "/umc/log/" + csv_date + "/mtr_" + svc_name + "-service.log", {
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false, false,
                          true,
@@ -238,7 +238,7 @@
                          false, false, false, false, false, false]
         });
         var g103 = new Dygraph(document.getElementById("chart-mtr-service-loss"),
-            "/umc/log/" + csv_date + "/mtr_" + svc_name + "_service.log", {
+            "/umc/log/" + csv_date + "/mtr_" + svc_name + "-service.log", {
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false, false,
                          false,
@@ -247,7 +247,7 @@
         });
         // socket
         var g110 = new Dygraph(document.getElementById("chart-socket-service"),
-            "/umc/log/" + csv_date + "/socket_" + svc_name + "_service.log", {
+            "/umc/log/" + csv_date + "/socket_" + svc_name + "-service.log", {
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false,         // timezone,timestamp,system,source
                          false, false, false, false,         // targetName,targetPort,address,dnsInfo
@@ -255,7 +255,7 @@
                          false, false]                       // response,error
         });
         var g111 = new Dygraph(document.getElementById("chart-socket-service-dns"),
-            "/umc/log/" + csv_date + "/socket_" + svc_name + "_service.log", {
+            "/umc/log/" + csv_date + "/socket_" + svc_name + "-service.log", {
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false,         // timezone,timestamp,system,source
                          false, false, false, false,         // targetName,targetPort,address,dnsInfo
@@ -264,19 +264,19 @@
         });
 
         var g200 = new Dygraph(document.getElementById("chart-ping-cpe"),
-            "/umc/log/" + csv_date + "/ping_" + svc_name + "_cpe.log", {
+            "/umc/log/" + csv_date + "/ping_" + svc_name + "-cpe.log", {
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false, false, 
                          true, true, true, false]
         });
         var g201 = new Dygraph(document.getElementById("chart-ping-cpe-stddev"),
-            "/umc/log/" + csv_date + "/ping_" + svc_name + "_cpe.log", {
+            "/umc/log/" + csv_date + "/ping_" + svc_name + "-cpe.log", {
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false, false, 
                          false, false, false, true]
         });
         var g202 = new Dygraph(document.getElementById("chart-mtr-cpe-hops"),
-            "/umc/log/" + csv_date + "/mtr_" + svc_name + "_cpe.log", {
+            "/umc/log/" + csv_date + "/mtr_" + svc_name + "-cpe.log", {
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false, false,
                          true,
@@ -284,7 +284,7 @@
                          false, false, false, false, false, false]
         });
         var g203 = new Dygraph(document.getElementById("chart-mtr-cpe-loss"),
-            "/umc/log/" + csv_date + "/mtr_" + svc_name + "_cpe.log", {
+            "/umc/log/" + csv_date + "/mtr_" + svc_name + "-cpe.log", {
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false, false,
                          false,
@@ -293,19 +293,19 @@
         });
 
         var g300 = new Dygraph(document.getElementById("chart-ping-vcn"),
-            "/umc/log/" + csv_date + "/ping_" + svc_name + "_vcn.log", {
+            "/umc/log/" + csv_date + "/ping_" + svc_name + "-vcn.log", {
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false, false, 
                          true, true, true, false]
         });
         var g301 = new Dygraph(document.getElementById("chart-ping-vcn-stddev"),
-            "/umc/log/" + csv_date + "/ping_" + svc_name + "_vcn.log", {
+            "/umc/log/" + csv_date + "/ping_" + svc_name + "-vcn.log", {
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false, false, 
                          false, false, false, true]
         });
         var g302 = new Dygraph(document.getElementById("chart-mtr-vcn-hops"),
-            "/umc/log/" + csv_date + "/mtr_" + svc_name + "_vcn.log", {
+            "/umc/log/" + csv_date + "/mtr_" + svc_name + "-vcn.log", {
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false, false,
                          true,
@@ -313,7 +313,7 @@
                          false, false, false, false, false, false]
         });
         var g303 = new Dygraph(document.getElementById("chart-mtr-vcn-loss"),
-            "/umc/log/" + csv_date + "/mtr_" + svc_name + "_vcn.log", {
+            "/umc/log/" + csv_date + "/mtr_" + svc_name + "-vcn.log", {
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false, false,
                          false,
@@ -322,20 +322,20 @@
         });
 
         var g400 = new Dygraph(document.getElementById("chart-ping-internet"),
-            "/umc/log/" + csv_date + "/ping_" + svc_name + "_internet.log", {
+            "/umc/log/" + csv_date + "/ping_" + svc_name + "-internet.log", {
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false, false, 
                          true, true, true, false]
         });
         var g401 = new Dygraph(document.getElementById("chart-ping-internet-stddev"),
-            "/umc/log/" + csv_date + "/ping_" + svc_name + "_internet.log", {
+            "/umc/log/" + csv_date + "/ping_" + svc_name + "-internet.log", {
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false, false, 
                          false, false, false, true]
         });
         //socket
         var g410 = new Dygraph(document.getElementById("chart-socket-internet"),
-            "/umc/log/" + csv_date + "/socket_" + svc_name + "_internet.log", {
+            "/umc/log/" + csv_date + "/socket_" + svc_name + "-internet.log", {
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false,         // timezone,timestamp,system,source
                          false, false, false, false,         // targetName,targetPort,address,dnsInfo
@@ -343,7 +343,7 @@
                          false, false]                       // response,error
         });
         var g411 = new Dygraph(document.getElementById("chart-socket-internet-dns"),
-            "/umc/log/" + csv_date + "/socket_" + svc_name + "_internet.log", {
+            "/umc/log/" + csv_date + "/socket_" + svc_name + "-internet.log", {
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false,         // timezone,timestamp,system,source
                          false, false, false, false,         // targetName,targetPort,address,dnsInfo
@@ -353,7 +353,7 @@
 
 
         var g402 = new Dygraph(document.getElementById("chart-mtr-internet-hops"),
-            "/umc/log/" + csv_date + "/mtr_" + svc_name + "_internet.log", {
+            "/umc/log/" + csv_date + "/mtr_" + svc_name + "-internet.log", {
             labelsDiv: "chart-legend", 
             visibility: [false, false, false, false, false,
                          true,
@@ -362,7 +362,7 @@
         });
 
         var g403 = new Dygraph(document.getElementById("chart-mtr-internet-loss"),
-            "/umc/log/" + csv_date + "/mtr_" + svc_name + "_internet.log", {
+            "/umc/log/" + csv_date + "/mtr_" + svc_name + "-internet.log", {
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false, false,
                          false,

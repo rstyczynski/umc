@@ -136,7 +136,7 @@
 
 
         var g100 = new Dygraph(document.getElementById("chart-socket-service"),
-            "/umc/log/" + csv_date + "/socket_" + svc_name + "_service.log", {
+            "/umc/log/" + csv_date + "/socket_" + svc_name + "-service.log", {
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false,         // timezone,timestamp,system,source
                          false, false, false, false,         // targetName,targetPort,address,dnsInfo
@@ -144,7 +144,7 @@
                          false, false]                       // response,error
         });
         var g101 = new Dygraph(document.getElementById("chart-socket-service-dns"),
-            "/umc/log/" + csv_date + "/socket_" + svc_name + "_service.log", {
+            "/umc/log/" + csv_date + "/socket_" + svc_name + "-service.log", {
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false,         // timezone,timestamp,system,source
                          false, false, false, false,         // targetName,targetPort,address,dnsInfo
@@ -153,7 +153,7 @@
         });
 
         var g200 = new Dygraph(document.getElementById("chart-socket-internet"),
-            "/umc/log/" + csv_date + "/socket_" + svc_name + "_internet.log", {
+            "/umc/log/" + csv_date + "/socket_" + svc_name + "-internet.log", {
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false,         // timezone,timestamp,system,source
                          false, false, false, false,         // targetName,targetPort,address,dnsInfo
@@ -161,7 +161,7 @@
                          false, false]                       // response,error
         });
         var g201 = new Dygraph(document.getElementById("chart-socket-internet-dns"),
-            "/umc/log/" + csv_date + "/socket_" + svc_name + "_internet.log", {
+            "/umc/log/" + csv_date + "/socket_" + svc_name + "-internet.log", {
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false,         // timezone,timestamp,system,source
                          false, false, false, false,         // targetName,targetPort,address,dnsInfo
