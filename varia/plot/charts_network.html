@@ -391,14 +391,15 @@
 
         // service no.1 chart start
         if ( multi_services === null ) {
+
+            g_s1_chart_section.style.display = "block";
+
             var g_s1_100 = new Dygraph(document.getElementById("chart1-ping-service"),
                 "/umc/log/" + csv_date + "/ping_" + svc_name + "-service.log", {
                 labelsDiv: "chart-legend",
                 visibility: [false, false, false, false, false, 
                             true, true, true, false]
             });
-            g_s1_chart_section.style.display = "block";
-
 
             var g_s1_101 = new Dygraph(document.getElementById("chart1-ping-service-stddev"),
                     "/umc/log/" + csv_date + "/ping_" + svc_name + "-service.log", {
@@ -500,14 +501,15 @@
 
             // service no.2 chart start
             {
+
+            g_s2_chart_section.style.display = "block";
+
             var g_s2_100 = new Dygraph(document.getElementById("chart2-ping-service"),
                 "/umc/log/" + csv_date + "/ping_" + svc_name + "-service2.log", {
                 labelsDiv: "chart-legend",
                 visibility: [false, false, false, false, false, 
                             true, true, true, false]
                 });
-                
-            g_s2_chart_section.style.display = "block";
 
             var g_s2_101 = new Dygraph(document.getElementById("chart2-ping-service-stddev"),
                 "/umc/log/" + csv_date + "/ping_" + svc_name + "-service2.log", {
@@ -554,14 +556,14 @@
 
             // service no.3 chart start
             {
+            g_s3_chart_section.style.display = "block";
+
             var g_s3_100 = new Dygraph(document.getElementById("chart3-ping-service"),
                 "/umc/log/" + csv_date + "/ping_" + svc_name + "-service3.log", {
                 labelsDiv: "chart-legend",
                 visibility: [false, false, false, false, false, 
                             true, true, true, false]
                 });
-
-            g_s3_chart_section.style.display = "block";
 
             var g_s3_101 = new Dygraph(document.getElementById("chart3-ping-service-stddev"),
                 "/umc/log/" + csv_date + "/ping_" + svc_name + "-service3.log", {
@@ -607,14 +609,14 @@
 
             // service no.4 chart start
             {
+                g_s4_chart_section.style.display = "block";
+
                 var g_s4_100 = new Dygraph(document.getElementById("chart4-ping-service"),
                     "/umc/log/" + csv_date + "/ping_" + svc_name + "-service4.log", {
                     labelsDiv: "chart-legend",
                     visibility: [false, false, false, false, false, 
                                 true, true, true, false]
                     });
-
-                g_s4_chart_section.style.display = "block";
 
                 var g_s4_101 = new Dygraph(document.getElementById("chart4-ping-service-stddev"),
                     "/umc/log/" + csv_date + "/ping_" + svc_name + "-service4.log", {
@@ -660,15 +662,14 @@
 
             // service no.5 chart start
             {
-            // try service5
+            g_s5_chart_section.style.display = "block";
+
             var g_s5_100 = new Dygraph(document.getElementById("chart5-ping-service"),
                 "/umc/log/" + csv_date + "/ping_" + svc_name + "-service5.log", {
                 labelsDiv: "chart-legend",
                 visibility: [false, false, false, false, false, 
                             true, true, true, false]
                 });
-
-            g_s5_chart_section.style.display = "block";
 
             var g_s5_101 = new Dygraph(document.getElementById("chart5-ping-service-stddev"),
                 "/umc/log/" + csv_date + "/ping_" + svc_name + "-service5.log", {
