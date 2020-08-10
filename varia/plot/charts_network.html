@@ -432,25 +432,25 @@
 
             if (g_s1_100.rawData_ !== undefined) {
                 var chart_section = document.getElementById("service1");
-                chart_section.style.display = "block";
+                g_s1_1chart_section.style.display = "none";
 
             } else {
-                var g_s1_101 = new Dygraph(document.getElementById("chart1-ping-service1-stddev"),
-                    "/umc/log/" + csv_date + "/ping_" + svc_name + "-service.log", {
+                var g_s1_101 = new Dygraph(document.getElementById("chart1-ping-service-stddev"),
+                    "/umc/log/" + csv_date + "/ping_" + svc_name + "-service1.log", {
                     labelsDiv: "chart-legend",
                     visibility: [false, false, false, false, false, 
                                 false, false, false, true]
                 });
-                var g_s1_102 = new Dygraph(document.getElementById("chart1-mtr-service1-hops"),
-                    "/umc/log/" + csv_date + "/mtr_" + svc_name + "-service.log", {
+                var g_s1_102 = new Dygraph(document.getElementById("chart1-mtr-service-hops"),
+                    "/umc/log/" + csv_date + "/mtr_" + svc_name + "-service1.log", {
                     labelsDiv: "chart-legend",
                     visibility: [false, false, false, false, false,
                                 true,
                                 false, false,
                                 false, false, false, false, false, false]
                 });
-                var g_s1_103 = new Dygraph(document.getElementById("chart1-mtr-service1-loss"),
-                    "/umc/log/" + csv_date + "/mtr_" + svc_name + "-service.log", {
+                var g_s1_103 = new Dygraph(document.getElementById("chart1-mtr-service-loss"),
+                    "/umc/log/" + csv_date + "/mtr_" + svc_name + "-service1.log", {
                     labelsDiv: "chart-legend",
                     visibility: [false, false, false, false, false,
                                 false,
@@ -458,7 +458,7 @@
                                 false, false, false, false, false, false]
                 });
                 // socket
-                var g_s1_110 = new Dygraph(document.getElementById("chart1-socket-service1"),
+                var g_s1_110 = new Dygraph(document.getElementById("chart1-socket-service"),
                     "/umc/log/" + csv_date + "/socket_" + svc_name + "-service1.log", {
                     labelsDiv: "chart-legend",
                     visibility: [false, false, false, false,         // timezone,timestamp,system,source
@@ -466,7 +466,7 @@
                                 false, false, true, true, true, true, // resolve,resolveFull,connect,send,response,close
                                 false, false]                       // response,error
                 });
-                var g_s1_111 = new Dygraph(document.getElementById("chart1-socket-service1-dns"),
+                var g_s1_111 = new Dygraph(document.getElementById("chart1-socket-service-dns"),
                     "/umc/log/" + csv_date + "/socket_" + svc_name + "-service1.log", {
                     labelsDiv: "chart-legend",
                     visibility: [false, false, false, false,         // timezone,timestamp,system,source
@@ -477,10 +477,10 @@
             }
         } 
         }
-        // service no.2 chart stop
+        // service no.1 chart stop
 
 
-        // service no.1 chart start
+        // service no.2 chart start
         {
         var g_s2_100 = new Dygraph(document.getElementById("chart2-ping-service"),
             "/umc/log/" + csv_date + "/ping_" + svc_name + "-service.log", {
@@ -541,25 +541,25 @@
 
             if (g_s2_100.rawData_ !== undefined) {
                 var chart_section = document.getElementById("service2");
-                chart_section.style.display = "block";
+                g_s1_1chart_section.style.display = "none";
 
             } else {
-                var g_s2_101 = new Dygraph(document.getElementById("chart2-ping-service2-stddev"),
-                    "/umc/log/" + csv_date + "/ping_" + svc_name + "-service.log", {
+                var g_s2_101 = new Dygraph(document.getElementById("chart2-ping-service-stddev"),
+                    "/umc/log/" + csv_date + "/ping_" + svc_name + "-service2.log", {
                     labelsDiv: "chart-legend",
                     visibility: [false, false, false, false, false, 
                                 false, false, false, true]
                 });
-                var g_s2_102 = new Dygraph(document.getElementById("chart2-mtr-service2-hops"),
-                    "/umc/log/" + csv_date + "/mtr_" + svc_name + "-service.log", {
+                var g_s2_102 = new Dygraph(document.getElementById("chart2-mtr-service-hops"),
+                    "/umc/log/" + csv_date + "/mtr_" + svc_name + "-service2.log", {
                     labelsDiv: "chart-legend",
                     visibility: [false, false, false, false, false,
                                 true,
                                 false, false,
                                 false, false, false, false, false, false]
                 });
-                var g_s2_103 = new Dygraph(document.getElementById("chart2-mtr-service2-loss"),
-                    "/umc/log/" + csv_date + "/mtr_" + svc_name + "-service.log", {
+                var g_s2_103 = new Dygraph(document.getElementById("chart2-mtr-service-loss"),
+                    "/umc/log/" + csv_date + "/mtr_" + svc_name + "-service2.log", {
                     labelsDiv: "chart-legend",
                     visibility: [false, false, false, false, false,
                                 false,
@@ -567,7 +567,7 @@
                                 false, false, false, false, false, false]
                 });
                 // socket
-                var g_s2_110 = new Dygraph(document.getElementById("chart2-socket-service2"),
+                var g_s2_110 = new Dygraph(document.getElementById("chart2-socket-service"),
                     "/umc/log/" + csv_date + "/socket_" + svc_name + "-service2.log", {
                     labelsDiv: "chart-legend",
                     visibility: [false, false, false, false,         // timezone,timestamp,system,source
@@ -575,7 +575,7 @@
                                 false, false, true, true, true, true, // resolve,resolveFull,connect,send,response,close
                                 false, false]                       // response,error
                 });
-                var g_s2_111 = new Dygraph(document.getElementById("chart2-socket-service2-dns"),
+                var g_s2_111 = new Dygraph(document.getElementById("chart2-socket-service-dns"),
                     "/umc/log/" + csv_date + "/socket_" + svc_name + "-service2.log", {
                     labelsDiv: "chart-legend",
                     visibility: [false, false, false, false,         // timezone,timestamp,system,source
@@ -649,25 +649,25 @@
 
             if (g_s3_100.rawData_ !== undefined) {
                 var chart_section = document.getElementById("service3");
-                chart_section.style.display = "block";
+                g_s1_1chart_section.style.display = "none";
 
             } else {
-                var g_s3_101 = new Dygraph(document.getElementById("chart3-ping-service3-stddev"),
-                    "/umc/log/" + csv_date + "/ping_" + svc_name + "-service.log", {
+                var g_s3_101 = new Dygraph(document.getElementById("chart3-ping-service-stddev"),
+                    "/umc/log/" + csv_date + "/ping_" + svc_name + "-service3.log", {
                     labelsDiv: "chart-legend",
                     visibility: [false, false, false, false, false, 
                                 false, false, false, true]
                 });
-                var g_s3_102 = new Dygraph(document.getElementById("chart3-mtr-service3-hops"),
-                    "/umc/log/" + csv_date + "/mtr_" + svc_name + "-service.log", {
+                var g_s3_102 = new Dygraph(document.getElementById("chart3-mtr-service-hops"),
+                    "/umc/log/" + csv_date + "/mtr_" + svc_name + "-service3.log", {
                     labelsDiv: "chart-legend",
                     visibility: [false, false, false, false, false,
                                 true,
                                 false, false,
                                 false, false, false, false, false, false]
                 });
-                var g_s3_103 = new Dygraph(document.getElementById("chart3-mtr-service3-loss"),
-                    "/umc/log/" + csv_date + "/mtr_" + svc_name + "-service.log", {
+                var g_s3_103 = new Dygraph(document.getElementById("chart3-mtr-service-loss"),
+                    "/umc/log/" + csv_date + "/mtr_" + svc_name + "-service3.log", {
                     labelsDiv: "chart-legend",
                     visibility: [false, false, false, false, false,
                                 false,
@@ -675,7 +675,7 @@
                                 false, false, false, false, false, false]
                 });
                 // socket
-                var g_s3_110 = new Dygraph(document.getElementById("chart3-socket-service3"),
+                var g_s3_110 = new Dygraph(document.getElementById("chart3-socket-service"),
                     "/umc/log/" + csv_date + "/socket_" + svc_name + "-service3.log", {
                     labelsDiv: "chart-legend",
                     visibility: [false, false, false, false,         // timezone,timestamp,system,source
@@ -683,7 +683,7 @@
                                 false, false, true, true, true, true, // resolve,resolveFull,connect,send,response,close
                                 false, false]                       // response,error
                 });
-                var g_s3_111 = new Dygraph(document.getElementById("chart3-socket-service3-dns"),
+                var g_s3_111 = new Dygraph(document.getElementById("chart3-socket-service-dns"),
                     "/umc/log/" + csv_date + "/socket_" + svc_name + "-service3.log", {
                     labelsDiv: "chart-legend",
                     visibility: [false, false, false, false,         // timezone,timestamp,system,source
@@ -757,25 +757,25 @@
 
             if (g_s4_100.rawData_ !== undefined) {
                 var chart_section = document.getElementById("service4");
-                chart_section.style.display = "block";
+                g_s1_1chart_section.style.display = "none";
 
             } else {
-                var g_s4_101 = new Dygraph(document.getElementById("chart4-ping-service4-stddev"),
-                    "/umc/log/" + csv_date + "/ping_" + svc_name + "-service.log", {
+                var g_s4_101 = new Dygraph(document.getElementById("chart4-ping-service-stddev"),
+                    "/umc/log/" + csv_date + "/ping_" + svc_name + "-service4.log", {
                     labelsDiv: "chart-legend",
                     visibility: [false, false, false, false, false, 
                                 false, false, false, true]
                 });
-                var g_s4_102 = new Dygraph(document.getElementById("chart4-mtr-service4-hops"),
-                    "/umc/log/" + csv_date + "/mtr_" + svc_name + "-service.log", {
+                var g_s4_102 = new Dygraph(document.getElementById("chart4-mtr-service-hops"),
+                    "/umc/log/" + csv_date + "/mtr_" + svc_name + "-service4.log", {
                     labelsDiv: "chart-legend",
                     visibility: [false, false, false, false, false,
                                 true,
                                 false, false,
                                 false, false, false, false, false, false]
                 });
-                var g_s4_103 = new Dygraph(document.getElementById("chart4-mtr-service4-loss"),
-                    "/umc/log/" + csv_date + "/mtr_" + svc_name + "-service.log", {
+                var g_s4_103 = new Dygraph(document.getElementById("chart4-mtr-service-loss"),
+                    "/umc/log/" + csv_date + "/mtr_" + svc_name + "-service4.log", {
                     labelsDiv: "chart-legend",
                     visibility: [false, false, false, false, false,
                                 false,
@@ -783,7 +783,7 @@
                                 false, false, false, false, false, false]
                 });
                 // socket
-                var g_s4_110 = new Dygraph(document.getElementById("chart4-socket-service4"),
+                var g_s4_110 = new Dygraph(document.getElementById("chart4-socket-service"),
                     "/umc/log/" + csv_date + "/socket_" + svc_name + "-service4.log", {
                     labelsDiv: "chart-legend",
                     visibility: [false, false, false, false,         // timezone,timestamp,system,source
@@ -791,7 +791,7 @@
                                 false, false, true, true, true, true, // resolve,resolveFull,connect,send,response,close
                                 false, false]                       // response,error
                 });
-                var g_s4_111 = new Dygraph(document.getElementById("chart4-socket-service4-dns"),
+                var g_s4_111 = new Dygraph(document.getElementById("chart4-socket-service-dns"),
                     "/umc/log/" + csv_date + "/socket_" + svc_name + "-service4.log", {
                     labelsDiv: "chart-legend",
                     visibility: [false, false, false, false,         // timezone,timestamp,system,source
@@ -804,7 +804,7 @@
         }
         // service no.4 chart stop
 
-        // service no.4 chart start
+        // service no.5 chart start
         {
         var g_s5_100 = new Dygraph(document.getElementById("chart5-ping-service"),
             "/umc/log/" + csv_date + "/ping_" + svc_name + "-service.log", {
@@ -865,25 +865,25 @@
 
             if (g_s5_100.rawData_ !== undefined) {
                 var chart_section = document.getElementById("service5");
-                chart_section.style.display = "block";
+                g_s1_1chart_section.style.display = "none";
 
             } else {
-                var g_s5_101 = new Dygraph(document.getElementById("chart5-ping-service5-stddev"),
-                    "/umc/log/" + csv_date + "/ping_" + svc_name + "-service.log", {
+                var g_s5_101 = new Dygraph(document.getElementById("chart5-ping-service-stddev"),
+                    "/umc/log/" + csv_date + "/ping_" + svc_name + "-service5.log", {
                     labelsDiv: "chart-legend",
                     visibility: [false, false, false, false, false, 
                                 false, false, false, true]
                 });
-                var g_s5_102 = new Dygraph(document.getElementById("chart5-mtr-service5-hops"),
-                    "/umc/log/" + csv_date + "/mtr_" + svc_name + "-service.log", {
+                var g_s5_102 = new Dygraph(document.getElementById("chart5-mtr-service-hops"),
+                    "/umc/log/" + csv_date + "/mtr_" + svc_name + "-service5.log", {
                     labelsDiv: "chart-legend",
                     visibility: [false, false, false, false, false,
                                 true,
                                 false, false,
                                 false, false, false, false, false, false]
                 });
-                var g_s5_103 = new Dygraph(document.getElementById("chart5-mtr-service5-loss"),
-                    "/umc/log/" + csv_date + "/mtr_" + svc_name + "-service.log", {
+                var g_s5_103 = new Dygraph(document.getElementById("chart5-mtr-service-loss"),
+                    "/umc/log/" + csv_date + "/mtr_" + svc_name + "-service5.log", {
                     labelsDiv: "chart-legend",
                     visibility: [false, false, false, false, false,
                                 false,
@@ -891,7 +891,7 @@
                                 false, false, false, false, false, false]
                 });
                 // socket
-                var g_s5_110 = new Dygraph(document.getElementById("chart5-socket-service5"),
+                var g_s5_110 = new Dygraph(document.getElementById("chart5-socket-service"),
                     "/umc/log/" + csv_date + "/socket_" + svc_name + "-service5.log", {
                     labelsDiv: "chart-legend",
                     visibility: [false, false, false, false,         // timezone,timestamp,system,source
@@ -899,7 +899,7 @@
                                 false, false, true, true, true, true, // resolve,resolveFull,connect,send,response,close
                                 false, false]                       // response,error
                 });
-                var g_s5_111 = new Dygraph(document.getElementById("chart5-socket-service5-dns"),
+                var g_s5_111 = new Dygraph(document.getElementById("chart5-socket-service-dns"),
                     "/umc/log/" + csv_date + "/socket_" + svc_name + "-service5.log", {
                     labelsDiv: "chart-legend",
                     visibility: [false, false, false, false,         // timezone,timestamp,system,source
@@ -910,7 +910,7 @@
             }
         } 
         }
-        // service no.4 chart stop
+        // service no.5 chart stop
 
 
         var g200 = new Dygraph(document.getElementById("chart-ping-cpe"),
