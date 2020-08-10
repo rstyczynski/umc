@@ -371,6 +371,17 @@
         document.getElementById("link_fwd").textContent = date2text(csv_date_fwd);
 
 
+        var g_s1_chart_section = document.getElementById("service1");
+        var g_s2_chart_section = document.getElementById("service2");
+        var g_s3_chart_section = document.getElementById("service3");
+        var g_s4_chart_section = document.getElementById("service4");
+        var g_s5_chart_section = document.getElementById("service5");
+
+        g_s2_chart_section.style.display = "none";
+        g_s3_chart_section.style.display = "none";
+        g_s4_chart_section.style.display = "none";
+        g_s5_chart_section.style.display = "none";
+
         // service no.1 chart start
         {
         var g_s1_100 = new Dygraph(document.getElementById("chart1-ping-service"),
@@ -381,6 +392,9 @@
         });
 
         if (g_s1_100.rawData_ !== undefined) {
+
+            g_s1_chart_section.style.display = "block";
+
             var g_s1_101 = new Dygraph(document.getElementById("chart1-ping-service-stddev"),
                     "/umc/log/" + csv_date + "/ping_" + svc_name + "-service.log", {
                     labelsDiv: "chart-legend",
@@ -431,10 +445,9 @@
                 });
 
             if (g_s1_100.rawData_ !== undefined) {
-                var chart_section = document.getElementById("service1");
-                g_s1_1chart_section.style.display = "none";
+                
+                g_s1_chart_section.style.display = "block";
 
-            } else {
                 var g_s1_101 = new Dygraph(document.getElementById("chart1-ping-service-stddev"),
                     "/umc/log/" + csv_date + "/ping_" + svc_name + "-service1.log", {
                     labelsDiv: "chart-legend",
@@ -487,10 +500,9 @@
                         });
 
                     if (g_s2_100.rawData_ !== undefined) {
-                        var chart_section = document.getElementById("service2");
-                        g_s1_1chart_section.style.display = "none";
+                        
+                        g_s2_chart_section.style.display = "block";
 
-                    } else {
                         var g_s2_101 = new Dygraph(document.getElementById("chart2-ping-service-stddev"),
                             "/umc/log/" + csv_date + "/ping_" + svc_name + "-service2.log", {
                             labelsDiv: "chart-legend",
@@ -545,10 +557,9 @@
                         });
 
                     if (g_s3_100.rawData_ !== undefined) {
-                        var chart_section = document.getElementById("service3");
-                        g_s1_1chart_section.style.display = "none";
 
-                    } else {
+                        g_s3_chart_section.style.display = "block";
+
                         var g_s3_101 = new Dygraph(document.getElementById("chart3-ping-service-stddev"),
                             "/umc/log/" + csv_date + "/ping_" + svc_name + "-service3.log", {
                             labelsDiv: "chart-legend",
@@ -603,10 +614,9 @@
                         });
 
                     if (g_s4_100.rawData_ !== undefined) {
-                        var chart_section = document.getElementById("service4");
-                        g_s1_1chart_section.style.display = "none";
 
-                    } else {
+                        g_s4_chart_section.style.display = "block";
+
                         var g_s4_101 = new Dygraph(document.getElementById("chart4-ping-service-stddev"),
                             "/umc/log/" + csv_date + "/ping_" + svc_name + "-service4.log", {
                             labelsDiv: "chart-legend",
@@ -661,10 +671,9 @@
                         });
 
                     if (g_s5_100.rawData_ !== undefined) {
-                        var chart_section = document.getElementById("service5");
-                        g_s1_1chart_section.style.display = "none";
 
-                    } else {
+                        g_s5_chart_section.style.display = "block";
+
                         var g_s5_101 = new Dygraph(document.getElementById("chart5-ping-service-stddev"),
                             "/umc/log/" + csv_date + "/ping_" + svc_name + "-service5.log", {
                             labelsDiv: "chart-legend",
@@ -712,9 +721,6 @@
         } 
         }
         // service no.1 chart stop
-
-
-
 
 
         var g200 = new Dygraph(document.getElementById("chart-ping-cpe"),
