@@ -74,7 +74,7 @@ function start() {
             ) &
             echo $! >>$umc_run/$svc_name.pid
 
-            if [[ $target_name ~= "service[0-9]+$" ]]; then
+            if [[ $target_name =~ "service[0-9]+$" ]]; then
                 multi_service=yes
             fi
 
