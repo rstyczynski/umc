@@ -385,7 +385,7 @@
 
 
         // service no.1 chart start
-        if ( multi_services === undefined ) {
+        if ( multi_services === null ) {
             var g_s1_100 = new Dygraph(document.getElementById("chart1-ping-service"),
                 "/umc/log/" + csv_date + "/ping_" + svc_name + "-service.log", {
                 labelsDiv: "chart-legend",
