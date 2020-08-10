@@ -363,8 +363,13 @@
 
         multi_services = params.get('multi');
 
-        link_rdw = location.protocol + '//' + location.host + location.pathname + '?service_name=' + svc_name + '&date=' + date2text(csv_date_rwd) + '&multi=' + multi_services;
-        link_fwd = location.protocol + '//' + location.host + location.pathname + '?service_name=' + svc_name + '&date=' + date2text(csv_date_fwd) + '&multi=' + multi_services;
+        if ( multi_services === null ) {
+            link_rdw = location.protocol + '//' + location.host + location.pathname + '?service_name=' + svc_name + '&date=' + date2text(csv_date_rwd);
+            link_fwd = location.protocol + '//' + location.host + location.pathname + '?service_name=' + svc_name + '&date=' + date2text(csv_date_fwd);
+        } else {
+            link_rdw = location.protocol + '//' + location.host + location.pathname + '?service_name=' + svc_name + '&date=' + date2text(csv_date_rwd) + '&multi';
+            link_fwd = location.protocol + '//' + location.host + location.pathname + '?service_name=' + svc_name + '&date=' + date2text(csv_date_fwd) + '&multi';
+        }
 
         document.getElementById("link_rdw").setAttribute("href",link_rdw);
         document.getElementById("link_rdw").textContent = date2text(csv_date_rwd);
@@ -439,6 +444,8 @@
 
             // service no.1 chart start
             {
+            g_s1_chart_section.style.display = "block";
+
             var g_s1_100 = new Dygraph(document.getElementById("chart1-ping-service"),
                 "/umc/log/" + csv_date + "/ping_" + svc_name + "-service1.log", {
                 labelsDiv: "chart-legend",
@@ -446,14 +453,13 @@
                             true, true, true, false]
                 });
 
-            g_s1_chart_section.style.display = "block";
-
             var g_s1_101 = new Dygraph(document.getElementById("chart1-ping-service-stddev"),
                 "/umc/log/" + csv_date + "/ping_" + svc_name + "-service1.log", {
                 labelsDiv: "chart-legend",
                 visibility: [false, false, false, false, false, 
                             false, false, false, true]
             });
+
             var g_s1_102 = new Dygraph(document.getElementById("chart1-mtr-service-hops"),
                 "/umc/log/" + csv_date + "/mtr_" + svc_name + "-service1.log", {
                 labelsDiv: "chart-legend",
