@@ -58,6 +58,8 @@ function y2j() {
 
 function start() {
 
+    multi_service=no
+
     for service_name in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".network[] | keys[]"); do
 
         for target_name in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".network[].$service_name.tcp[] | keys[]"); do
@@ -71,6 +73,10 @@ function start() {
                     $umc_bin/logdirector.pl -dir /var/log/umc -addDateSubDir -name socket_$service_name-$target_name -detectHeader -checkHeaderDups -flush
             ) &
             echo $! >>$umc_run/$svc_name.pid
+
+            if [[ $target_name ~= "service[0-9]+$" ]]; then
+                multi_service=yes
+            fi
 
         done
 
@@ -96,15 +102,22 @@ function start() {
             echo $! >>$umc_run/$svc_name.pid
         done
 
-        cat >$umc_log/ping_$service_name.html <<EOF
-<meta http-equiv="Refresh" content="0; url='/umc/log/ping?service_name=$service_name'" />
+#         cat >$umc_log/ping_$service_name.html <<EOF
+# <meta http-equiv="Refresh" content="0; url='/umc/log/ping?service_name=$service_name'" />
+# EOF
+#         cat >$umc_log/socket_$service_name.html <<EOF
+# <meta http-equiv="Refresh" content="0; url='/umc/log/socket?service_name=$service_name'" />
+# EOF
+
+        if [ $multi_service == "yes" ]; then
+            cat >$umc_log/network_$service_name.html <<EOF
+<meta http-equiv="Refresh" content="0; url='/umc/log/network?service_name=$service_name&multi'" />
 EOF
-        cat >$umc_log/socket_$service_name.html <<EOF
-<meta http-equiv="Refresh" content="0; url='/umc/log/socket?service_name=$service_name'" />
-EOF
-        cat >$umc_log/network_$service_name.html <<EOF
+        else
+            cat >$umc_log/network_$service_name.html <<EOF
 <meta http-equiv="Refresh" content="0; url='/umc/log/network?service_name=$service_name'" />
 EOF
+        fi
     done
 }
 
