@@ -14,5 +14,5 @@ else
     iostat -k -y -p $device  -d $delay $count | 
     sed $sedBUFFER -n -e '/^Device:/,/^$/{ /^Device/d; /^$/d; p; }'  | 
     sed $sedBUFFER 's/  */,/g;s/^,//;s/,$//' | 
-    egrep -v "$device[0-9]"
+    egrep --line-buffered -v "$device[0-9]"
 fi
