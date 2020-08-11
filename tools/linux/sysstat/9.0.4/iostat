@@ -1,6 +1,10 @@
 #!/bin/bash
 
-delay=$1
-count=$2
+delay=$1; shift
+count=$1; shift
+device=$1
+
 count=$(( $count + 1 ))
-iostat -k -d $delay $count | sed $sedBUFFER -n -e '/^Device:/,/^$/{ /^Device/d; /^$/d; p; }'  | sed $sedBUFFER 's/  */,/g;s/^,//;s/,$//' | sed $sedBUFFER -n '1!p'  | sed $sedBUFFER -n '1!p' 
+iostat -k -y -p $device  -d $delay $count | 
+sed $sedBUFFER -n -e '/^Device:/,/^$/{ /^Device/d; /^$/d; p; }'  | 
+sed $sedBUFFER 's/  */,/g;s/^,//;s/,$//' 
