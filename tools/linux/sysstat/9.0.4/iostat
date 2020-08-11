@@ -5,6 +5,14 @@ count=$1; shift
 device=$1
 
 count=$(( $count + 1 ))
-iostat -k -y -p $device  -d $delay $count | 
-sed $sedBUFFER -n -e '/^Device:/,/^$/{ /^Device/d; /^$/d; p; }'  | 
-sed $sedBUFFER 's/  */,/g;s/^,//;s/,$//' 
+
+if [ ! -z "$device" ]; then
+    iostat -k -y -p $device  -d $delay $count | 
+    sed $sedBUFFER -n -e '/^Device:/,/^$/{ /^Device/d; /^$/d; p; }'  | 
+    sed $sedBUFFER 's/  */,/g;s/^,//;s/,$//'
+else
+    iostat -k -y -p $device  -d $delay $count | 
+    sed $sedBUFFER -n -e '/^Device:/,/^$/{ /^Device/d; /^$/d; p; }'  | 
+    sed $sedBUFFER 's/  */,/g;s/^,//;s/,$//' | 
+    egrep -v "$device[0-9][0-9]*"
+fi
