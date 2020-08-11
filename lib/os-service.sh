@@ -83,6 +83,19 @@ function start() {
                             echo $! >>$umc_run/$svc_name.pid
                         done
                         ;;
+                    disk-tps)
+                        for key in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem.$component[]"); do
+                            echo "       - $key"
+                            (
+                                umc iostat collect 5 2147483647 $key |
+                                    $umc_bin/csv2obd --resource disk-tps-$key |
+                                    $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name disk-tps-$key -detectHeader -checkHeaderDups -flush -tee |
+                                    $umc_bin/dvdt --resource disk-tps-$key --dataat 7 |
+                                    $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name disk-tps-$key\_dt -detectHeader -checkHeaderDups -flush
+                            ) &
+                            echo $! >>$umc_run/$svc_name.pid
+                        done
+                        ;;                    
                     network-if)
                         for key in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem.$component[]"); do
                             echo "       - $key"
