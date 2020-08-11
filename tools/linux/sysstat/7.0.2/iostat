@@ -6,8 +6,8 @@ device=$1
 
 count=$(( $count + 1 ))
 
-if [ ! -z "$device" ]; then
-    iostat -k -y -p $device  -d $delay $count | 
+if [ -z "$device" ]; then
+    iostat -k -y -d $delay $count | 
     sed $sedBUFFER -n -e '/^Device:/,/^$/{ /^Device/d; /^$/d; p; }'  | 
     sed $sedBUFFER 's/  */,/g;s/^,//;s/,$//'
 else
