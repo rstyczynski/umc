@@ -1,0 +1,252 @@
+<html>
+
+<head>
+    <script type="text/javascript" src="lib/dygraph.js"></script>
+    <link rel="stylesheet" src="lib/dygraph.css" />
+    <style type="text/css">
+        /*
+      NOTE: dygraphs does set some properties on the built-in legend, e.g.
+      background-color and left. If you wish to override these, you can add
+      "!important" to your CSS styles, as below.
+
+      The full list of styles for which this is necessary are listed in
+      plugins/legend.js. They are:
+      o position
+      o font-size
+      o z-index
+      o width
+      o top
+      o left
+      o background
+      o line-height
+      o text-align
+      o overflow
+      */
+
+        #graphdiv1 .dygraph-legend {
+            width: 1000px;
+            background-color: transparent !important;
+            left: 0px !important;
+            font-size: 20;
+        }
+
+        /* to keep chart aligned at X axis */
+        .verticalText {
+            text-align: center;
+            white-space: nowrap;
+            width: 150px;
+        }
+
+        body {
+            background-color: #dfbf9f;
+            color: #0000 !important;
+            text-shadow: 1px 1px #444;
+        }
+
+        #chart-legend {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background-color: hsla(170, 58%, 86%, 0.932); /* with opacity */
+            z-index: 2;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div id="chart-legend"></div>
+    
+    <title id='main_title'>Host operational metrics</title>
+    <h1 id='body_title' align="center">Host operational metrics</h1>
+
+    <p align="center">
+    <a id='link_rdw'>previous</a><text id='data_date'></text><a id='link_fwd'>next</a>
+    </p>
+
+    <!-- vmstat -->
+    <h2>Overview</h2>
+    <table width='1300px'>
+        <tr>
+            <td rowspan="2" class="verticalText">CPU</td>
+            <td colspan="2">
+                <div id="chart-os-vmstat-cpu-idle" style="width:800px; height:150px;"></div>
+            </td>
+            <td>
+                <div id="chart-os-vmstat-proc" style="width:200px; height:150px;"></div>
+            </td>
+            <td>
+                <div id="chart-os-vmstat-io" style="width:200px; height:150px;"></div>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <div id="chart-os-vmstat-cpu-busy" style="width:800px; height:150px;"></div>
+            </td>
+            <td>
+                <div id="chart-os-vmstat-int" style="width:200px; height:150px;"></div>
+            </td>
+            <td>
+                <div id="chart-os-vmstat-mem" style="width:200px; height:150px;"></div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- ifconfig -->
+    <h2>Network activity [B/s]</h2>
+    <table width='1300px'>
+        <tr>
+            <td rowspan="2" class="verticalText">net1</td>
+            <td colspan="2" rowspan="2">
+                <div id="chart-os-network-net1-bytes" style="width:800px; height:300px;"></div>
+            </td>
+            <td colspan="2">
+                <div id="chart-os-network-net1-packets" style="width:400px; height:150px;"></div>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <div id="chart-os-network-net1-errors" style="width:400px; height:150px;"></div>
+            </td>
+        </tr>
+
+    </table>
+
+    <!-- disk-tps -->
+    <h2>Disk space</h2>
+    <table width='1300px'>
+        <tr>
+            <td rowspan="2" class="verticalText">all</td>
+            <td colspan="2" rowspan="2">
+                <div id="chart-os-disk-space-mount1-used" style="width:800px; height:300px;"></div>
+            </td>
+            <td colspan="2">
+                <div id="chart-os-disk-space-mount1-ups" style="width:400px; height:150px;"></div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- disk-tps -->
+    <h2>IO activity [kB/s]</h2>
+    <table width='1300px'>
+        <tr>
+            <td rowspan="2" class="verticalText">all</td>
+            <td colspan="2" rowspan="2">
+                <div id="chart-os-disk-tps-disk1-kB_read_wrtn" style="width:800px; height:300px;"></div>
+            </td>
+            <td colspan="2">
+                <div id="chart-os-disk-tps-disk1-tps" style="width:400px; height:150px;"></div>
+            </td>
+        </tr>
+    </table>
+
+    <script type="text/javascript">
+
+        function date2text(date_obj) {
+            dd = String(date_obj.getDate()).padStart(2, '0');
+            mm = String(date_obj.getMonth() + 1).padStart(2, '0');
+            yyyy = date_obj.getFullYear();
+
+            date_txt = yyyy + '-' + mm + '-' + dd;
+            return date_txt;
+        }
+
+        params = (new URL(document.location)).searchParams;
+        csv_date = name = params.get('date');
+        if (!csv_date) {
+            today = new Date();
+            csv_date = date2text(today);
+        }
+        document.getElementById('data_date').textContent = " | " + csv_date + " | ";
+        csv_date_rwd = new Date(csv_date);
+        csv_date_rwd.setDate(csv_date_rwd.getDate() - 1 );
+
+        csv_date_fwd = new Date(csv_date);
+        csv_date_fwd.setDate(csv_date_fwd.getDate() + 1 );
+
+        link_rdw = location.protocol + '//' + location.host + location.pathname + '?date=' + date2text(csv_date_rwd);
+        link_fwd = location.protocol + '//' + location.host + location.pathname + '?date=' + date2text(csv_date_fwd);
+
+        document.getElementById("link_rdw").setAttribute("href",link_rdw);
+        document.getElementById("link_rdw").textContent = date2text(csv_date_rwd);
+        document.getElementById("link_fwd").setAttribute("href",link_fwd);
+        document.getElementById("link_fwd").textContent = date2text(csv_date_fwd);
+
+        var g100 = new Dygraph(document.getElementById("chart-os-vmstat-cpu-idle"),
+            "/umc/log/" + csv_date + "/system-vmstat.log", {
+            labelsDiv: "chart-legend",
+            visibility: [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false]
+        });
+
+        var g_s1_101 = new Dygraph(document.getElementById("chart-os-vmstat-cpu-busy"),
+            "/umc/log/" + csv_date + "/system-vmstat.log", {
+            labelsDiv: "chart-legend",
+            visibility: [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true, false, true, true]
+        });
+
+        var g_s1_110 = new Dygraph(document.getElementById("chart-os-vmstat-proc"),
+            "/umc/log/" + csv_date + "/system-vmstat.log", {
+            labelsDiv: "chart-legend",
+            visibility: [false, false, false, false, true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false]
+        });
+
+        var g_s1_111 = new Dygraph(document.getElementById("chart-os-vmstat-io"),
+            "/umc/log/" + csv_date + "/system-vmstat.log", {
+            labelsDiv: "chart-legend",
+            visibility: [false, false, false, false, false, false, false, false, false, false, true, true, true, true, false, false, false, false, false, false, false]
+        });
+
+        var g_s1_112 = new Dygraph(document.getElementById("chart-os-vmstat-int"),
+            "/umc/log/" + csv_date + "/system-vmstat.log", {
+            labelsDiv: "chart-legend",
+            visibility: [false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true, false, false, false, false, false]
+        });
+
+        var g_s1_113 = new Dygraph(document.getElementById("chart-os-vmstat-mem"),
+            "/umc/log/" + csv_date + "/system-vmstat.log", {
+            labelsDiv: "chart-legend",
+            visibility: [false, false, false, false, false, false, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false]
+        });
+
+        var g_s2_200 = new Dygraph(document.getElementById("chart-os-network-net1-bytes"),
+            "/umc/log/" + csv_date + "/network-if-net1_dt.log",
+            {
+                logscale: false,
+                labelsDiv: "chart-legend",
+                visibility: [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true]
+            });
+        var g_s2_201 = new Dygraph(document.getElementById("chart-os-network-net1-packets"),
+            "/umc/log/" + csv_date + "/network-if-net1_dt.log",
+            {
+                logscale: false,
+                labelsDiv: "chart-legend",
+                visibility: [false, false, false, false, false, true, false, false, false, false, true, false, false, false, false, false, false, false, false] 
+           });
+        var g_s2_202 = new Dygraph(document.getElementById("chart-os-network-net1-errors"),
+            "/umc/log/" + csv_date + "/network-if-net1_dt.log",
+            {
+                logscale: false,
+                labelsDiv: "chart-legend",
+                visibility: [false, false, false, false, false, false, true, false, false, false, false, true, false, false, false, false, false, false, false]
+            });
+
+        var g_s5_500 = new Dygraph(document.getElementById("chart-os-disk-tps-disk1-kB_read_wrtn"),
+        "/umc/log/" + csv_date + "/disk-tps-disk1.log",
+        {
+            logscale: false,
+            labelsDiv: "chart-legend",
+                 visibility: [false, false, false, false, false, false, true, true, false, false ]
+        });
+        var g_s5_501 = new Dygraph(document.getElementById("chart-os-disk-tps-disk1-tps"),
+            "/umc/log/" + csv_date + "/disk-tps-disk1.log",
+            {
+                logscale: false,
+                labelsDiv: "chart-legend",
+                visibility: [false, false, false, false, false, true, false, false, false, false ]
+            });
+            
+    </script>
+
+</body>
+
+</html>
