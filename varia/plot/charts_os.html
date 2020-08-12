@@ -289,10 +289,12 @@
                 </tr>
             </table>
             `
-
-            disk_space_html += disk_space_bucket[id].disk_space_div ;
-
+        
+            disk_space_html += disk_space_bucket[id].disk_space_div;
             disk_space_div.innerHTML = disk_space_html;
+        }
+
+        for(var id=1; id<=2; id++){
 
             disk_space_bucket[id].g_os_disk_space_100 = new Dygraph(document.getElementById("chart-os-disk-space-mount" + id + "-used"),
             "/umc/log/" + csv_date + "/disk-space-mount" + id + ".log",
@@ -304,6 +306,7 @@
                                 false, false, false, true,    // 1024-blocks, used, available, capacity, 
                                 false ]                       // mounted_on
             });
+
             disk_space_bucket[id].g_os_disk_space_101 = new Dygraph(document.getElementById("chart-os-disk-space-mount" + id + "-ups"),
                 "/umc/log/" + csv_date + "/disk-space-mount" + id + "_dt.log",
                 {
