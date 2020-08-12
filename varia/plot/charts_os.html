@@ -172,8 +172,8 @@
 
         page_slot = document.getElementById('os-vmstat');
 
-        const inner_html = vmstat_code;
-        page_slot.innerHTML = inner_html;
+        const vmstat_html = vmstat_code;
+        page_slot.innerHTML = vmstat_html;
 
         var g_os_vmstat_100 = new Dygraph(document.getElementById("chart-os-vmstat-cpu-idle"),
             "/umc/log/" + csv_date + "/system-vmstat.log", {
@@ -218,7 +218,6 @@
         });
 
 
-
         // network
         network_table = ` 
         <table width='1300px'>
@@ -243,9 +242,9 @@
         page_slot = document.getElementById('os-network');
 
         var id = 1;
-        const inner_html = network_table;
+        const network_html = network_table;
 
-        page_slot.innerHTML = inner_html;
+        page_slot.innerHTML = network_html;
 
         var g_os_network_200 = new Dygraph(document.getElementById("chart-os-network-net1-bytes"),
             "/umc/log/" + csv_date + "/network-if-net1_dt.log",
