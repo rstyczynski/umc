@@ -291,7 +291,7 @@
 
         disk_space_html += network_bucket[id].network_div ;
 
-        disk_space_div.innerHTML = network_html;
+        disk_space_div.innerHTML = disk_space_html;
 
         disk_space_bucket[id].g_os_disk_space_100 = new Dygraph(document.getElementById("chart-os-disk-space-mount" + id + "-used"),
         "/umc/log/" + csv_date + "/disk-space-mount" + id + ".log",
