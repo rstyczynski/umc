@@ -224,9 +224,10 @@
         
         network_div = document.getElementById('os-network');
         network_html = "";
+        network_bucket = new Array();
 
         var id = 1;
-        network_bucket[$id] = {}
+        network_bucket[$id] = new Struct();
 
         network_bucket[$id].network_table = ` 
         <table width='1300px'>
