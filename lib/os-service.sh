@@ -84,27 +84,29 @@ function start() {
                         done
                         ;;
                     disk-tps)
-                        for key in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem.$component[]"); do
-                            echo "       - $key"
+                        for key in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem.$component | keys[]"); do
+                            dev_name=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].$subsystem.$component[$key].name")
+                            dev_device=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem.$component[$key].device")
+                            echo "       - $dev_name-$dev_device"
                             (
-                                umc iostat collect 5 2147483647 $key |
-                                    $umc_bin/csv2obd --resource disk-tps-$key |
-                                    $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name disk-tps-$key -detectHeader -checkHeaderDups -flush -tee |
-                                    $umc_bin/dvdt --resource disk-tps-$key --dataat 7 |
-                                    $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name disk-tps-$key\_dt -detectHeader -checkHeaderDups -flush
+                                umc iostat collect 5 2147483647 $dev_device |
+                                    $umc_bin/csv2obd --resource disk-tps-$dev_name |
+                                    $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name disk-tps-$dev_name -detectHeader -checkHeaderDups -flush
                             ) &
                             echo $! >>$umc_run/$svc_name.pid
                         done
                         ;;                    
                     network-if)
-                        for key in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem.$component[]"); do
-                            echo "       - $key"
+                        for key in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem.$component | keys[]"); do
+                            dev_name=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].$subsystem.$component[$key].name")
+                            dev_device=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem.$component[$key].device")
+                            echo "       - $dev_name-$dev_device"
                             (
-                                umc ifconfig collect 5 2147483647 $key |
-                                    $umc_bin/csv2obd --resource network-if-$key |
-                                    $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name network-if-$key -detectHeader -checkHeaderDups -flush -tee |
-                                    $umc_bin/dvdt --resource network-if-$key --dataat 7 |
-                                    $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name network-if-$key\_dt -detectHeader -checkHeaderDups -flush
+                                umc ifconfig collect 5 2147483647 $dev_device |
+                                    $umc_bin/csv2obd --resource network-if-$dev_name |
+                                    $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name network-if-$dev_name -detectHeader -checkHeaderDups -flush -tee |
+                                    $umc_bin/dvdt --resource network-if-$dev_name --dataat 7 |
+                                    $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name network-if-$dev_name\_dt -detectHeader -checkHeaderDups -flush
                             ) &
                             echo $! >>$umc_run/$svc_name.pid
                         done
