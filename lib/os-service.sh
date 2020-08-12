@@ -85,7 +85,7 @@ function start() {
                         ;;
                     disk-tps)
                         for key in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem.$component | keys[]"); do
-                            dev_name=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].$subsystem.$component[$key].name")
+                            dev_name=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem.$component[$key].name")
                             dev_device=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem.$component[$key].device")
                             echo "       - $dev_name-$dev_device"
                             (
@@ -98,7 +98,7 @@ function start() {
                         ;;                    
                     network-if)
                         for key in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem.$component | keys[]"); do
-                            dev_name=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].$subsystem.$component[$key].name")
+                            dev_name=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem.$component[$key].name")
                             dev_device=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem.$component[$key].device")
                             echo "       - $dev_name-$dev_device"
                             (
