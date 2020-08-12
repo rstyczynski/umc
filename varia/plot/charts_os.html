@@ -79,20 +79,9 @@
         <!-- dynamic code here-->
     </div>
 
+    <h2>IO activity [kB/s]</h2>
     <div id=os-disk-tps>
         <!-- disk-tps -->
-        <h2>IO activity [kB/s]</h2>
-        <table width='1300px'>
-            <tr>
-                <td rowspan="2" class="verticalText">net1</td>
-                <td colspan="2" rowspan="2">
-                    <div id="chart-os-disk-tps-disk1-kB_read_wrtn" style="width:800px; height:300px;"></div>
-                </td>
-                <td colspan="2">
-                    <div id="chart-os-disk-tps-disk1-tps" style="width:400px; height:150px;"></div>
-                </td>
-            </tr>
-        </table>
     </div>
 
     <!-- logic -->
@@ -332,12 +321,12 @@
             disk_tps_bucket[id].disk_tps_div = ` 
             <table width='1300px'>
                 <tr>
-                    <td rowspan="2" class="verticalText">disk${id}</td>
+                    <td rowspan="2" class="verticalText">net1</td>
                     <td colspan="2" rowspan="2">
-                        <div id="chart-os-disk-tps-mount${id}-used" style="width:800px; height:300px;"></div>
+                        <div id="chart-os-disk-tps-disk${id}-kB_read_wrtn" style="width:800px; height:300px;"></div>
                     </td>
                     <td colspan="2">
-                        <div id="chart-os-disk-tps-mount${id}-ups" style="width:400px; height:150px;"></div>
+                        <div id="chart-os-disk-tps-disk${id}-tps" style="width:400px; height:150px;"></div>
                     </td>
                 </tr>
             </table>
