@@ -275,7 +275,7 @@
         var id = 1;
         disk_space_bucket[id] = {};
 
-        disk_space_bucket[id].network_div = ` 
+        disk_space_bucket[id].disk_space_div = ` 
         <table width='1300px'>
             <tr>
                 <td rowspan="2" class="verticalText">disk1</td>
@@ -289,7 +289,7 @@
         </table>
         `
 
-        disk_space_html += network_bucket[id].network_div ;
+        disk_space_html += network_bucket[id].disk_space_div ;
 
         disk_space_div.innerHTML = disk_space_html;
 
