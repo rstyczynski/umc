@@ -112,7 +112,7 @@
 
     </table>
 
-    <!-- disk-tps -->
+    <!-- disk-space -->
     <h2>Disk space</h2>
     <table width='1300px'>
         <tr>
@@ -172,57 +172,57 @@
         document.getElementById("link_fwd").setAttribute("href",link_fwd);
         document.getElementById("link_fwd").textContent = date2text(csv_date_fwd);
 
-        var g100 = new Dygraph(document.getElementById("chart-os-vmstat-cpu-idle"),
+        var g_os_vmstat_100 = new Dygraph(document.getElementById("chart-os-vmstat-cpu-idle"),
             "/umc/log/" + csv_date + "/system-vmstat.log", {
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false]
         });
 
-        var g_s1_101 = new Dygraph(document.getElementById("chart-os-vmstat-cpu-busy"),
+        var g_os_vmstat_101 = new Dygraph(document.getElementById("chart-os-vmstat-cpu-busy"),
             "/umc/log/" + csv_date + "/system-vmstat.log", {
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true, false, true, true]
         });
 
-        var g_s1_110 = new Dygraph(document.getElementById("chart-os-vmstat-proc"),
+        var g_os_vmstat_110 = new Dygraph(document.getElementById("chart-os-vmstat-proc"),
             "/umc/log/" + csv_date + "/system-vmstat.log", {
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false, true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false]
         });
 
-        var g_s1_111 = new Dygraph(document.getElementById("chart-os-vmstat-io"),
+        var g_os_vmstat_111 = new Dygraph(document.getElementById("chart-os-vmstat-io"),
             "/umc/log/" + csv_date + "/system-vmstat.log", {
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false, false, false, false, false, false, false, true, true, true, true, false, false, false, false, false, false, false]
         });
 
-        var g_s1_112 = new Dygraph(document.getElementById("chart-os-vmstat-int"),
+        var g_os_vmstat_112 = new Dygraph(document.getElementById("chart-os-vmstat-int"),
             "/umc/log/" + csv_date + "/system-vmstat.log", {
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true, false, false, false, false, false]
         });
 
-        var g_s1_113 = new Dygraph(document.getElementById("chart-os-vmstat-mem"),
+        var g_os_vmstat_113 = new Dygraph(document.getElementById("chart-os-vmstat-mem"),
             "/umc/log/" + csv_date + "/system-vmstat.log", {
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false, false, false, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false]
         });
 
-        var g_s2_200 = new Dygraph(document.getElementById("chart-os-network-net1-bytes"),
+        var g_os_network_200 = new Dygraph(document.getElementById("chart-os-network-net1-bytes"),
             "/umc/log/" + csv_date + "/network-if-net1_dt.log",
             {
                 logscale: false,
                 labelsDiv: "chart-legend",
                 visibility: [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true]
             });
-        var g_s2_201 = new Dygraph(document.getElementById("chart-os-network-net1-packets"),
+        var g_os_network_201 = new Dygraph(document.getElementById("chart-os-network-net1-packets"),
             "/umc/log/" + csv_date + "/network-if-net1_dt.log",
             {
                 logscale: false,
                 labelsDiv: "chart-legend",
                 visibility: [false, false, false, false, false, true, false, false, false, false, true, false, false, false, false, false, false, false, false] 
            });
-        var g_s2_202 = new Dygraph(document.getElementById("chart-os-network-net1-errors"),
+        var g_os_network_202 = new Dygraph(document.getElementById("chart-os-network-net1-errors"),
             "/umc/log/" + csv_date + "/network-if-net1_dt.log",
             {
                 logscale: false,
@@ -230,14 +230,30 @@
                 visibility: [false, false, false, false, false, false, true, false, false, false, false, true, false, false, false, false, false, false, false]
             });
 
-        var g_s5_500 = new Dygraph(document.getElementById("chart-os-disk-tps-disk1-kB_read_wrtn"),
+        var g_os_disk_space_100 = new Dygraph(document.getElementById("chart-os-disk-space-mount1-used"),
+        "/umc/log/" + csv_date + "/disk-space-mount1.log",
+        {
+            logscale: false,
+            labelsDiv: "chart-legend",
+                 visibility: [false, false, false, false, false, false, true, true, false, false ]
+        });
+        var g_os_disk_space_101 = new Dygraph(document.getElementById("chart-os-disk-space-mount1-ups"),
+            "/umc/log/" + csv_date + "/disk-space-mount1_dt.log",
+            {
+                logscale: false,
+                labelsDiv: "chart-legend",
+                visibility: [false, false, false, false, false, true, false, false, false, false ]
+            });
+
+
+        var g_os_disk_tps_500 = new Dygraph(document.getElementById("chart-os-disk-tps-disk1-kB_read_wrtn"),
         "/umc/log/" + csv_date + "/disk-tps-disk1.log",
         {
             logscale: false,
             labelsDiv: "chart-legend",
                  visibility: [false, false, false, false, false, false, true, true, false, false ]
         });
-        var g_s5_501 = new Dygraph(document.getElementById("chart-os-disk-tps-disk1-tps"),
+        var g_os_disk_tps_501 = new Dygraph(document.getElementById("chart-os-disk-tps-disk1-tps"),
             "/umc/log/" + csv_date + "/disk-tps-disk1.log",
             {
                 logscale: false,
