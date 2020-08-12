@@ -235,16 +235,21 @@
         {
             logscale: false,
             labelsDiv: "chart-legend",
-                 visibility: [false, false, false, false, false, false, true, true, false, false ]
+                 visibility: [false, false, false, false,   // timezone,timestamp,system,source, 
+                              false, false,                 // filesystem, type
+                              false, false, false, true,    // 1024-blocks, used, available, capacity, 
+                              false ]                       // mounted_on
         });
         var g_os_disk_space_101 = new Dygraph(document.getElementById("chart-os-disk-space-mount1-ups"),
             "/umc/log/" + csv_date + "/disk-space-mount1_dt.log",
             {
                 logscale: false,
                 labelsDiv: "chart-legend",
-                visibility: [false, false, false, false, false, true, false, false, false, false ]
+                visibility: [false, false, false, false,     // timezone,timestamp,system,source, 
+                              false, false,                  // filesystem, type
+                              false, true , false, false,    // 1024-blocks, used, available, capacity, 
+                              false ]                        // mounted_on
             });
-
 
         var g_os_disk_tps_500 = new Dygraph(document.getElementById("chart-os-disk-tps-disk1-kB_read_wrtn"),
         "/umc/log/" + csv_date + "/disk-tps-disk1.log",
