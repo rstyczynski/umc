@@ -177,47 +177,47 @@
         vmstat_html += vmstat_code;
         page_slot.innerHTML = vmstat_html;
 
-        var g_os_vmstat_100 = new Dygraph(document.getElementById("chart-os-vmstat-cpu-idle"),
-            "/umc/log/" + csv_date + "/system-vmstat.log", {
-            labelsDiv: "chart-legend",
-            visibility: [false, false, false, false,        // timezone,timestamp,system,source, 
-                        false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false]
-        });
+        // var g_os_vmstat_100 = new Dygraph(document.getElementById("chart-os-vmstat-cpu-idle"),
+        //     "/umc/log/" + csv_date + "/system-vmstat.log", {
+        //     labelsDiv: "chart-legend",
+        //     visibility: [false, false, false, false,        // timezone,timestamp,system,source, 
+        //                 false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false]
+        // });
 
-        var g_os_vmstat_101 = new Dygraph(document.getElementById("chart-os-vmstat-cpu-busy"),
-            "/umc/log/" + csv_date + "/system-vmstat.log", {
-            labelsDiv: "chart-legend",
-            visibility: [false, false, false, false,        // timezone,timestamp,system,source, 
-                        false, false, false, false, false, false, false, false, false, false, false, false, true, true, false, true, true]
-        });
+        // var g_os_vmstat_101 = new Dygraph(document.getElementById("chart-os-vmstat-cpu-busy"),
+        //     "/umc/log/" + csv_date + "/system-vmstat.log", {
+        //     labelsDiv: "chart-legend",
+        //     visibility: [false, false, false, false,        // timezone,timestamp,system,source, 
+        //                 false, false, false, false, false, false, false, false, false, false, false, false, true, true, false, true, true]
+        // });
 
-        var g_os_vmstat_110 = new Dygraph(document.getElementById("chart-os-vmstat-proc"),
-            "/umc/log/" + csv_date + "/system-vmstat.log", {
-            labelsDiv: "chart-legend",
-            visibility: [false, false, false, false,        // timezone,timestamp,system,source, 
-                        true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false]
-        });
+        // var g_os_vmstat_110 = new Dygraph(document.getElementById("chart-os-vmstat-proc"),
+        //     "/umc/log/" + csv_date + "/system-vmstat.log", {
+        //     labelsDiv: "chart-legend",
+        //     visibility: [false, false, false, false,        // timezone,timestamp,system,source, 
+        //                 true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false]
+        // });
 
-        var g_os_vmstat_111 = new Dygraph(document.getElementById("chart-os-vmstat-io"),
-            "/umc/log/" + csv_date + "/system-vmstat.log", {
-            labelsDiv: "chart-legend",
-            visibility: [false, false, false, false,        // timezone,timestamp,system,source, 
-                        false, false, false, false, false, false, true, true, true, true, false, false, false, false, false, false, false]
-        });
+        // var g_os_vmstat_111 = new Dygraph(document.getElementById("chart-os-vmstat-io"),
+        //     "/umc/log/" + csv_date + "/system-vmstat.log", {
+        //     labelsDiv: "chart-legend",
+        //     visibility: [false, false, false, false,        // timezone,timestamp,system,source, 
+        //                 false, false, false, false, false, false, true, true, true, true, false, false, false, false, false, false, false]
+        // });
 
-        var g_os_vmstat_112 = new Dygraph(document.getElementById("chart-os-vmstat-int"),
-            "/umc/log/" + csv_date + "/system-vmstat.log", {
-            labelsDiv: "chart-legend",
-            visibility: [false, false, false, false,        // timezone,timestamp,system,source, 
-                        false, false, false, false, false, false, false, false, false, false, true, true, false, false, false, false, false]
-        });
+        // var g_os_vmstat_112 = new Dygraph(document.getElementById("chart-os-vmstat-int"),
+        //     "/umc/log/" + csv_date + "/system-vmstat.log", {
+        //     labelsDiv: "chart-legend",
+        //     visibility: [false, false, false, false,        // timezone,timestamp,system,source, 
+        //                 false, false, false, false, false, false, false, false, false, false, true, true, false, false, false, false, false]
+        // });
 
-        var g_os_vmstat_113 = new Dygraph(document.getElementById("chart-os-vmstat-mem"),
-            "/umc/log/" + csv_date + "/system-vmstat.log", {
-            labelsDiv: "chart-legend",
-            visibility: [false, false, false, false,        // timezone,timestamp,system,source, 
-                        false, false, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false]
-        });
+        // var g_os_vmstat_113 = new Dygraph(document.getElementById("chart-os-vmstat-mem"),
+        //     "/umc/log/" + csv_date + "/system-vmstat.log", {
+        //     labelsDiv: "chart-legend",
+        //     visibility: [false, false, false, false,        // timezone,timestamp,system,source, 
+        //                 false, false, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false]
+        // });
 
 
         // network
