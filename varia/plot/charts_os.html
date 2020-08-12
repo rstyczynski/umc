@@ -241,30 +241,30 @@
 
         network_div.innerHTML = network_html;
 
-        network_bucket[id].g_os_network_200 = new Dygraph(document.getElementById("chart-os-network-net" + id + "-bytes"),
-            "/umc/log/" + csv_date + "/network-if-net" + id + "_dt.log",
-            {
-                logscale: false,
-                labelsDiv: "chart-legend",
-                visibility: [false, false, false, false,    // timezone,timestamp,system,source, 
-                            false, false, false, false, false, false, false, false, false, false, false, false, false, true, true]
-            });
-        network_bucket[id].g_os_network_201 = new Dygraph(document.getElementById("chart-os-network-net" + id + "-packets"),
-            "/umc/log/" + csv_date + "/network-if-net1_d" + id + ".log",
-            {
-                logscale: false,
-                labelsDiv: "chart-legend",
-                visibility: [false, false, false, false,    // timezone,timestamp,system,source, 
-                            false, true, false, false, false, false, true, false, false, false, false, false, false, false, false] 
-           });
-        network_bucket[id].g_os_network_202 = new Dygraph(document.getElementById("chart-os-network-net" + id + "-errors"),
-            "/umc/log/" + csv_date + "/network-if-net" + id + "_dt.log",
-            {
-                logscale: false,
-                labelsDiv: "chart-legend",
-                visibility: [false, false, false, false,    // timezone,timestamp,system,source, 
-                             false, false, true, false, false, false, false, true, false, false, false, false, false, false, false]
-            });
+        // network_bucket[id].g_os_network_200 = new Dygraph(document.getElementById("chart-os-network-net" + id + "-bytes"),
+        //     "/umc/log/" + csv_date + "/network-if-net" + id + "_dt.log",
+        //     {
+        //         logscale: false,
+        //         labelsDiv: "chart-legend",
+        //         visibility: [false, false, false, false,    // timezone,timestamp,system,source, 
+        //                     false, false, false, false, false, false, false, false, false, false, false, false, false, true, true]
+        //     });
+        // network_bucket[id].g_os_network_201 = new Dygraph(document.getElementById("chart-os-network-net" + id + "-packets"),
+        //     "/umc/log/" + csv_date + "/network-if-net1_d" + id + ".log",
+        //     {
+        //         logscale: false,
+        //         labelsDiv: "chart-legend",
+        //         visibility: [false, false, false, false,    // timezone,timestamp,system,source, 
+        //                     false, true, false, false, false, false, true, false, false, false, false, false, false, false, false] 
+        //    });
+        // network_bucket[id].g_os_network_202 = new Dygraph(document.getElementById("chart-os-network-net" + id + "-errors"),
+        //     "/umc/log/" + csv_date + "/network-if-net" + id + "_dt.log",
+        //     {
+        //         logscale: false,
+        //         labelsDiv: "chart-legend",
+        //         visibility: [false, false, false, false,    // timezone,timestamp,system,source, 
+        //                      false, false, true, false, false, false, false, true, false, false, false, false, false, false, false]
+        //     });
 
 
         //disk space
@@ -289,6 +289,10 @@
         </table>
         `
 
+        disk_space_html += network_bucket[id].network_div ;
+
+        disk_space_div.innerHTML = network_html;
+
         disk_space_bucket[id].g_os_disk_space_100 = new Dygraph(document.getElementById("chart-os-disk-space-mount" + id + "-used"),
         "/umc/log/" + csv_date + "/disk-space-mount" + id + ".log",
         {
@@ -309,6 +313,7 @@
                               false, true , false, false,    // 1024-blocks, used, available, capacity, 
                               false ]                        // mounted_on
             });
+
 
 
 
