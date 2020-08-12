@@ -64,29 +64,14 @@
     <a id='link_rdw'>previous</a><text id='data_date'></text><a id='link_fwd'>next</a>
     </p>
 
+    <h2>Overview</h2>
     <div id=os-vmstat>
-
+        <!-- dynamic code here-->
     </div>
 
+    <h2>Network activity [B/s]</h2>
     <div id=os-network>
-        <!-- ifconfig -->
-        <h2>Network activity [B/s]</h2>
-        <table width='1300px'>
-            <tr>
-                <td rowspan="2" class="verticalText">net1</td>
-                <td colspan="2" rowspan="2">
-                    <div id="chart-os-network-net1-bytes" style="width:800px; height:300px;"></div>
-                </td>
-                <td colspan="2">
-                    <div id="chart-os-network-net1-packets" style="width:400px; height:150px;"></div>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <div id="chart-os-network-net1-errors" style="width:400px; height:150px;"></div>
-                </td>
-            </tr>
-        </table>
+        <!-- dynamic code here-->
     </div>
 
 
@@ -158,10 +143,7 @@
 
 
         // vmstat
-
         html_code = `        
-        <!-- vmstat -->
-        <h2>Overview</h2>
         <table width='1300px'>
             <tr>
                 <td rowspan='2' class='verticalText'>CPU</td>
@@ -236,6 +218,30 @@
 
 
         // network
+        html_code = ` 
+        <table width='1300px'>
+            <tr>
+                <td rowspan="2" class="verticalText">net${id}</td>
+
+                <td colspan="2" rowspan="2">
+                    <div id="chart-os-network-net${id}-bytes" style="width:800px; height:300px;"></div>
+                </td>
+
+                <td colspan="2">
+                    <div id="chart-os-network-net${id}-packets" style="width:400px; height:150px;"></div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div id="chart-os-network-net${id}-errors" style="width:400px; height:150px;"></div>
+                </td>
+            </tr>
+        </table>`
+
+        page_slot = document.getElementById('os-network');
+
+        id=1;
+        page_slot.innerHTML = html_code;
 
         var g_os_network_200 = new Dygraph(document.getElementById("chart-os-network-net1-bytes"),
             "/umc/log/" + csv_date + "/network-if-net1_dt.log",
