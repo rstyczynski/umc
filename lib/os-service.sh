@@ -69,6 +69,7 @@ function start() {
                     echo "    - $subsystem-$component"
                     case $subsystem-$component in
                     disk-space)
+                        mount_cnt=0
                         for mount_point_id in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.disk.space | keys[]"); do
                             mount_point_name=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.disk.space[$mount_point_id].name")
                             mount_point=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.disk.space[$mount_point_id].point")
@@ -81,9 +82,11 @@ function start() {
                                     $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name disk-space-$mount_point_name\_dt -detectHeader -checkHeaderDups -flush
                             ) &
                             echo $! >>$umc_run/$svc_name.pid
+                            mount_cnt=$(( $mount_cnt + 1 ))
                         done
                         ;;
                     disk-tps)
+                        disk_cnt=0
                         for key in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem.$component | keys[]"); do
                             dev_name=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem.$component[$key].name")
                             dev_device=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem.$component[$key].device")
@@ -94,9 +97,11 @@ function start() {
                                     $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name disk-tps-$dev_name -detectHeader -checkHeaderDups -flush
                             ) &
                             echo $! >>$umc_run/$svc_name.pid
+                            disk_cnt=$(( $disk_cnt + 1 ))
                         done
                         ;;                    
                     network-if)
+                        net_cnt=0
                         for key in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem.$component | keys[]"); do
                             dev_name=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem.$component[$key].name")
                             dev_device=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem.$component[$key].device")
@@ -109,6 +114,7 @@ function start() {
                                     $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name network-if-$dev_name\_dt -detectHeader -checkHeaderDups -flush
                             ) &
                             echo $! >>$umc_run/$svc_name.pid
+                            net_cnt=$(( $net_cnt + 1 ))
                         done
                         ;;
                     network-tcp)
@@ -171,6 +177,11 @@ function start() {
                 done
             fi
         done
+
+            cat >$umc_log/os_$service_name.html <<EOF
+<meta http-equiv="Refresh" content="0; url='/umc/log/charts_os?disk_cnt=$disk_cnt&net_cnt=$net_cnt&mount_cnt=$mount_cnt'" />
+EOF
+
     done
 
 }
