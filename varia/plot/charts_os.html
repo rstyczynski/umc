@@ -99,12 +99,12 @@
         params = (new URL(document.location)).searchParams;
         
         disk_cnt = params.get('disk_cnt');
-        if ( disk_cnt === null )
+        if ( disk_cnt === null ) {
             disk_cnt = 1;
         }
         
         net_cnt = params.get('net_cnt');
-        if ( net_cnt === null )
+        if ( net_cnt === null ) {
             net_cnt = 1;
         }
 
