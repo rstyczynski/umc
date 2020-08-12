@@ -99,7 +99,14 @@
         params = (new URL(document.location)).searchParams;
         
         disk_cnt = params.get('disk_cnt');
-        net_cnt = nparams.get('net_cnt');
+        if ( disk_cnt === null )
+            disk_cnt = 1;
+        }
+        
+        net_cnt = params.get('net_cnt');
+        if ( net_cnt === null )
+            net_cnt = 1;
+        }
 
         csv_date = params.get('date');
         if (!csv_date) {
@@ -115,18 +122,18 @@
 
         link_rev = location.protocol + '//' + location.host + location.pathname + '?date=' + date2text(csv_date_rwd);        
         if ( disk_cnt !== null ) {
-            link_rev += "?disk_cnt" + disk_cnt
+            link_rev += "?disk_cnt" + disk_cnt;
         }
         if ( net_cnt !== null ) {
-            link_rev += "?net_cnt" + net_cnt
+            link_rev += "?net_cnt" + net_cnt;
         }
 
         link_fwd = location.protocol + '//' + location.host + location.pathname + '?date=' + date2text(csv_date_fwd);
         if ( disk_cnt !== null ) {
-            link_fwd += "?disk_cnt" + disk_cnt
+            link_fwd += "?disk_cnt" + disk_cnt;
         }
         if ( net_cnt !== null ) {
-            link_fwd += "?net_cnt" + net_cnt
+            link_fwd += "?net_cnt" + net_cnt;
         }
 
         document.getElementById("link_rev").setAttribute("href",link_rev);
