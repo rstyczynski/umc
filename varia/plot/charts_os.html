@@ -74,21 +74,9 @@
         <!-- dynamic code here-->
     </div>
 
-
+    <h2>Disk space</h2>
     <div id=os-disk-space>
-        <!-- disk-space -->
-        <h2>Disk space</h2>
-        <table width='1300px'>
-            <tr>
-                <td rowspan="2" class="verticalText">disk1</td>
-                <td colspan="2" rowspan="2">
-                    <div id="chart-os-disk-space-mount1-used" style="width:800px; height:300px;"></div>
-                </td>
-                <td colspan="2">
-                    <div id="chart-os-disk-space-mount1-ups" style="width:400px; height:150px;"></div>
-                </td>
-            </tr>
-        </table>
+        <!-- dynamic code here-->
     </div>
 
     <div id=os-disk-space>
@@ -221,7 +209,6 @@
 
 
         // network
-        
         network_div = document.getElementById('os-network');
         network_html = "";
         network_bucket = new Array();
@@ -254,24 +241,24 @@
 
         network_div.innerHTML = network_html;
 
-        network_bucket[id].g_os_network_200 = new Dygraph(document.getElementById("chart-os-network-net1-bytes"),
-            "/umc/log/" + csv_date + "/network-if-net1_dt.log",
+        network_bucket[id].g_os_network_200 = new Dygraph(document.getElementById("chart-os-network-net" + id + "-bytes"),
+            "/umc/log/" + csv_date + "/network-if-net" + id + "_dt.log",
             {
                 logscale: false,
                 labelsDiv: "chart-legend",
                 visibility: [false, false, false, false,    // timezone,timestamp,system,source, 
                             false, false, false, false, false, false, false, false, false, false, false, false, false, true, true]
             });
-        network_bucket[id].g_os_network_201 = new Dygraph(document.getElementById("chart-os-network-net1-packets"),
-            "/umc/log/" + csv_date + "/network-if-net1_dt.log",
+        network_bucket[id].g_os_network_201 = new Dygraph(document.getElementById("chart-os-network-net" + id + "-packets"),
+            "/umc/log/" + csv_date + "/network-if-net1_d" + id + ".log",
             {
                 logscale: false,
                 labelsDiv: "chart-legend",
                 visibility: [false, false, false, false,    // timezone,timestamp,system,source, 
                             false, true, false, false, false, false, true, false, false, false, false, false, false, false, false] 
            });
-        network_bucket[id].g_os_network_202 = new Dygraph(document.getElementById("chart-os-network-net1-errors"),
-            "/umc/log/" + csv_date + "/network-if-net1_dt.log",
+        network_bucket[id].g_os_network_202 = new Dygraph(document.getElementById("chart-os-network-net" + id + "-errors"),
+            "/umc/log/" + csv_date + "/network-if-net" + id + "_dt.log",
             {
                 logscale: false,
                 labelsDiv: "chart-legend",
@@ -280,9 +267,30 @@
             });
 
 
-        //
-        var g_os_disk_space_100 = new Dygraph(document.getElementById("chart-os-disk-space-mount1-used"),
-        "/umc/log/" + csv_date + "/disk-space-mount1.log",
+        //disk space
+        disk_space_div = document.getElementById('os-network');
+        disk_space_html = "";
+        disk_space_bucket = new Array();
+
+        var id = 1;
+        disk_space_bucket[id] = {};
+
+        disk_space_bucket[id].network_div = ` 
+        <table width='1300px'>
+            <tr>
+                <td rowspan="2" class="verticalText">disk1</td>
+                <td colspan="2" rowspan="2">
+                    <div id="chart-os-disk-space-mount" + id + "-used" style="width:800px; height:300px;"></div>
+                </td>
+                <td colspan="2">
+                    <div id="chart-os-disk-space-mount" + id + "-ups" style="width:400px; height:150px;"></div>
+                </td>
+            </tr>
+        </table>
+        `
+
+        disk_space_bucket[id].g_os_disk_space_100 = new Dygraph(document.getElementById("chart-os-disk-space-mount" + id + "-used"),
+        "/umc/log/" + csv_date + "/disk-space-mount" + id + ".log",
         {
             logscale: false,
             labelsDiv: "chart-legend",
@@ -291,8 +299,8 @@
                               false, false, false, true,    // 1024-blocks, used, available, capacity, 
                               false ]                       // mounted_on
         });
-        var g_os_disk_space_101 = new Dygraph(document.getElementById("chart-os-disk-space-mount1-ups"),
-            "/umc/log/" + csv_date + "/disk-space-mount1_dt.log",
+        disk_space_bucket[id].g_os_disk_space_101 = new Dygraph(document.getElementById("chart-os-disk-space-mount" + id + "-ups"),
+            "/umc/log/" + csv_date + "/disk-space-mount" + id + "_dt.log",
             {
                 logscale: false,
                 labelsDiv: "chart-legend",
