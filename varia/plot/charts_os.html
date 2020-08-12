@@ -229,7 +229,7 @@
         var id = 1;
         network_bucket[id] = {};
 
-        network_bucket[id].network_table = ` 
+        network_bucket[id].network_div = ` 
         <table width='1300px'>
             <tr>
                 <td rowspan="2" class="verticalText">net${id}</td>
@@ -249,7 +249,8 @@
             </tr>
         </table>
         `
-        network_html += network_table;
+        network_html += network_bucket[id].network_div ;
+
 
         network_div.innerHTML = network_html;
 
