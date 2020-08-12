@@ -143,6 +143,9 @@
 
 
         // vmstat
+        page_slot = document.getElementById('os-vmstat');
+        vmstat_html = "";
+        
         vmstat_code = `        
         <table width='1300px'>
             <tr>
@@ -170,9 +173,7 @@
             </tr>
         </table>`
 
-        page_slot = document.getElementById('os-vmstat');
-
-        const vmstat_html = vmstat_code;
+        vmstat_html += vmstat_code;
         page_slot.innerHTML = vmstat_html;
 
         // var g_os_vmstat_100 = new Dygraph(document.getElementById("chart-os-vmstat-cpu-idle"),
@@ -219,6 +220,10 @@
 
 
         // network
+        page_slot = document.getElementById('os-network');
+        network_html = "";
+
+        var id = 1;
         network_table = ` 
         <table width='1300px'>
             <tr>
@@ -238,11 +243,7 @@
                 </td>
             </tr>
         </table>`
-
-        page_slot = document.getElementById('os-network');
-
-        var id = 1;
-        const network_html = network_table;
+        network_html += network_table;
 
         page_slot.innerHTML = network_html;
 
