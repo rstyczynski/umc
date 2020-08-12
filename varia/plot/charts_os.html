@@ -172,7 +172,7 @@
 
         page_slot = document.getElementById('os-vmstat');
 
-        const inner_html = vmstat_code
+        const inner_html = vmstat_code;
         page_slot.innerHTML = inner_html;
 
         var g_os_vmstat_100 = new Dygraph(document.getElementById("chart-os-vmstat-cpu-idle"),
@@ -243,8 +243,8 @@
         page_slot = document.getElementById('os-network');
 
         var id = 1;
-        const inner_html = network_table
-        
+        const inner_html = network_table;
+
         page_slot.innerHTML = inner_html;
 
         var g_os_network_200 = new Dygraph(document.getElementById("chart-os-network-net1-bytes"),
