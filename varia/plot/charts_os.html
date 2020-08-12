@@ -227,9 +227,9 @@
         network_bucket = new Array();
 
         var id = 1;
-        network_bucket[$id] = new Struct();
+        network_bucket[id] = new Struct();
 
-        network_bucket[$id].network_table = ` 
+        network_bucket[id].network_table = ` 
         <table width='1300px'>
             <tr>
                 <td rowspan="2" class="verticalText">net${id}</td>
@@ -253,7 +253,7 @@
 
         network_div.innerHTML = network_html;
 
-        network_bucket[$id].g_os_network_200 = new Dygraph(document.getElementById("chart-os-network-net1-bytes"),
+        network_bucket[id].g_os_network_200 = new Dygraph(document.getElementById("chart-os-network-net1-bytes"),
             "/umc/log/" + csv_date + "/network-if-net1_dt.log",
             {
                 logscale: false,
@@ -261,7 +261,7 @@
                 visibility: [false, false, false, false,    // timezone,timestamp,system,source, 
                             false, false, false, false, false, false, false, false, false, false, false, false, false, true, true]
             });
-        network_bucket[$id].g_os_network_201 = new Dygraph(document.getElementById("chart-os-network-net1-packets"),
+        network_bucket[id].g_os_network_201 = new Dygraph(document.getElementById("chart-os-network-net1-packets"),
             "/umc/log/" + csv_date + "/network-if-net1_dt.log",
             {
                 logscale: false,
@@ -269,7 +269,7 @@
                 visibility: [false, false, false, false,    // timezone,timestamp,system,source, 
                             false, true, false, false, false, false, true, false, false, false, false, false, false, false, false] 
            });
-        network_bucket[$id].g_os_network_202 = new Dygraph(document.getElementById("chart-os-network-net1-errors"),
+        network_bucket[id].g_os_network_202 = new Dygraph(document.getElementById("chart-os-network-net1-errors"),
             "/umc/log/" + csv_date + "/network-if-net1_dt.log",
             {
                 logscale: false,
