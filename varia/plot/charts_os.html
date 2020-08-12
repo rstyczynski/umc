@@ -272,48 +272,49 @@
         disk_space_html = "";
         disk_space_bucket = new Array();
 
-        var id = 1;
-        disk_space_bucket[id] = {};
+        for(var id=1; i<=3; i++){
+            
+            disk_space_bucket[id] = {};
 
-        disk_space_bucket[id].disk_space_div = ` 
-        <table width='1300px'>
-            <tr>
-                <td rowspan="2" class="verticalText">disk${id}</td>
-                <td colspan="2" rowspan="2">
-                    <div id="chart-os-disk-space-mount${id}-used" style="width:800px; height:300px;"></div>
-                </td>
-                <td colspan="2">
-                    <div id="chart-os-disk-space-mount${id}-ups" style="width:400px; height:150px;"></div>
-                </td>
-            </tr>
-        </table>
-        `
+            disk_space_bucket[id].disk_space_div = ` 
+            <table width='1300px'>
+                <tr>
+                    <td rowspan="2" class="verticalText">disk${id}</td>
+                    <td colspan="2" rowspan="2">
+                        <div id="chart-os-disk-space-mount${id}-used" style="width:800px; height:300px;"></div>
+                    </td>
+                    <td colspan="2">
+                        <div id="chart-os-disk-space-mount${id}-ups" style="width:400px; height:150px;"></div>
+                    </td>
+                </tr>
+            </table>
+            `
 
-        disk_space_html += disk_space_bucket[id].disk_space_div ;
+            disk_space_html += disk_space_bucket[id].disk_space_div ;
 
-        disk_space_div.innerHTML = disk_space_html;
+            disk_space_div.innerHTML = disk_space_html;
 
-        disk_space_bucket[id].g_os_disk_space_100 = new Dygraph(document.getElementById("chart-os-disk-space-mount" + id + "-used"),
-        "/umc/log/" + csv_date + "/disk-space-mount" + id + ".log",
-        {
-            logscale: false,
-            labelsDiv: "chart-legend",
-                 visibility: [false, false, false, false,   // timezone,timestamp,system,source, 
-                              false, false,                 // filesystem, type
-                              false, false, false, true,    // 1024-blocks, used, available, capacity, 
-                              false ]                       // mounted_on
-        });
-        disk_space_bucket[id].g_os_disk_space_101 = new Dygraph(document.getElementById("chart-os-disk-space-mount" + id + "-ups"),
-            "/umc/log/" + csv_date + "/disk-space-mount" + id + "_dt.log",
+            disk_space_bucket[id].g_os_disk_space_100 = new Dygraph(document.getElementById("chart-os-disk-space-mount" + id + "-used"),
+            "/umc/log/" + csv_date + "/disk-space-mount" + id + ".log",
             {
                 logscale: false,
                 labelsDiv: "chart-legend",
-                visibility: [false, false, false, false,     // timezone,timestamp,system,source, 
-                              false, false,                  // filesystem, type
-                              false, true , false, false,    // 1024-blocks, used, available, capacity, 
-                              false ]                        // mounted_on
+                    visibility: [false, false, false, false,   // timezone,timestamp,system,source, 
+                                false, false,                 // filesystem, type
+                                false, false, false, true,    // 1024-blocks, used, available, capacity, 
+                                false ]                       // mounted_on
             });
-
+            disk_space_bucket[id].g_os_disk_space_101 = new Dygraph(document.getElementById("chart-os-disk-space-mount" + id + "-ups"),
+                "/umc/log/" + csv_date + "/disk-space-mount" + id + "_dt.log",
+                {
+                    logscale: false,
+                    labelsDiv: "chart-legend",
+                    visibility: [false, false, false, false,     // timezone,timestamp,system,source, 
+                                false, false,                  // filesystem, type
+                                false, true , false, false,    // 1024-blocks, used, available, capacity, 
+                                false ]                        // mounted_on
+                });
+        }
 
 
 
