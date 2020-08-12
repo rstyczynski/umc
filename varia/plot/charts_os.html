@@ -61,7 +61,7 @@
     <h1 id='body_title' align="center">Host operational metrics</h1>
 
     <p align="center">
-    <a id='link_rdw'>previous</a><text id='data_date'></text><a id='link_fwd'>next</a>
+    <a id='link_rev'>previous</a><text id='data_date'></text><a id='link_fwd'>next</a>
     </p>
 
     <h2>Overview</h2>
@@ -97,7 +97,11 @@
         }
 
         params = (new URL(document.location)).searchParams;
-        csv_date = name = params.get('date');
+        
+        disk_cnt = params.get('disk_cnt');
+        net_cnt = nparams.get('net_cnt');
+
+        csv_date = params.get('date');
         if (!csv_date) {
             today = new Date();
             csv_date = date2text(today);
@@ -109,11 +113,24 @@
         csv_date_fwd = new Date(csv_date);
         csv_date_fwd.setDate(csv_date_fwd.getDate() + 1 );
 
-        link_rdw = location.protocol + '//' + location.host + location.pathname + '?date=' + date2text(csv_date_rwd);
-        link_fwd = location.protocol + '//' + location.host + location.pathname + '?date=' + date2text(csv_date_fwd);
+        link_rev = location.protocol + '//' + location.host + location.pathname + '?date=' + date2text(csv_date_rwd);        
+        if ( disk_cnt !== null ) {
+            link_rev += "?disk_cnt" + disk_cnt
+        }
+        if ( net_cnt !== null ) {
+            link_rev += "?net_cnt" + net_cnt
+        }
 
-        document.getElementById("link_rdw").setAttribute("href",link_rdw);
-        document.getElementById("link_rdw").textContent = date2text(csv_date_rwd);
+        link_fwd = location.protocol + '//' + location.host + location.pathname + '?date=' + date2text(csv_date_fwd);
+        if ( disk_cnt !== null ) {
+            link_fwd += "?disk_cnt" + disk_cnt
+        }
+        if ( net_cnt !== null ) {
+            link_fwd += "?net_cnt" + net_cnt
+        }
+
+        document.getElementById("link_rev").setAttribute("href",link_rev);
+        document.getElementById("link_rev").textContent = date2text(csv_date_rwd);
         document.getElementById("link_fwd").setAttribute("href",link_fwd);
         document.getElementById("link_fwd").textContent = date2text(csv_date_fwd);
 
@@ -321,7 +338,7 @@
             disk_tps_bucket[id].disk_tps_div = ` 
             <table width='1300px'>
                 <tr>
-                    <td rowspan="2" class="verticalText">net1</td>
+                    <td rowspan="2" class="verticalText">disk${id}</td>
                     <td colspan="2" rowspan="2">
                         <div id="chart-os-disk-tps-disk${id}-kB_read_wrtn" style="width:800px; height:300px;"></div>
                     </td>
