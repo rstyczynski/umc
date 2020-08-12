@@ -98,12 +98,12 @@
 
         params = (new URL(document.location)).searchParams;
         
-        disk_cnt = params.get('disk_cnt');
+        disk_cnt = parseInt(params.get('disk_cnt'));
         if ( disk_cnt === null ) {
             disk_cnt = 1;
         }
         
-        net_cnt = params.get('net_cnt');
+        net_cnt = parseInt(params.get('net_cnt'));
         if ( net_cnt === null ) {
             net_cnt = 1;
         }
@@ -361,7 +361,7 @@
             disk_tps_div.innerHTML = disk_tps_html;
         }
 
-        for(var id=1; id<=2; id++){
+        for(var id=1; id<=disk_cnt; id++){
             var g_os_disk_tps_500 = new Dygraph(document.getElementById("chart-os-disk-tps-disk" + id + "-kB_read_wrtn"),
             "/umc/log/" + csv_date + "/disk-tps-disk" + id + ".log",
             {
