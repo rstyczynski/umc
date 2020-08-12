@@ -122,18 +122,18 @@
 
         link_rev = location.protocol + '//' + location.host + location.pathname + '?date=' + date2text(csv_date_rwd);        
         if ( disk_cnt !== null ) {
-            link_rev += "?disk_cnt" + disk_cnt;
+            link_rev += "?disk_cnt=" + disk_cnt;
         }
         if ( net_cnt !== null ) {
-            link_rev += "?net_cnt" + net_cnt;
+            link_rev += "?net_cnt=" + net_cnt;
         }
 
         link_fwd = location.protocol + '//' + location.host + location.pathname + '?date=' + date2text(csv_date_fwd);
         if ( disk_cnt !== null ) {
-            link_fwd += "?disk_cnt" + disk_cnt;
+            link_fwd += "?disk_cnt=" + disk_cnt;
         }
         if ( net_cnt !== null ) {
-            link_fwd += "?net_cnt" + net_cnt;
+            link_fwd += "?net_cnt=" + net_cnt;
         }
 
         document.getElementById("link_rev").setAttribute("href",link_rev);
@@ -226,58 +226,59 @@
         network_html = "";
         network_bucket = new Array();
 
-        var id = 1;
-        network_bucket[id] = {};
+        for(var id=1; id<=net_cnt; id++){
+            network_bucket[id] = {};
 
-        network_bucket[id].network_div = ` 
-        <table width='1300px'>
-            <tr>
-                <td rowspan="2" class="verticalText">net${id}</td>
+            network_bucket[id].network_div = ` 
+            <table width='1300px'>
+                <tr>
+                    <td rowspan="2" class="verticalText">net${id}</td>
 
-                <td colspan="2" rowspan="2">
-                    <div id="chart-os-network-net${id}-bytes" style="width:800px; height:300px;"></div>
-                </td>
+                    <td colspan="2" rowspan="2">
+                        <div id="chart-os-network-net${id}-bytes" style="width:800px; height:300px;"></div>
+                    </td>
 
-                <td colspan="2">
-                    <div id="chart-os-network-net${id}-packets" style="width:400px; height:150px;"></div>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <div id="chart-os-network-net${id}-errors" style="width:400px; height:150px;"></div>
-                </td>
-            </tr>
-        </table>
-        `
-        network_html += network_bucket[id].network_div ;
+                    <td colspan="2">
+                        <div id="chart-os-network-net${id}-packets" style="width:400px; height:150px;"></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <div id="chart-os-network-net${id}-errors" style="width:400px; height:150px;"></div>
+                    </td>
+                </tr>
+            </table>
+            `
+            network_html += network_bucket[id].network_div ;
+            network_div.innerHTML = network_html;
+        }
 
-
-        network_div.innerHTML = network_html;
-
-        // network_bucket[id].g_os_network_200 = new Dygraph(document.getElementById("chart-os-network-net" + id + "-bytes"),
-        //     "/umc/log/" + csv_date + "/network-if-net" + id + "_dt.log",
-        //     {
-        //         logscale: false,
-        //         labelsDiv: "chart-legend",
-        //         visibility: [false, false, false, false,    // timezone,timestamp,system,source, 
-        //                     false, false, false, false, false, false, false, false, false, false, false, false, false, true, true]
-        //     });
-        // network_bucket[id].g_os_network_201 = new Dygraph(document.getElementById("chart-os-network-net" + id + "-packets"),
-        //     "/umc/log/" + csv_date + "/network-if-net1_d" + id + ".log",
-        //     {
-        //         logscale: false,
-        //         labelsDiv: "chart-legend",
-        //         visibility: [false, false, false, false,    // timezone,timestamp,system,source, 
-        //                     false, true, false, false, false, false, true, false, false, false, false, false, false, false, false] 
-        //    });
-        // network_bucket[id].g_os_network_202 = new Dygraph(document.getElementById("chart-os-network-net" + id + "-errors"),
-        //     "/umc/log/" + csv_date + "/network-if-net" + id + "_dt.log",
-        //     {
-        //         logscale: false,
-        //         labelsDiv: "chart-legend",
-        //         visibility: [false, false, false, false,    // timezone,timestamp,system,source, 
-        //                      false, false, true, false, false, false, false, true, false, false, false, false, false, false, false]
-        //     });
+        for(var id=1; id<=disk_cnt; id++){
+            network_bucket[id].g_os_network_200 = new Dygraph(document.getElementById("chart-os-network-net" + id + "-bytes"),
+                "/umc/log/" + csv_date + "/network-if-net" + id + "_dt.log",
+                {
+                    logscale: false,
+                    labelsDiv: "chart-legend",
+                    visibility: [false, false, false, false,    // timezone,timestamp,system,source, 
+                                false, false, false, false, false, false, false, false, false, false, false, false, false, true, true]
+                });
+            network_bucket[id].g_os_network_201 = new Dygraph(document.getElementById("chart-os-network-net" + id + "-packets"),
+                "/umc/log/" + csv_date + "/network-if-net1_d" + id + ".log",
+                {
+                    logscale: false,
+                    labelsDiv: "chart-legend",
+                    visibility: [false, false, false, false,    // timezone,timestamp,system,source, 
+                                false, true, false, false, false, false, true, false, false, false, false, false, false, false, false] 
+            });
+            network_bucket[id].g_os_network_202 = new Dygraph(document.getElementById("chart-os-network-net" + id + "-errors"),
+                "/umc/log/" + csv_date + "/network-if-net" + id + "_dt.log",
+                {
+                    logscale: false,
+                    labelsDiv: "chart-legend",
+                    visibility: [false, false, false, false,    // timezone,timestamp,system,source, 
+                                false, false, true, false, false, false, false, true, false, false, false, false, false, false, false]
+                });
+        }
 
 
         //disk space
@@ -285,7 +286,7 @@
         disk_space_html = "";
         disk_space_bucket = new Array();
 
-        for(var id=1; id<=2; id++){
+        for(var id=1; id<=disk_cnt; id++){
 
             disk_space_bucket[id] = {};
 
@@ -307,7 +308,7 @@
             disk_space_div.innerHTML = disk_space_html;
         }
 
-        for(var id=1; id<=2; id++){
+        for(var id=1; id<=disk_cnt; id++){
 
             disk_space_bucket[id].g_os_disk_space_100 = new Dygraph(document.getElementById("chart-os-disk-space-mount" + id + "-used"),
             "/umc/log/" + csv_date + "/disk-space-mount" + id + ".log",
