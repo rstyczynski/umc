@@ -178,7 +178,7 @@ function start() {
             fi
         done
 
-            cat >$umc_log/os_$service_name.html <<EOF
+        cat >$umc_log/os_$system.html <<EOF
 <meta http-equiv="Refresh" content="0; url='/umc/log/charts_os?disk_cnt=$disk_cnt&net_cnt=$net_cnt&mount_cnt=$mount_cnt'" />
 EOF
 
