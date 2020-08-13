@@ -235,7 +235,10 @@ function register_inetd() {
 # chkconfig:   12345 01 99
 # description: umc $service_type for $svc_name
 #
-sudo su - $(whoami) $umc_home/lib/$service_type.sh $svc_name.yml \$1
+
+#sudo su - $(whoami) $umc_home/lib/$service_type.sh $svc_name.yml \$1
+# run w/o setting env.
+sudo su $(whoami) $umc_home/lib/$service_type.sh $svc_name.yml \$1
 EOF
 
     chmod +x /tmp/umc_$service_type-$svc_name
