@@ -6,12 +6,50 @@ service_type=$(basename "$0" | cut -d. -f1)
 
 export umc_home=$script_dir/..
 export umc_bin=$umc_home/bin
-export umc_cfg=$umc_home/../.umc
-export umc_log=/var/log/umc
-export umc_run=$umc_cfg/pid
-mkdir -p $umc_run
-
 source $umc_home/bin/umc.h
+
+export umc_cfg=~/.umc
+export umc_run=$umc_cfg/pid; mkdir -p $umc_run
+
+case $umc_home in
+    /opt/umc)
+
+        #
+        # runs from central location? 
+        # use central log and obd locations unless other cfg is in ~/.umc/umc.conf 
+        #
+        if [ -z $umc_log ]; then
+            export umc_log=/var/log/umc
+            sudo mkdir -p $umc_log
+            sudo chmod 777 $umc_log
+        fi
+
+        if [ -z $status_root ]; then
+            export status_root=/run/umc/obd
+            # prepare odb directory, as /run is a ramdisk directories must be recreated after boot
+            sudo mkdir -p /run/umc/obd
+            sudo chmod 777 /run/umc
+            sudo chmod 777 /run/umc/obd
+        fi
+
+        ;;
+    *)
+        #
+        # runs in other location? 
+        # use home directory
+        #
+        if [ -z $umc_log ]; then
+            export umc_log=~/umc/log
+            mkdir -p $umc_log
+        fi
+
+        if [ -z $status_root ]; then
+            export status_root=~/umc/obd
+            mkdir -p $status_root
+        fi
+            
+        ;;
+esac
 
 function usage() {
     cat <<EOF
@@ -43,12 +81,6 @@ if [ ! $umc_cfg/$umc_svc_def ]; then
     exit 1
 fi
 
-# umc obd; is here as /run is a ramdisk
-export status_root=/run/umc/obd
-# prepare odb directory
-sudo mkdir -p /run/umc/obd
-sudo chmod 777 /run/umc
-sudo chmod 777 /run/umc/obd
 
 svc_name=$(echo $umc_svc_def | cut -d. -f1)
 
@@ -77,9 +109,9 @@ function start() {
                             (
                                 umc df collect 15 5760 $mount_point |
                                     $umc_bin/csv2obd --resource disk-space-$mount_point_name |
-                                    $umc_bin/logdirector.pl -dir /var/log/umc -addDateSubDir -name disk-space-$mount_point_name -detectHeader -checkHeaderDups -flush -tee |
+                                    $umc_bin/logdirector.pl -dir $umc_log -addDateSubDir -name disk-space-$mount_point_name -detectHeader -checkHeaderDups -flush -tee |
                                     $umc_bin/dvdt --resource disk-space-$mount_point_name --dataat 8 |
-                                    $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name disk-space-$mount_point_name\_dt -detectHeader -checkHeaderDups -flush
+                                    $umc_bin/logdirector.pl -addDateSubDir -dir $umc_log -name disk-space-$mount_point_name\_dt -detectHeader -checkHeaderDups -flush
                             ) &
                             echo $! >>$umc_run/$svc_name.pid
                             mount_cnt=$(( $mount_cnt + 1 ))
@@ -94,7 +126,7 @@ function start() {
                             (
                                 umc iostat collect 5 2147483647 $dev_device |
                                     $umc_bin/csv2obd --resource disk-tps-$dev_name |
-                                    $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name disk-tps-$dev_name -detectHeader -checkHeaderDups -flush
+                                    $umc_bin/logdirector.pl -addDateSubDir -dir $umc_log -name disk-tps-$dev_name -detectHeader -checkHeaderDups -flush
                             ) &
                             echo $! >>$umc_run/$svc_name.pid
                             disk_cnt=$(( $disk_cnt + 1 ))
@@ -109,9 +141,9 @@ function start() {
                             (
                                 umc ifconfig collect 5 2147483647 $dev_device |
                                     $umc_bin/csv2obd --resource network-if-$dev_name |
-                                    $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name network-if-$dev_name -detectHeader -checkHeaderDups -flush -tee |
+                                    $umc_bin/logdirector.pl -addDateSubDir -dir $umc_log -name network-if-$dev_name -detectHeader -checkHeaderDups -flush -tee |
                                     $umc_bin/dvdt --resource network-if-$dev_name --dataat 7 |
-                                    $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name network-if-$dev_name\_dt -detectHeader -checkHeaderDups -flush
+                                    $umc_bin/logdirector.pl -addDateSubDir -dir $umc_log -name network-if-$dev_name\_dt -detectHeader -checkHeaderDups -flush
                             ) &
                             echo $! >>$umc_run/$svc_name.pid
                             net_cnt=$(( $net_cnt + 1 ))
@@ -124,9 +156,9 @@ function start() {
                                 (
                                     umc netstattcp collect 5 2147483647 |
                                         $umc_bin/csv2obd --resource network-tcp-netstattcp |
-                                        $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name network-tcp-netstattcp -detectHeader -checkHeaderDups -flush -tee |
+                                        $umc_bin/logdirector.pl -addDateSubDir -dir $umc_log -name network-tcp-netstattcp -detectHeader -checkHeaderDups -flush -tee |
                                         $umc_bin/dvdt --resource network-tcp-netstattcp --dataat 7 |
-                                        $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name network-tcp-netstattcp\_dt -detectHeader -checkHeaderDups -flush
+                                        $umc_bin/logdirector.pl -addDateSubDir -dir $umc_log -name network-tcp-netstattcp\_dt -detectHeader -checkHeaderDups -flush
                                 ) &
                                 echo $! >>$umc_run/$svc_name.pid
                             fi
@@ -143,7 +175,7 @@ function start() {
                         (
                             umc vmstat collect 5 2147483647 |
                                 $umc_bin/csv2obd --resource $subsystem-$component |
-                                $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name $subsystem-$component -detectHeader -checkHeaderDups -flush
+                                $umc_bin/logdirector.pl -addDateSubDir -dir $umc_log -name $subsystem-$component -detectHeader -checkHeaderDups -flush
                         ) &
                         echo $! >>$umc_run/$svc_name.pid
                         ;;
@@ -151,7 +183,7 @@ function start() {
                         (
                             umc uptime collect 5 2147483647 |
                                 $umc_bin/csv2obd --resource $subsystem-$component |
-                                $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name $subsystem-$component -detectHeader -checkHeaderDups -flush
+                                $umc_bin/logdirector.pl -addDateSubDir -dir $umc_log -name $subsystem-$component -detectHeader -checkHeaderDups -flush
                         ) &
                         echo $! >>$umc_run/$svc_name.pid
                         ;;
@@ -159,18 +191,18 @@ function start() {
                         (
                             umc meminfo collect 5 2147483647 |
                                 $umc_bin/csv2obd --resource $subsystem-$component |
-                                $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name $subsystem-$component -detectHeader -checkHeaderDups -flush -tee |
+                                $umc_bin/logdirector.pl -addDateSubDir -dir $umc_log -name $subsystem-$component -detectHeader -checkHeaderDups -flush -tee |
                                 $umc_bin/dvdt --resource $subsystem-$component |
-                                $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name $subsystem-$component\_dt -detectHeader -checkHeaderDups -flush
+                                $umc_bin/logdirector.pl -addDateSubDir -dir $umc_log -name $subsystem-$component\_dt -detectHeader -checkHeaderDups -flush
                         ) &
                         ;;
                     memory-free)
                         (
                             umc free collect 5 2147483647 |
                                 $umc_bin/csv2obd --resource $subsystem-$component |
-                                $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name $subsystem-$component -detectHeader -checkHeaderDups -flush -tee |
+                                $umc_bin/logdirector.pl -addDateSubDir -dir $umc_log -name $subsystem-$component -detectHeader -checkHeaderDups -flush -tee |
                                 $umc_bin/dvdt --resource $subsystem-$component |
-                                $umc_bin/logdirector.pl -addDateSubDir -dir /var/log/umc -name $subsystem-$component\_dt -detectHeader -checkHeaderDups -flush
+                                $umc_bin/logdirector.pl -addDateSubDir -dir $umc_log -name $subsystem-$component\_dt -detectHeader -checkHeaderDups -flush
                         ) &
                         ;;
                     esac
