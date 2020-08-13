@@ -13,7 +13,6 @@ export umc_run=$umc_cfg/pid; mkdir -p $umc_run
 
 case $umc_home in
     /opt/umc)
-
         #
         # runs from central location? 
         # use central log and obd locations unless other cfg is in ~/.umc/umc.conf 
@@ -60,7 +59,6 @@ EOF
 umc_svc_def=$1
 
 os_release=$(cat /etc/os-release | grep '^VERSION=' | cut -d= -f2 | tr -d '"' | cut -d. -f1)
-
 if [ $os_release -eq 6 ]; then
     source /etc/init.d/functions
 fi
@@ -237,7 +235,7 @@ function register_inetd() {
 # chkconfig:   12345 01 99
 # description: umc $service_type for $svc_name
 #
-$umc_home/lib/$service_type.sh $svc_name.yml \$1
+sudo su - $(ehoami) $umc_home/lib/$service_type.sh $svc_name.yml \$1
 EOF
 
     chmod +x /tmp/umc_$service_type-$svc_name
