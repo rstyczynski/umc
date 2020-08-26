@@ -325,7 +325,7 @@ start)
 
         if [ $blocking_run == yes ]; then
             echo $$ >>$umc_run/$svc_name.pid
-            read
+            sleep 172800
         fi
 
     else
