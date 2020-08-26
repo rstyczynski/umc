@@ -120,7 +120,7 @@ EOF
         fi
     done
 
-    echo $PPID >$umc_run/$svc_name.pid
+    echo $PID >$umc_run/$svc_name.pid
 }
 
 function stop() {
