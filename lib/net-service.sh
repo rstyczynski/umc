@@ -43,12 +43,45 @@ if [ ! $umc_cfg/$umc_svc_def ]; then
     exit 1
 fi
 
-# umc obd; is here as /run is a ramdisk
-export status_root=/run/umc/obd
-# prepare odb directory
-sudo mkdir -p /run/umc/obd
-sudo chmod 777 /run/umc
-sudo chmod 777 /run/umc/obd
+
+case $umc_home in
+    /opt/umc)
+        #
+        # runs from central location? 
+        # use central log and obd locations unless other cfg is in ~/.umc/umc.conf 
+        #
+        if [ -z "$umc_log" ]; then
+            export umc_log=/var/log/umc
+            sudo mkdir -p $umc_log
+            sudo chmod 777 $umc_log
+        fi
+
+        if [ -z "$status_root" ]; then
+            export status_root=/run/umc/obd
+            # prepare odb directory, as /run is a ramdisk directories must be recreated after boot
+            sudo mkdir -p /run/umc/obd
+            sudo chmod 777 /run/umc
+            sudo chmod 777 /run/umc/obd
+        fi
+
+        ;;
+    *)
+        #
+        # runs in other location? 
+        # use home directory
+        #
+        if [ -z "$umc_log" ]; then
+            export umc_log=~/umc/log
+            mkdir -p $umc_log
+        fi
+
+        if [ -z "$status_root" ]; then
+            export status_root=~/umc/obd
+            mkdir -p $status_root
+        fi
+            
+        ;;
+esac
 
 svc_name=$(echo $umc_svc_def | cut -d. -f1)
 
