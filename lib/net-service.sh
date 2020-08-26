@@ -254,7 +254,7 @@ start)
     if [ ! -f $umc_run/$svc_name.pid ]; then
         start
 
-        if [ $blocking_run == yes]; then
+        if [ $blocking_run == yes ]; then
             echo $$ >>$umc_run/$svc_name.pid
             read
         fi
