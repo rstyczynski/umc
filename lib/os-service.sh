@@ -50,19 +50,6 @@ case $umc_home in
         ;;
 esac
 
-function usage() {
-    cat <<EOF
-Usage: $service_type svc_def [start|stop|status|restart|register|unregister] 
-EOF
-}
-
-umc_svc_def=$1
-
-os_release=$(cat /etc/os-release | grep '^VERSION=' | cut -d= -f2 | tr -d '"' | cut -d. -f1)
-if [ $os_release -eq 6 ]; then
-    source /etc/init.d/functions
-fi
-
 case $2 in
 start | stop | status | restart | register | unregister)
     operation=$2
@@ -74,13 +61,29 @@ start | stop | status | restart | register | unregister)
     ;;
 esac
 
+umc_svc_def=$1
 if [ ! $umc_cfg/$umc_svc_def ]; then
     echo "Error. Service definition not found."
     exit 1
 fi
-
-
 svc_name=$(echo $umc_svc_def | cut -d. -f1)
+
+
+os_release=$(cat /etc/os-release | grep '^VERSION=' | cut -d= -f2 | tr -d '"' | cut -d. -f1)
+
+if [ $os_release -eq 6 ]; then
+    source /etc/init.d/functions
+fi
+
+#
+# custom
+#
+
+function usage() {
+    cat <<EOF
+Usage: $service_type svc_def [start|stop|status|restart|register|unregister] 
+EOF
+}
 
 function y2j() {
     python -c "import json, sys, yaml ; y=yaml.safe_load(sys.stdin.read()) ; print(json.dumps(y))"
