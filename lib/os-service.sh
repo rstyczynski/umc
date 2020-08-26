@@ -111,7 +111,7 @@ function start() {
                                     $umc_bin/dvdt --resource disk-space-$mount_point_name --dataat 8 |
                                     $umc_bin/logdirector.pl -addDateSubDir -dir $umc_log -name disk-space-$mount_point_name\_dt -detectHeader -checkHeaderDups -flush
                             ) &
-                            echo $! >>$umc_run/$svc_name.pid
+                            #echo $! >>$umc_run/$svc_name.pid
                             mount_cnt=$(( $mount_cnt + 1 ))
                         done
                         ;;
@@ -126,7 +126,7 @@ function start() {
                                     $umc_bin/csv2obd --resource disk-tps-$dev_name |
                                     $umc_bin/logdirector.pl -addDateSubDir -dir $umc_log -name disk-tps-$dev_name -detectHeader -checkHeaderDups -flush
                             ) &
-                            echo $! >>$umc_run/$svc_name.pid
+                            #echo $! >>$umc_run/$svc_name.pid
                             disk_cnt=$(( $disk_cnt + 1 ))
                         done
                         ;;                    
@@ -143,7 +143,7 @@ function start() {
                                     $umc_bin/dvdt --resource network-if-$dev_name --dataat 7 |
                                     $umc_bin/logdirector.pl -addDateSubDir -dir $umc_log -name network-if-$dev_name\_dt -detectHeader -checkHeaderDups -flush
                             ) &
-                            echo $! >>$umc_run/$svc_name.pid
+                            #echo $! >>$umc_run/$svc_name.pid
                             net_cnt=$(( $net_cnt + 1 ))
                         done
                         ;;
@@ -158,7 +158,7 @@ function start() {
                                         $umc_bin/dvdt --resource network-tcp-netstattcp --dataat 7 |
                                         $umc_bin/logdirector.pl -addDateSubDir -dir $umc_log -name network-tcp-netstattcp\_dt -detectHeader -checkHeaderDups -flush
                                 ) &
-                                echo $! >>$umc_run/$svc_name.pid
+                                #echo $! >>$umc_run/$svc_name.pid
                             fi
                         done
                         ;;
@@ -175,7 +175,7 @@ function start() {
                                 $umc_bin/csv2obd --resource $subsystem-$component |
                                 $umc_bin/logdirector.pl -addDateSubDir -dir $umc_log -name $subsystem-$component -detectHeader -checkHeaderDups -flush
                         ) &
-                        echo $! >>$umc_run/$svc_name.pid
+                        #echo $! >>$umc_run/$svc_name.pid
                         ;;
                     system-uptime)
                         (
@@ -183,7 +183,7 @@ function start() {
                                 $umc_bin/csv2obd --resource $subsystem-$component |
                                 $umc_bin/logdirector.pl -addDateSubDir -dir $umc_log -name $subsystem-$component -detectHeader -checkHeaderDups -flush
                         ) &
-                        echo $! >>$umc_run/$svc_name.pid
+                        #echo $! >>$umc_run/$svc_name.pid
                         ;;
                     memory-meminfo)
                         (
@@ -213,6 +213,8 @@ function start() {
 EOF
 
     done
+
+    echo $PPID >$umc_run/$svc_name.pid
 
 }
 

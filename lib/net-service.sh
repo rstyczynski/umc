@@ -72,7 +72,7 @@ function start() {
                     $umc_bin/csv2obd --resource socket_$service_name-$target_name |
                     $umc_bin/logdirector.pl -dir /var/log/umc -addDateSubDir -name socket_$service_name-$target_name -detectHeader -checkHeaderDups -flush
             ) &
-            echo $! >>$umc_run/$svc_name.pid
+            #echo $! >>$umc_run/$svc_name.pid
 
             if [[ $target_name =~ service[0-9][0-9]* ]]; then
                 multi_service=yes
@@ -91,7 +91,7 @@ function start() {
                     $umc_bin/csv2obd --resource ping_$service_name-$target_name |
                     $umc_bin/logdirector.pl -dir /var/log/umc -addDateSubDir -name ping_$service_name-$target_name -detectHeader -checkHeaderDups -flush
             ) &
-            echo $! >>$umc_run/$svc_name.pid
+            #echo $! >>$umc_run/$svc_name.pid
 
             echo "mtr $service_name $target_name $address"
             (
@@ -99,7 +99,7 @@ function start() {
                     $umc_bin/csv2obd --resource mtr_$service_name-$target_name |
                     $umc_bin/logdirector.pl -dir /var/log/umc -addDateSubDir -name mtr_$service_name-$target_name -detectHeader -checkHeaderDups -flush
             ) &
-            echo $! >>$umc_run/$svc_name.pid
+            #echo $! >>$umc_run/$svc_name.pid
         done
 
 #         cat >$umc_log/ping_$service_name.html <<EOF
@@ -119,6 +119,8 @@ EOF
 EOF
         fi
     done
+
+    echo $PPID >$umc_run/$svc_name.pid
 }
 
 function stop() {
