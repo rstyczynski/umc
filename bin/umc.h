@@ -10,7 +10,9 @@ export toolsBin=$umcRoot/bin
 
 PATH=$PATH:/sbin:$toolsBin
 
-export status_root=~/obd
+if [ -z "$status_root" ]; then
+  export status_root=~/obd
+fi
 
 #---------------------------------------------------------------------------------------
 #--- call cfg scripts
