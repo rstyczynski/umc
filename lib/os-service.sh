@@ -217,9 +217,9 @@ EOF
     done
 
     # this process ends... so let's trick to move it to background
-    echo $$ >>$umc_run/$svc_name.pid
-    (kill -STOP $$; kill -CONT $$) &
-    sleep 1
+    # echo $$ >>$umc_run/$svc_name.pid
+    # (kill -STOP $$; kill -CONT $$) &
+    # sleep 86400
 
 }
 
