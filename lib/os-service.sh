@@ -214,7 +214,7 @@ EOF
 
     done
 
-    echo $PID >$umc_run/$svc_name.pid
+    echo $$ >$umc_run/$svc_name.pid
 
 }
 
