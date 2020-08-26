@@ -51,6 +51,7 @@ case $umc_home in
 esac
 
 umc_svc_def=$1
+shift
 if [ ! $umc_cfg/$umc_svc_def ]; then
     echo "Error. Service definition not found."
     exit 1
@@ -58,9 +59,9 @@ fi
 svc_name=$(echo $umc_svc_def | cut -d. -f1)
 
 
-case $2 in
+case $1 in
 start | stop | status | restart | register | unregister)
-    operation=$2
+    operation=$1
     shift
     ;;
 *)
@@ -68,6 +69,11 @@ start | stop | status | restart | register | unregister)
     exit 1
     ;;
 esac
+
+blocking_run=no
+if [ "$1" == 'block' ]; then
+    blocking_run=yes
+fi
 
 os_release=$(cat /etc/os-release | grep '^VERSION=' | cut -d= -f2 | tr -d '"' | cut -d. -f1)
 
@@ -219,11 +225,10 @@ EOF
 
     done
 
-    # this process ends... so let's trick to move it to background
-    # echo $$ >>$umc_run/$svc_name.pid
-    # (kill -STOP $$; kill -CONT $$) &
-    # sleep 86400
-
+    if [ $blocking_run == yes]; then
+        echo $$ >>$umc_run/$svc_name.pid
+        read
+    fi
 }
 
 function stop() {
