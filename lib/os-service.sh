@@ -225,10 +225,6 @@ EOF
 
     done
 
-    if [ $blocking_run == yes]; then
-        echo $$ >>$umc_run/$svc_name.pid
-        read
-    fi
 }
 
 function stop() {
@@ -326,6 +322,12 @@ case $operation in
 start)
     if [ ! -f $umc_run/$svc_name.pid ]; then
         start
+
+        if [ $blocking_run == yes]; then
+            echo $$ >>$umc_run/$svc_name.pid
+            read
+        fi
+
     else
         echo "Already running. Info: $(cat $umc_run/$svc_name.pid)"
         exit 1
