@@ -120,8 +120,11 @@ EOF
         fi
     done
 
-    # this process ends...
-    #echo $$ >$umc_run/$svc_name.pid
+    # this process ends... so let's trick to move it to background
+    echo $$ >>$umc_run/$svc_name.pid
+    (kill -STOP $$; kill -CONT $$) &
+    sleep 1
+
 }
 
 function stop() {
