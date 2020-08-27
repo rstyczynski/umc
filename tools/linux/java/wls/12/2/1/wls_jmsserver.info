@@ -3,7 +3,7 @@ wls_jmsserver:
     layer:      Middleware
     system:     WLS
     subsystem:  jmsserver
-    header:     domain,serverName,subsystem,jmsServerName,bytes,bytesHigh,bytesPageable,bytesPagedIn,bytesPagedOut,bytesPending,bytesReceived,bytesThresholdTime,destinations,destinationsHigh,destinationsTotal,messages,messagesHigh,messagesPageable,messagesPagedIn,messagesPagedOut,messagesPending,messagesReceived,messagesThresholdTime,pending,transactions,sessionPoolsCurrent,sessionPoolsHigh,sessionPoolsTotal 
+    header:     domain,serverName,subsystem,jmsServerName,bytes,bytesHigh,bytesPageable,bytesPagedIn,bytesPagedOut,bytesPending,bytesReceived,bytesThresholdTime,destinations,destinationsHigh,destinationsTotal,messages,messagesHigh,messagesPageable,messagesPagedIn,messagesPagedOut,messagesPending,messagesReceived,messagesThresholdTime,sessionPoolsCurrent,sessionPoolsHigh,sessionPoolsTotal 
     rawheader:
         method:     script
         directive:  wls --printrawheader
