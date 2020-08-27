@@ -100,16 +100,30 @@ rsync -t ~/trace/log/ $shared_trace/$server_env/$(hostname)/runtime/log/$(date +
 
 
 echo "#"
+echo "# look at cron"
+echo "#"
+read -p "Press enter to see crontab"
+crontab -l
+
+echo "#"
 echo "# look at logs"
 echo "#"
+
+read -p "Press enter to see local logs"
 ll ~/trace/log
+ll ~/trace/log/$(date +%Y-%m-%d)
+
+read -p "Press enter to see central logs"
 ll $shared_trace_root/$server_env/$(hostname)/runtime/log
 ls $shared_trace_root/$server_env/$(hostname)/runtime/log/$(date +%Y-%m-%d)
 
 echo "#"
 echo "# look at state data"
 echo "#"
+read -p "Press enter to see local state file"
 ll ~/trace/obd
 cat ~/trace/obd/system-vmstat/state
+
+read -p "Press enter to see central state file"
 ll $shared_trace_root/$server_env/$(hostname)/runtime/obd
-cat $shared_trace_root/$server_env/$(hostname)/runtime/obd/
+cat $shared_trace_root/$server_env/$(hostname)/runtime/obd/system-vmstat/state

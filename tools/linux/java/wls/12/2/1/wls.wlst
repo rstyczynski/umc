@@ -127,9 +127,10 @@ def collectWLSdata(subsystems=[]):
                 'messagesPagedIn', 'messagesPagedOut', 'messagesPending', 
                 'messagesReceived', 'messagesThresholdTime'
                 ])
-                header[4] = header[4] + delimiter + addtoCSV([
-                'pending', 'transactions'
-                ])
+                # removed as non numerical info  
+                # header[4] = header[4] + delimiter + addtoCSV([
+                # 'pending', 'transactions'
+                # ])
                 header[4] = header[4] + delimiter + addtoCSV([
                 'sessionPoolsCurrent', 'sessionPoolsHigh', 'sessionPoolsTotal'
                 ])
@@ -172,11 +173,12 @@ def collectWLSdata(subsystems=[]):
                     ])
                     ####
                     ####
-                    ####                
-                    data[4][serverName][jmsServerName] = data[4][serverName][jmsServerName] + delimiter + addtoCSV([
-                    str(jmsServer.getPendingTransactions()),
-                    str(jmsServer.getTransactions())
-                    ]) 
+                    ####             
+                    # removed as non numerical info   
+                    # data[4][serverName][jmsServerName] = data[4][serverName][jmsServerName] + delimiter + addtoCSV([
+                    # str(jmsServer.getPendingTransactions()),
+                    # str(jmsServer.getTransactions())
+                    # ]) 
                     ####
                     ####
                     ####                
