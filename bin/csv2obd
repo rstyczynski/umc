@@ -175,9 +175,8 @@ while read -r line; do
         # add line to resource_id status log
         #
         if [ ! -z "$resource_log_prefix" ]; then
-            resource_log_dir=$(dirname $resource_log_prefix\_$resource_id.log) 
-            if [ ! -d $resource_log_dir ]; then
-                mkdir -p $resource_log_dir
+            if [ ! -f $resource_log_prefix\_$resource_id.log ]; then
+                mkdir -p $(dirname $resource_log_prefix\_$resource_id.log) 
                 echo $header >$resource_log_prefix\_$resource_id.log
             fi
             echo $line >>$resource_log_prefix\_$resource_id.log
