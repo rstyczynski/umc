@@ -36,6 +36,7 @@ while [ $# -gt 0 ]; do
     --display) display=$1 ;;
     --max_lines) max_lines=$1 ;;
     --status_root) status_root=$1 ;;
+    --resource_log_prefix) resource_log_prefix=$1 ;;
     -h | --help)
         usage
         exit
@@ -76,6 +77,9 @@ fi
 #####
 
 # Credits: https://www.unix.com/unix-for-dummies-questions-and-answers/181419-sliding-window-variables.html
+#
+# TODO: Add handler for map of lists... data_window=f(resource_id)
+#        
 function add_line() {
     typeset i=0
 
@@ -113,7 +117,7 @@ else
 fi
 
 while read -r line; do
-    process_line=1
+    process_line=yes
     if [ "$header" != "external" ]; then
         if [ "$header" == "instream" ]; then
             header=$line
@@ -121,13 +125,14 @@ while read -r line; do
             if [ "$display" == "yes" ]; then
                 echo $line
             fi
-            process_line=0
+            process_line=no
         fi
     fi
 
-    if [ $process_line -eq 1 ]; then
+    if [ $process_line == yes ]; then
 
         # extact resource name from stream
+        # do it for eaach line
         if [ ! -z "$resource_id_column" ]; then
             resource_id=$(echo $line | cut -d$CSVdelimiter -f$resource_id_column | tr -d ' ')
             resource_tmp=$status_root/$resource_id/tmp
@@ -144,21 +149,38 @@ while read -r line; do
             echo "$header" >$status_root/$resource_id/header
         fi
 
-        # append to log
-        echo $line >>$status_root/$resource_id/log/state
 
-        # keep data history in bash array as sliding window
-        add_line "$line"
+        if [ -z "$resource_id_column" ]; then
+            # append to log
+            echo $line >>$status_root/$resource_id/log/state
 
-        echo $header >$status_root/$resource_id/log/state
-        dump_window >>$status_root/$resource_id/log/state
+            # keep data history in bash array as sliding window
+            # TODO BUG history is not kept for resource named in resource_id_column, but for all lines....
+            add_line "$line"
 
-        # limit log to N lines; use mv/cat? for atomic file change
-        # if [ $max_lines -gt 0 ]; then
-        #   tail -$max_lines $status_root/$resource_id/log/state > $status_root/$resource_id/tmp/state.max_lines
-        #   #echo $header > $status_root/$resource_id/log/state
-        #   cat $status_root/$resource_id/tmp/state.max_lines > $status_root/$resource_id/log/state
-        # fi
+            echo $header >$status_root/$resource_id/log/state
+            dump_window >>$status_root/$resource_id/log/state
+
+            # limit log to N lines; use mv/cat? for atomic file change
+            # if [ $max_lines -gt 0 ]; then
+            #   tail -$max_lines $status_root/$resource_id/log/state > $status_root/$resource_id/tmp/state.max_lines
+            #   #echo $header > $status_root/$resource_id/log/state
+            #   cat $status_root/$resource_id/tmp/state.max_lines > $status_root/$resource_id/log/state
+            # fi
+        else
+            echo "Not supported for multi resource streams." >$status_root/$resource_id/log/state
+        fi
+
+        #
+        # add line to resource_id status log
+        #
+        if [ ! -z "$resource_log_prefix" ]; then
+            echo $line >>$resource_log_prefix\_$resource_id.log
+            if [ $? -ne 0 ]; then
+                mkdir -p $(dirname $resource_log_prefix\_$resource_id.log)
+                echo $header >$resource_log_prefix\_$resource_id.log
+            fi
+        fi
 
         # display
         if [ "$display" == "yes" ]; then
