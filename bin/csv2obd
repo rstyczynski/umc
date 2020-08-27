@@ -175,11 +175,12 @@ while read -r line; do
         # add line to resource_id status log
         #
         if [ ! -z "$resource_log_prefix" ]; then
-            echo $line >>$resource_log_prefix\_$resource_id.log
-            if [ $? -ne 0 ]; then
-                mkdir -p $(dirname $resource_log_prefix\_$resource_id.log)
+            resource_log_dir=$(dirname $resource_log_prefix\_$resource_id.log) 
+            if [ ! -d $resource_log_dir ]; then
+                mkdir -p $resource_log_dir
                 echo $header >$resource_log_prefix\_$resource_id.log
             fi
+            echo $line >>$resource_log_prefix\_$resource_id.log
         fi
 
         # display
