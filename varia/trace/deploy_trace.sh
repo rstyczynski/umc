@@ -116,8 +116,8 @@ echo "# look at logs"
 echo "#"
 
 read -p "Press enter to see local logs"
-ll ~/trace/log
-ll ~/trace/log/$(date +%Y-%m-%d)
+ls -l ~/trace/log
+ls -l ~/trace/log/$(date +%Y-%m-%d)
 
 read -p "Press enter to see central logs"
 ll $shared_trace_root/$server_env/$(hostname)/runtime/log
@@ -127,9 +127,9 @@ echo "#"
 echo "# look at state data"
 echo "#"
 read -p "Press enter to see local state file"
-ll ~/trace/obd
+ls -l ~/trace/obd
 cat ~/trace/obd/system-vmstat/state
 
 read -p "Press enter to see central state file"
-ll $shared_trace_root/$server_env/$(hostname)/runtime/obd
+ls -l $shared_trace_root/$server_env/$(hostname)/runtime/obd
 cat $shared_trace_root/$server_env/$(hostname)/runtime/obd/system-vmstat/state
