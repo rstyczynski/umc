@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source ~/.umc/umc.conf
+
 : ${server_env:=$1}
 : ${server_type:=$2}
 : ${shared_trace_root:=$3}
