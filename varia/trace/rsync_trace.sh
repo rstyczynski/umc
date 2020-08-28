@@ -11,4 +11,4 @@ rsync -rt ~/trace/obd/ $shared_trace_root/$server_env/$(hostname)/runtime/obd
 if [ ! -d $shared_trace_root/$server_env/$(hostname)/runtime/log/$(date +%Y-%m-%d) ]; then
     mkdir -p $shared_trace_root/$server_env/$(hostname)/runtime/log/$(date +%Y-%m-%d)
 fi
-rsync -t ~/trace/log/$(date +%Y-%m-%d)/ $shared_trace_root/$server_env/$(hostname)/runtime/log/$(date +%Y-%m-%d)
+rsync -t ~/trace/log/$(date +%Y-%m-%d)/* $shared_trace_root/$server_env/$(hostname)/runtime/log/$(date +%Y-%m-%d)
