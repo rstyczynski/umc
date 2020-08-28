@@ -73,7 +73,7 @@ echo "1 0 * * * ~/umc/lib/os-service.sh $os_service restart" >> cron.tmp
 for net_service in $(cd ~/.umc; ls net-probe_*.yml); do 
   echo "1 0 * * * ~/umc/lib/net-service.sh $net_service restart" >> cron.tmp
 done
-echo "* * * * * ~/umc/varia/trace/rsync_trace.sh" >>  cron.tmp
+echo "* * * * * ~/umc/varia/trace/rsync_trace.sh $server_env $server_type $shared_trace_root" >>  cron.tmp
 echo "# stop - umc" >>  cron.tmp
 
 (crontab -l 2>/dev/null |
