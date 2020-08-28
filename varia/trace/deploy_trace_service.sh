@@ -48,7 +48,8 @@ echo "# create umc.conf"
 echo "#"
 
 mkdir -p ~/.umc
-cat >> ~/.umc/umc.conf <<EOF
+mv ~/.umc/umc.conf ~/.umc/umc.conf.bak
+cat > ~/.umc/umc.conf <<EOF
 export umc_log=/var/log/umc
 export status_root=/run/umc/obd
 
