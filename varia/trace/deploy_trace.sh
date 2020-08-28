@@ -49,6 +49,7 @@ export server_type=$server_type
 # keep as is
 export status_root=~/trace/obd
 export umc_log=~/trace/log
+export shared_trace_root=$shared_trace_root
 
 mkdir -p ~/.umc
 mkdir -p $status_root
