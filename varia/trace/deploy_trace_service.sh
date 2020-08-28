@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if [ -d /opt/umc ]; then
-    echo "Error. deploy_trace.sh is intended to run with user space version of umc, but /opt/umc is available. consider switching to deploy_trace_service.sh"
+if [ ! -d /opt/umc ]; then
+    echo "Error. deploy_trace_service.sh is intended to run with root vrsion of umc, but /opt/umc is not available. Install root umc or consider using user space deploy_trace.sh"
     exit 1
 fi
 
@@ -31,12 +31,31 @@ if [ $(ls $shared_trace_root/cfg/$server_env/ext/net-probe_*.yml | wc -l) -eq 0 
     return 4
 fi
 
+os_release=$(cat /etc/os-release | grep '^VERSION=' | cut -d= -f2 | tr -d '"' | cut -d. -f1)
+
 echo "#"
 echo "# copy resource definitions"
 echo "#"
 
+rm ~/.umc/os-probe_*.yml
 cp $shared_trace_root/cfg/$server_env/$server_type/os-probe_$server_env\-$server_type.yml ~/.umc
+
+rm ~/.umc/net-probe_*.yml
 cp $shared_trace_root/cfg/$server_env/ext/net-probe_*.yml ~/.umc
+
+echo "#"
+echo "# create umc.conf"
+echo "#"
+
+mkdir -p ~/.umc
+cat >> ~/.umc/umc.conf <<EOF
+export umc_log=/var/log/umc
+export status_root=/run/umc/obd
+
+export server_env=$server_env
+export server_type=$server_type
+export shared_trace_root=$shared_trace_root
+EOF
 
 echo "#"
 echo "# update bash_profile"
@@ -48,15 +67,8 @@ cat ~/.bash_profile.bak | sed '/# umc envs. - START/,/# umc envs. - STOP/d'  > ~
 cat >> ~/.bash_profile <<EOF
 # umc envs. - START
 
-export server_env=$server_env
-export server_type=$server_type
+source ~/.umc/umc.conf
 
-# keep as is
-export status_root=~/trace/obd
-export umc_log=~/trace/log
-export shared_trace_root=$shared_trace_root
-
-mkdir -p ~/.umc
 mkdir -p $status_root
 mkdir -p $umc_log
 mkdir -p $shared_trace_root/$server_env/$(hostname)/runtime/obd
@@ -68,15 +80,59 @@ cat ~/.bash_profile
 source ~/.bash_profile
 
 echo "#"
+echo "# unregister services"
+echo "#"
+os_service=os-probe_$server_env\-$server_type.yml
+/opt/umc/lib/os-service.sh $os_service unregister
+
+for net_service in $(cd ~/.umc; ls net-probe_*.yml); do 
+    /opt/umc/lib/net-service.sh $net_service unregister
+done
+
+if [ $(ps aux | grep umc | grep -v grep | wc -l) -gt 0 ]; then
+    echo "Error. umc processes left after unregister. Check and fix this. Cannot contine."
+    exit 2
+fi
+
+echo "#"
+echo "# register services"
+echo "#"
+os_service=os-probe_$server_env\-$server_type.yml
+/opt/umc/lib/os-service.sh $os_service register
+
+for net_service in $(cd ~/.umc; ls net-probe_*.yml); do 
+    /opt/umc/lib/net-service.sh $net_service register
+done
+
+echo "#"
 echo "# update cron"
 echo "#"
 
 echo "# start - umc" > cron.tmp
 os_service=os-probe_$server_env\-$server_type.yml
-echo "1 0 * * * ~/umc/lib/os-service.sh $os_service restart" >> cron.tmp
+service_name=$(echo $os_service | cut -f1 -d.)
+case $os_release in
+6)
+    echo "1 0 * * * sudo service umc_os-service-$service_name restart" >> cron.tmp
+    ;;
+7)
+    echo not supported
+    exit 3
+    ;;
+esac
 
 for net_service in $(cd ~/.umc; ls net-probe_*.yml); do 
-  echo "1 0 * * * ~/umc/lib/net-service.sh $net_service restart" >> cron.tmp
+    service_name=$(echo $net_service | cut -f1 -d.)
+
+    case $os_release in
+    6)
+        echo "1 0 * * * sudo service umc_net-service-$service_name restart" >> cron.tmp
+        ;;
+    7)
+        echo not supported
+        exit 3
+        ;;
+    esac 
 done
 echo "* * * * * ~/umc/varia/trace/rsync_trace.sh $server_env $server_type $shared_trace_root" >>  cron.tmp
 echo "# stop - umc" >>  cron.tmp
@@ -88,22 +144,51 @@ cat cron.tmp) | crontab -; rm cron.tmp; crontab -l
 echo "#"
 echo "# start umc metric collection services"
 echo "#"
-echo ...
-source ~/.bash_profile
 
 os_service=os-probe_$server_env\-$server_type.yml
-~/umc/lib/os-service.sh $os_service stop
-nohup ~/umc/lib/os-service.sh $os_service start block > $os_service.log & 
+service_name=$(echo $os_service | cut -f1 -d.)
+case $os_release in
+6)
+    sudo service umc_os-service-$service_name start
+    ;;
+7)
+    echo not supported
+    exit 3
+    ;;
+esac
+sudo service umc_os-service-$service_name start
 
 for net_service in $(cd ~/.umc; ls net-probe_*.yml); do 
-  ~/umc/lib/net-service.sh $net_service stop
-  nohup ~/umc/lib/net-service.sh $net_service start block > $net_service.log &
+    service_name=$(echo $net_service | cut -f1 -d.)
+    case $os_release in
+    6)
+        sudo service umc_net-service-$service_name start
+        ;;
+    7)
+        echo not supported
+        exit 3
+        ;;
+    esac
 done
 
 echo "#"
 echo "# perform intial rsync"
 echo "#"
-~/umc/varia/trace/rsync_trace.sh $server_env $server_type $shared_trace_root
+/opt/umc/varia/trace/rsync_trace.sh $server_env $server_type $shared_trace_root
+
+echo "#"
+echo "# look at service"
+echo "#"
+read -p "Press enter to see umc services"
+    case $os_release in
+    6)
+        chkconfig --list | grep umc
+        ;;
+    7)
+        echo not supported
+        exit 3
+        ;;
+    esac
 
 echo "#"
 echo "# look at cron"
