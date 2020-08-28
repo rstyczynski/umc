@@ -98,7 +98,7 @@ done
 echo "#"
 echo "# perform intial rsync"
 echo "#"
-~/umc/varia/trace/rsync_trace.sh
+~/umc/varia/trace/rsync_trace.sh $server_env $server_type $shared_trace_root
 
 echo "#"
 echo "# look at cron"
