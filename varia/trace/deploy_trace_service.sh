@@ -90,7 +90,7 @@ for net_service in $(cd ~/.umc; ls net-probe_*.yml); do
     /opt/umc/lib/net-service.sh $net_service unregister
 done
 
-if [ $(ps aux | grep umc | grep -v grep | wc -l) -gt 0 ]; then
+if [ $(ps aux | grep umc | grep -v grep | wc -l) != 0 ]; then
     echo "Error. umc processes left after unregister. Check and fix this. Cannot contine."
     exit 2
 fi
@@ -183,7 +183,7 @@ echo "#"
 read -p "Press enter to see umc services"
     case $os_release in
     6)
-        chkconfig --list | grep umc
+        sudo chkconfig --list | grep umc
         ;;
     7)
         echo not supported
