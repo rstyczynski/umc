@@ -95,9 +95,10 @@ for net_service in $(cd ~/.umc; ls net-probe_*.yml); do
   nohup ~/umc/lib/net-service.sh $net_service start block > $net_service.log &
 done
 
-rsync -rt ~/trace/obd/ $shared_trace/$server_env/$(hostname)/runtime/obd
-rsync -t ~/trace/log/ $shared_trace/$server_env/$(hostname)/runtime/log/$(date +%Y-%m-%d)
-
+echo "#"
+echo "# perform intial rsync"
+echo "#"
+~/umc/varia/trace/rsync_trace.bash
 
 echo "#"
 echo "# look at cron"
