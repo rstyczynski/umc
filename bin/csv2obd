@@ -150,6 +150,9 @@ while read -r line; do
         fi
 
 
+        #
+        # add line to status log
+        #
         if [ -z "$resource_id_column" ]; then
             # append to log
             echo $line >>$status_root/$resource_id/log/state
@@ -168,19 +171,20 @@ while read -r line; do
             #   cat $status_root/$resource_id/tmp/state.max_lines > $status_root/$resource_id/log/state
             # fi
         else
-            echo "Not supported for multi resource streams." >$status_root/$resource_id/log/state
+            #
+            # add line to sepcified resource_id status log
+            #
+            if [ ! -z "$resource_log_prefix" ]; then
+                if [ ! -f $resource_log_prefix\_$resource_id.log ]; then
+                    mkdir -p $(dirname $resource_log_prefix\_$resource_id.log) 
+                    echo $header >$resource_log_prefix\_$resource_id.log
+                fi
+                echo $line >>$resource_log_prefix\_$resource_id.log
+            else
+                echo "Sliding windows log not supported for multi resource streams. Use --resource_log_prefix to direct log to full log." >$status_root/$resource_id/log/state
+            fi
         fi
 
-        #
-        # add line to resource_id status log
-        #
-        if [ ! -z "$resource_log_prefix" ]; then
-            if [ ! -f $resource_log_prefix\_$resource_id.log ]; then
-                mkdir -p $(dirname $resource_log_prefix\_$resource_id.log) 
-                echo $header >$resource_log_prefix\_$resource_id.log
-            fi
-            echo $line >>$resource_log_prefix\_$resource_id.log
-        fi
 
         # display
         if [ "$display" == "yes" ]; then
