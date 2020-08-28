@@ -98,7 +98,7 @@ done
 echo "#"
 echo "# perform intial rsync"
 echo "#"
-~/umc/varia/trace/rsync_trace.bash
+~/umc/varia/trace/rsync_trace.sh
 
 echo "#"
 echo "# look at cron"
