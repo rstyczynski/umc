@@ -90,10 +90,8 @@ for net_service in $(cd ~/.umc; ls net-probe_*.yml); do
     /opt/umc/lib/net-service.sh $net_service unregister
 done
 
-echo $(ps aux | grep umc | grep -v grep | wc -l)
-sleep 2
-echo $(ps aux | grep umc | grep -v grep | wc -l)
-if [ "$(ps aux | grep umc | grep -v grep | wc -l)" != "0" ]; then
+# 2 processes are for this script
+if [ "$(ps aux | grep umc | grep -v grep | wc -l)" -gt 2 ]; then
     echo "Error. umc processes left after unregister. Check and fix this. Cannot contine."
     exit 2
 fi
