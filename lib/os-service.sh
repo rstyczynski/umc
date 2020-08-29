@@ -11,6 +11,8 @@ source $umc_home/bin/umc.h
 export umc_cfg=~/.umc
 export umc_run=$umc_cfg/pid; mkdir -p $umc_run
 
+max_int=2147483647
+
 case $umc_home in
     /opt/umc)
         #
@@ -80,6 +82,8 @@ os_release=$(cat /etc/os-release | grep '^VERSION=' | cut -d= -f2 | tr -d '"' | 
 if [ $os_release -eq 6 ]; then
     source /etc/init.d/functions
 fi
+
+service_user=$(whoami)
 
 #
 # custom
@@ -247,9 +251,9 @@ function register_inetd() {
 # description: umc $service_type for $svc_name
 #
 
-#sudo su - $(whoami) $umc_home/lib/$service_type.sh $svc_name.yml \$1
+#sudo su - $service_user $umc_home/lib/$service_type.sh $svc_name.yml \$1
 # run w/o setting env.
-sudo su $(whoami) $umc_home/lib/$service_type.sh $svc_name.yml \$1
+sudo su $service_user $umc_home/lib/$service_type.sh $svc_name.yml \$1
 EOF
 
     chmod +x /tmp/umc_$service_type-$svc_name
@@ -281,7 +285,7 @@ function register_systemd() {
 Description=umc data collector - $service_type - $svc_name
 
 [Service]
-User=$(whomai)
+User=$service_user
 TimeoutStartSec=infinity
 
 ExecStart=$umc_root/lib/$service_type.sh $svc_name start

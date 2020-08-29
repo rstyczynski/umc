@@ -85,14 +85,19 @@ fi
 
 service_user=$(whoami)
 
-
 #
 # custom
 #
 
+wls_admin=$(cat $umc_cfg/$umc_svc_def | y2j  | jq -r .weblogic.admin)
+
+if [ ! -z "$wls_admin" ];then
+    service_user=$wls_admin
+fi
+
 function usage() {
     cat <<EOF
-Usage: net-service.sh svc_def [start|stop|status|restart|register|unregister] 
+Usage: wls-service.sh svc_def [start|stop|status|restart|register|unregister] 
 EOF
 }
 
@@ -101,69 +106,23 @@ function y2j() {
 }
 
 function start() {
+    wls_url=$(cat $umc_cfg/$umc_svc_def | y2j  | jq -r .weblogic.url)
 
-    multi_service=no
+    for collector in general channel jmsserver jmsruntime datasource; do
 
-    for service_name in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".network[] | keys[]"); do
+        echo "wls $wls_admin $wls_url $collector"
 
-        for target_name in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".network[].$service_name.tcp[] | keys[]"); do
+        resource_id=$(cat $umc_cfg/$umc_svc_def | y2j  | jq -r .weblogic.collectors.$collector.resource_id)
+        resource_log_prefix=$(cat $umc_cfg/$umc_svc_def | y2j  | jq -r .weblogic.collectors.$collector.resource_log_prefix)
+        interval=$(cat $umc_cfg/$umc_svc_def | y2j  | jq -r .weblogic.collectors.$collector.interval)
+        (
+            umc wls collect $interval $max_int --subsystem $collector |
+                $umc_bin/csv2obd --resource $resource_id --resource_log_prefix $resource_log_prefix |
+                $umc_bin/logdirector.pl -dir $umc_log -addDateSubDir -name wls_$collector -detectHeader -checkHeaderDups -flush
+        ) &
+        echo $! >>$umc_run/$svc_name.pid
 
-            address=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".network[].$service_name.tcp[].$target_name.ip" | grep -v null)
-
-            echo "pingSocket $service_name $target_name $address"
-            (
-                umc pingSocket collect 15 5760 --subsystem $address |
-                    $umc_bin/csv2obd --resource socket_$service_name-$target_name |
-                    $umc_bin/logdirector.pl -dir $umc_log -addDateSubDir -name socket_$service_name-$target_name -detectHeader -checkHeaderDups -flush
-            ) &
-            echo $! >>$umc_run/$svc_name.pid
-
-            if [[ $target_name =~ service[0-9][0-9]* ]]; then
-                multi_service=yes
-            fi
-
-        done
-
-        # icmp
-        for target_name in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".network[].$service_name.icmp[] | keys[]"); do
-
-            address=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".network[].$service_name.icmp[].$target_name.ip" | grep -v null)
-
-            echo "ping $service_name $target_name $address"
-            (
-                umc ping collect 15 5760 $address |
-                    $umc_bin/csv2obd --resource ping_$service_name-$target_name |
-                    $umc_bin/logdirector.pl -dir $umc_log -addDateSubDir -name ping_$service_name-$target_name -detectHeader -checkHeaderDups -flush
-            ) &
-            echo $! >>$umc_run/$svc_name.pid
-
-            echo "mtr $service_name $target_name $address"
-            (
-                umc mtr collect 60 1440 $address |
-                    $umc_bin/csv2obd --resource mtr_$service_name-$target_name |
-                    $umc_bin/logdirector.pl -dir $umc_log -addDateSubDir -name mtr_$service_name-$target_name -detectHeader -checkHeaderDups -flush
-            ) &
-            echo $! >>$umc_run/$svc_name.pid
-        done
-
-#         cat >$umc_log/ping_$service_name.html <<EOF
-# <meta http-equiv="Refresh" content="0; url='/umc/log/ping?service_name=$service_name'" />
-# EOF
-#         cat >$umc_log/socket_$service_name.html <<EOF
-# <meta http-equiv="Refresh" content="0; url='/umc/log/socket?service_name=$service_name'" />
-# EOF
-
-        if [ $multi_service == "yes" ]; then
-            cat >$umc_log/network_$service_name.html <<EOF
-<meta http-equiv="Refresh" content="0; url='/umc/log/network?service_name=$service_name&multi'" />
-EOF
-        else
-            cat >$umc_log/network_$service_name.html <<EOF
-<meta http-equiv="Refresh" content="0; url='/umc/log/network?service_name=$service_name'" />
-EOF
-        fi
     done
-
 }
 
 function stop() {
