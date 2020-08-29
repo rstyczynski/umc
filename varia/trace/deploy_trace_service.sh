@@ -33,15 +33,6 @@ fi
 
 os_release=$(cat /etc/os-release | grep '^VERSION=' | cut -d= -f2 | tr -d '"' | cut -d. -f1)
 
-echo "#"
-echo "# copy resource definitions"
-echo "#"
-
-rm ~/.umc/os-probe_*.yml
-cp $shared_trace_root/cfg/$server_env/$server_type/os-probe_$server_env\-$server_type.yml ~/.umc
-
-rm ~/.umc/net-probe_*.yml
-cp $shared_trace_root/cfg/$server_env/ext/net-probe_*.yml ~/.umc
 
 echo "#"
 echo "# create umc.conf"
@@ -79,6 +70,26 @@ mkdir -p $shared_trace_root/$server_env/$(hostname)/runtime/log
 EOF
 cat ~/.bash_profile
 source ~/.bash_profile
+
+
+echo "#"
+echo "# copy resource definitions"
+echo "#"
+
+if [ $(ls $shared_trace_root/cfg/$server_env/$server_type/os-probe_$server_env\-$server_type.yml | wc -l) -eq 0 ]; then
+    echo "Error. No service definition found at $shared_trace_root/cfg/$server_env/$server_type/os-probe_$server_env\-$server_type.yml"
+    exit 4
+fi
+rm ~/.umc/os-probe_*.yml
+cp $shared_trace_root/cfg/$server_env/$server_type/os-probe_$server_env\-$server_type.yml ~/.umc
+
+if [ $(ls $shared_trace_root/cfg/$server_env/ext/net-probe_*.yml  | wc -l) -eq 0 ]; then
+    echo "Error. No service definition found at $shared_trace_root/cfg/$server_env/ext/net-probe_*.yml"
+    exit 4
+fi
+rm ~/.umc/net-probe_*.yml
+cp $shared_trace_root/cfg/$server_env/ext/net-probe_*.yml ~/.umc
+
 
 echo "#"
 echo "# unregister services"
@@ -118,7 +129,7 @@ case $os_release in
     echo "1 0 * * * sudo service umc_os-service-$service_name restart" >> cron.tmp
     ;;
 7)
-    echo not supported
+    echo "1 0 * * * sudo systemctl restart umc_os-service-$service_name" >> cron.tmp
     exit 3
     ;;
 esac
@@ -131,7 +142,7 @@ for net_service in $(cd ~/.umc; ls net-probe_*.yml); do
         echo "1 0 * * * sudo service umc_net-service-$service_name restart" >> cron.tmp
         ;;
     7)
-        echo not supported
+        echo "1 0 * * * sudo systemctl restart umc_net-service-$service_name" >> cron.tmp
         exit 3
         ;;
     esac 
@@ -154,7 +165,7 @@ case $os_release in
     sudo service umc_os-service-$service_name start
     ;;
 7)
-    echo not supported
+    udo systemctl start umc_os-service-$service_name
     exit 3
     ;;
 esac
@@ -167,7 +178,7 @@ for net_service in $(cd ~/.umc; ls net-probe_*.yml); do
         sudo service umc_net-service-$service_name start
         ;;
     7)
-        echo not supported
+        sudo systemctl start umc_net-service-$service_name
         exit 3
         ;;
     esac
@@ -184,10 +195,10 @@ echo "#"
 read -p "Press enter to see umc services"
     case $os_release in
     6)
-        sudo chkconfig --list | grep umc
+        chkconfig --list | grep umc
         ;;
     7)
-        echo not supported
+        systemctl list-units --type service | grep umc
         exit 3
         ;;
     esac

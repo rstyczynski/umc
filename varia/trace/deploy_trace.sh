@@ -32,11 +32,19 @@ if [ $(ls $shared_trace_root/cfg/$server_env/ext/net-probe_*.yml | wc -l) -eq 0 
 fi
 
 echo "#"
-echo "# copy resource definitions"
+echo "# create umc.conf"
 echo "#"
 
-cp $shared_trace_root/cfg/$server_env/$server_type/os-probe_$server_env\-$server_type.yml ~/.umc
-cp $shared_trace_root/cfg/$server_env/ext/net-probe_*.yml ~/.umc
+mkdir -p ~/.umc
+mv ~/.umc/umc.conf ~/.umc/umc.conf.bak
+cat > ~/.umc/umc.conf <<EOF
+export umc_log=/var/log/umc
+export status_root=/run/umc/obd
+
+export server_env=$server_env
+export server_type=$server_type
+export shared_trace_root=$shared_trace_root
+EOF
 
 echo "#"
 echo "# update bash_profile"
@@ -48,15 +56,8 @@ cat ~/.bash_profile.bak | sed '/# umc envs. - START/,/# umc envs. - STOP/d'  > ~
 cat >> ~/.bash_profile <<EOF
 # umc envs. - START
 
-export server_env=$server_env
-export server_type=$server_type
+source ~/.umc/umc.conf
 
-# keep as is
-export status_root=~/trace/obd
-export umc_log=~/trace/log
-export shared_trace_root=$shared_trace_root
-
-mkdir -p ~/.umc
 mkdir -p $status_root
 mkdir -p $umc_log
 mkdir -p $shared_trace_root/$server_env/$(hostname)/runtime/obd
@@ -66,6 +67,24 @@ mkdir -p $shared_trace_root/$server_env/$(hostname)/runtime/log
 EOF
 cat ~/.bash_profile
 source ~/.bash_profile
+
+
+echo "#"
+echo "# copy resource definitions"
+echo "#"
+
+if [ $(ls $shared_trace_root/cfg/$server_env/$server_type/os-probe_$server_env\-$server_type.yml | wc -l) -eq 0 ]; then
+    echo "Error. No service definition found at $shared_trace_root/cfg/$server_env/$server_type/os-probe_$server_env\-$server_type.yml"
+    exit 4
+fi
+cp $shared_trace_root/cfg/$server_env/$server_type/os-probe_$server_env\-$server_type.yml ~/.umc
+
+if [ $(ls $shared_trace_root/cfg/$server_env/ext/net-probe_*.yml  | wc -l) -eq 0 ]; then
+    echo "Error. No service definition found at $shared_trace_root/cfg/$server_env/ext/net-probe_*.yml"
+    exit 4
+fi
+cp $shared_trace_root/cfg/$server_env/ext/net-probe_*.yml ~/.umc
+
 
 echo "#"
 echo "# update cron"
