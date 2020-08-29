@@ -6,10 +6,11 @@ service_type=$(basename "$0" | cut -d. -f1)
 
 export umc_home=$script_dir/..
 export umc_bin=$umc_home/bin
-source $umc_home/bin/umc.h
 
 export umc_cfg=~/.umc
 export umc_run=$umc_cfg/pid; mkdir -p $umc_run
+
+source $umc_home/bin/umc.h
 
 max_int=2147483647
 
