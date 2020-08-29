@@ -64,9 +64,8 @@ while line:
         res_name_columns=res_name_column_def.split(',')
         res_name=''
         for res_name_column in res_name_columns:
-            res_name_column=int(res_name_column_def[int(res_name_column)-1])
             try:
-                res_name_fragment=line.split(separator)[res_name_column-1]
+                res_name_fragment=line.split(separator)[int(res_name_column)-1]
             except:
                 continue
             
