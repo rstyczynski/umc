@@ -147,12 +147,12 @@ while line:
                 state_f.write(header[i] + '=' + str(dvdt[i]) + '\n')
         state_f.close
 
+        #
         # write line to dv log 
+        #
         if resource_log_prefix != 'no':
             dvdt_log = resource_log_prefix + '_' + res_name + '.log'
             # write header if file does not exist
-            print(dvdt_log)
-            print(os.path.exists(dvdt_log))
             if os.path.exists(dvdt_log):
                 dvdt_f = open(dvdt_log, "a")
             else:
@@ -175,7 +175,9 @@ while line:
             
             dvdt_f.close
 
+        #
         # write dvdt data to stdout if needed
+        #
         if out_data == 'compute':
             if out_format == 'csv':
                 for i in range(len(header)-1):
