@@ -85,6 +85,10 @@ fi
 
 service_user=$(whoami)
 
+function y2j() {
+    python -c "import json, sys, yaml ; y=yaml.safe_load(sys.stdin.read()) ; print(json.dumps(y))"
+}
+
 #
 # custom
 #
@@ -93,10 +97,6 @@ function usage() {
     cat <<EOF
 Usage: $service_type svc_def [start|stop|status|restart|register|unregister] 
 EOF
-}
-
-function y2j() {
-    python -c "import json, sys, yaml ; y=yaml.safe_load(sys.stdin.read()) ; print(json.dumps(y))"
 }
 
 function start() {
