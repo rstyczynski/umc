@@ -117,7 +117,7 @@ function start() {
         interval=$(cat $umc_cfg/$umc_svc_def | y2j  | jq -r .weblogic.collectors.$collector.interval)
         (
             umc wls collect $interval $max_int --subsystem $collector |
-                $umc_bin/csv2obd --resource $resource_id --resource_log_prefix $resource_log_prefix |
+                $umc_bin/csv2obd --resource $resource_id --resource_log_prefix $umc_log/$resource_log_prefix |
                 $umc_bin/logdirector.pl -dir $umc_log -addDateSubDir -name wls_$collector -detectHeader -checkHeaderDups -flush
         ) &
         echo $! >>$umc_run/$svc_name.pid

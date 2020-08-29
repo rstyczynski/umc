@@ -38,8 +38,8 @@ echo "#"
 mkdir -p ~/.umc
 mv ~/.umc/umc.conf ~/.umc/umc.conf.bak
 cat > ~/.umc/umc.conf <<EOF
-export umc_log=/var/log/umc
-export status_root=/run/umc/obd
+export umc_log=~/trace/log
+export status_root=~/trace/obd
 
 export server_env=$server_env
 export server_type=$server_type
