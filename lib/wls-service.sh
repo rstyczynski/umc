@@ -116,7 +116,7 @@ function start() {
         echo "wls $wls_admin $wls_url $collector $resource_id $resource_log_prefix $interval"
         echo "umc wls collect $interval $max_int --subsystem $collector --url $wls_url"
         (
-            umc wls collect $interval $max_int --subsystem $collector --url $wls_url |
+            umc wls collect $interval $max_int --subsystem=$collector --url=$wls_url |
                 $umc_bin/csv2obd --resource $resource_id --resource_log_prefix $umc_log/$resource_log_prefix |
                 $umc_bin/logdirector.pl -dir $umc_log -addDateSubDir -name wls_$collector -detectHeader -checkHeaderDups -flush
         ) &
