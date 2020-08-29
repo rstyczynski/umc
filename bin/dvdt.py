@@ -52,13 +52,28 @@ while line:
         continue
 
     if res_name_parameter.startswith('csv:'):
-        res_name_column=int(res_name_parameter.split(':')[1])
-        #
-        try:
-            res_name=line.split(separator)[res_name_column-1]
-        except:
-            continue
+        # res_name_column=int(res_name_parameter.split(':')[1])
+        # #
+        # try:
+        #     res_name=line.split(separator)[res_name_column-1]
+        # except:
+        #     continue
         
+        res_name_column_def=res_name_parameter.split(':')[1]
+        res_name_columns=res_name_column_def.split(',')
+        res_name=''
+        for res_name_column in res_name_columns:
+            res_name_column=int(res_name_column_def[int(res_name_column)-1])
+            try:
+                res_name_fragment=line.split(separator)[res_name_column-1]
+            except:
+                continue
+            
+            if res_name == '':
+                res_name=res_name_fragment
+            else:
+                res_name=res_name + '_' + res_name_fragment
+
         data_now[res_name] = list()
 
         header_src = herald_state + '/' + res_type + '/' + res_name + '/header'
