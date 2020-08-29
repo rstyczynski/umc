@@ -109,14 +109,14 @@ function start() {
     wls_url=$(cat $umc_cfg/$umc_svc_def | y2j  | jq -r .weblogic.url)
 
     for collector in general channel jmsserver jmsruntime datasource; do
-
-        echo "wls $wls_admin $wls_url $collector"
-
         resource_id=$(cat $umc_cfg/$umc_svc_def | y2j  | jq -r .weblogic.collectors.$collector.resource_id)
         resource_log_prefix=$(cat $umc_cfg/$umc_svc_def | y2j  | jq -r .weblogic.collectors.$collector.resource_log_prefix)
         interval=$(cat $umc_cfg/$umc_svc_def | y2j  | jq -r .weblogic.collectors.$collector.interval)
+
+        echo "wls $wls_admin $wls_url $collector $resource_id $resource_log_prefix $interval"
+
         (
-            umc wls collect $interval $max_int --subsystem $collector |
+            umc wls collect $interval $max_int --subsystem $collector --url $wls_url |
                 $umc_bin/csv2obd --resource $resource_id --resource_log_prefix $umc_log/$resource_log_prefix |
                 $umc_bin/logdirector.pl -dir $umc_log -addDateSubDir -name wls_$collector -detectHeader -checkHeaderDups -flush
         ) &
