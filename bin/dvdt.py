@@ -151,6 +151,8 @@ while line:
         if resource_log_prefix != 'no':
             dvdt_log = resource_log_prefix + '_' + res_name + '.log'
             # write header if file does not exist
+            print(dvdt_log)
+            print(os.path.exists(dvdt_log))
             if os.path.exists(dvdt_log):
                 dvdt_f = open(dvdt_log, "w")
                 print ("EXITS! " + dvdt_log)
