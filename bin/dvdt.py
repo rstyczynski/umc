@@ -153,7 +153,7 @@ while line:
             dvdt_f = open(dvdt_log, "w")
 
             # write header if file does not exist
-            if not Path(dvdt_log).is_file():
+            if not os.path.exists(dvdt_log):
                 for i in range(len(header)-1):
                     dvdt_f.write(header[i])
                     if i < len(header)-1:
