@@ -1,5 +1,6 @@
 import sys
 import os
+import re
 
 res_type = sys.argv[1]     # os.environ['herald_res_type'] #'ens3'
 res_name_parameter = sys.argv[2]     # os.environ['herald_res_name'] #'ens3'
@@ -10,7 +11,7 @@ out_format = sys.argv[6]   # map | csv
 out_data = sys.argv[7]     # compute | forward
 separator = sys.argv[8]
 herald_state = sys.argv[9]
-
+resource_log_prefix = sys.argv[10]
 
 line = 'start'
 data_prv_set = False
@@ -73,6 +74,9 @@ while line:
                 res_name=res_name_fragment
             else:
                 res_name=res_name + '_' + res_name_fragment
+
+        # remove non-filename characters
+        res_name=re.sub('[^a-zA-Z0-9\.\-\_]','_',res_name)
 
         data_now[res_name] = list()
 
@@ -143,6 +147,31 @@ while line:
             else:
                 state_f.write(header[i] + '=' + str(dvdt[i]) + '\n')
         state_f.close
+
+        # write line to dv log 
+        if resource_log_prefix != 'no':
+            dvdt_log = resource_log_prefix + '_' + res_name + '.log'
+            dvdt_f = open(dvdt_log, "w")
+
+            # write header if file does not exist
+            if os.path.exists(dvdt_log) == False:
+                for i in range(len(header)-1):
+                    dvdt_f.write(header[i])
+                    if i < len(header)-1:
+                        dvdt_f.write(',')
+                dvdt_f.write('\n')
+
+            # write data line
+            for i in range(len(header)-1):
+                if i < dataat:
+                    dvdt_f.write(str(line_asis[i]) + ',')
+                else:
+                    dvdt_f.write(str(dvdt[i]) + ',')
+                if i < len(header)-1:
+                    dvdt_f.write(',')
+            dvdt_f.write('\n')    
+            
+            dvdt_f.close
 
         # write dvdt data to stdout if needed
         if out_data == 'compute':

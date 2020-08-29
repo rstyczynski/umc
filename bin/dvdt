@@ -40,6 +40,7 @@ while [ $# -gt 0 ]; do opt="$1"; shift
         --separator) separator=$1 ;;
         --buffering) buffering=$1 ;;
         --status_root) status_root=$1 ;;
+        --resource_log_prefix) resource_log_prefix=$1 ;;
         -h|--help)  usage; exit ;;
     esac
     shift
@@ -56,6 +57,7 @@ done
 [ -z $separator ] && separator=','
 [ -z $buffering ] && buffering=no
 [ -z $status_root ] && status_root=~/obd
+[ -z $resource_log_prefix ] && resource_log_prefix=no
 # parameters defaults - stop
 
 # mandatory parameters - start
@@ -94,7 +96,7 @@ if [ ! "$format" != "csv" ]; then
 fi
 
 if [ "$buffering" == no ]; then
-    python -u $(dirname $0)/dvdt.py $type $resource $delta $timeat $dataat $format $display $separator $status_root
+    python -u $(dirname $0)/dvdt.py $type $resource $delta $timeat $dataat $format $display $separator $status_root $resource_log_prefix
 else
-    python $(dirname $0)/dvdt.py $type $resource $delta $timeat $dataat $format $display $separator $status_root
+    python $(dirname $0)/dvdt.py $type $resource $delta $timeat $dataat $format $display $separator $status_root $resource_log_prefix
 fi
