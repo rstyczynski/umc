@@ -154,10 +154,8 @@ while line:
             print(dvdt_log)
             print(os.path.exists(dvdt_log))
             if os.path.exists(dvdt_log):
-                dvdt_f = open(dvdt_log, "w")
-                print ("EXITS! " + dvdt_log)
+                dvdt_f = open(dvdt_log, "a")
             else:
-                print ("DOES NOT EXIT! " + dvdt_log)
                 dvdt_f = open(dvdt_log, "w")
                 for i in range(len(header)-1):
                     dvdt_f.write(header[i])
