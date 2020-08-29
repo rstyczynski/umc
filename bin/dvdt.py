@@ -138,7 +138,7 @@ while line:
 
         dvdt = [v / dt for v in dv]
 
-        # wriote dvdt state file
+        # write dvdt state file
         state_f = open(state_dst + '/state', "w")
         for i in range(len(header)-1):
             if i < dataat:
@@ -151,7 +151,7 @@ while line:
         # write line to dv log 
         #
         if resource_log_prefix != 'no':
-            dvdt_log = resource_log_prefix + '_' + res_name + '.log'
+            dvdt_log = resource_log_prefix + '_' + res_name + '_dv.log'
             # write header if file does not exist
             if os.path.exists(dvdt_log):
                 dvdt_f = open(dvdt_log, "a")
