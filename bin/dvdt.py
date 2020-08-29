@@ -153,7 +153,7 @@ while line:
             dvdt_f = open(dvdt_log, "w")
 
             # write header if file does not exist
-            if os.path.exists(dvdt_log) == False:
+            if not os.path.exists(dvdt_log):
                 for i in range(len(header)-1):
                     dvdt_f.write(header[i])
                     if i < len(header)-1:
@@ -163,9 +163,9 @@ while line:
             # write data line
             for i in range(len(header)-1):
                 if i < dataat:
-                    dvdt_f.write(str(line_asis[i]) + ',')
+                    dvdt_f.write(str(line_asis[i]))
                 else:
-                    dvdt_f.write(str(dvdt[i]) + ',')
+                    dvdt_f.write(str(dvdt[i]))
                 if i < len(header)-1:
                     dvdt_f.write(',')
             dvdt_f.write('\n')    
