@@ -151,16 +151,16 @@ while line:
         if resource_log_prefix != 'no':
             dvdt_log = resource_log_prefix + '_' + res_name + '.log'
             # write header if file does not exist
-            if not os.path.exists(dvdt_log):
+            if os.path.exists(dvdt_log):
+                dvdt_f = open(dvdt_log, "w")
+            else:
                 dvdt_f = open(dvdt_log, "w")
                 for i in range(len(header)-1):
                     dvdt_f.write(header[i])
                     if i < len(header)-1:
                         dvdt_f.write(',')
                 dvdt_f.write('\n')
-            else:
-                dvdt_f = open(dvdt_log, "w")
-
+                            
             # write data line
             for i in range(len(header)-1):
                 if i < dataat:
