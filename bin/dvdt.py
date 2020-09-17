@@ -151,7 +151,7 @@ while line:
         # write line to dv log 
         #
         if resource_log_prefix != 'no':
-            dvdt_log = resource_log_prefix + '_' + res_name + '_dv.log'
+            dvdt_log = resource_log_prefix + '_' + res_name + '_dt.log'
             # write header if file does not exist
             if os.path.exists(dvdt_log):
                 dvdt_f = open(dvdt_log, "a")
