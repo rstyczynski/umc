@@ -7,6 +7,7 @@
 UMC_PROBE_META_EXT=general
 UMC_PROBE_LOG_NAME=general
 
+set -x
 while [ "$#" -gt 0 ]
 do  
     option=$1; shift
@@ -26,6 +27,7 @@ do
 		;;
 	esac
 done
+set +x
 
 UMC_SENSOR_HELP="--help"
 
