@@ -21,9 +21,9 @@ soadms_soaInfra_JCABinding:
         ignore:
             - Parent
         JCAadapter:
-            - soaInfra_JCABinding_Type
+            - soaInfra_JCABinding_Type:
                 - desc: Adapter name
-            - Name
+            - Name:
                 - desc: direction
         size:
             - size_value

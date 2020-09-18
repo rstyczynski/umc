@@ -28,9 +28,9 @@ soadms_soainfra_bpel_activity:
             - Name
         success:
             - executionTime_time
-            - executionTime_minTime,
-            - executionTime_avg,
-            - executionTime_maxTime,
+            - executionTime_minTime
+            - executionTime_avg
+            - executionTime_maxTime
         fault:
             - faultedExecutionTime_completed
             - faultedExecutionTime_avg

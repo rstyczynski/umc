@@ -23,13 +23,12 @@ soadms_soainfra_Binding:
             - Parent
             - Name
             - soainfra_ComponentReferences
-            - soainfra_Adapters
+            - soainfra_Adapters:
                 - desc: Adapters or nothing
-            - soainfra_Ports
+            - soainfra_Ports:
                 - decs: PORTs or nothing
-            - soainfra_Rests
+            - soainfra_Rests:
                 - desc: Rests or nothing
-
         composite:
             - soainfra_composite
             - soainfra_composite_assembly_member
@@ -58,7 +57,7 @@ soadms_soainfra_Binding:
 
         ops:
             - processOutboundMessagesEvents_count
-           - processIncomingMessagesEvents_count
+            - processIncomingMessagesEvents_count
             - Errors_count
     loop:
         method: external
