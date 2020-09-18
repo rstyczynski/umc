@@ -8,23 +8,9 @@ soadms_soainfra_bpel_activity:
         executionTime_maxTime,soainfra_component,Parent,ServerName,faultedExecutionTime_completed,Process,faultedExecutionTime_avg,
         faultedExecutionTime_time,Name,executionTime_completed,soainfra_composite,soainfra_domain,soainfra_composite_label,
         faultedExecutionTime_minTime,faultedExecutionTime_maxTime
-    rawheader:
-        method: script
-        directive: dms-collector --table ${UMC_SENSOR_ARGS['table']} --printheader --url=${UMC_SENSOR_ARGS['url']} --connect ${UMC_SENSOR_ARGS['connect']} --count 1 --delay 1 --loginform  | cut -d, -f3-9999
-        expected: >-
-            soainfra_component_type,executionTime_time,soainfra_composite_revision,Host,executionTime_minTime,executionTime_avg,
-            executionTime_maxTime,soainfra_component,Parent,ServerName,faultedExecutionTime_completed,Process,faultedExecutionTime_avg,
-            faultedExecutionTime_time,Name,executionTime_completed,soainfra_composite,soainfra_domain,soainfra_composite_label,
-            faultedExecutionTime_minTime,faultedExecutionTime_maxTime
-    availability:
-        method: command
-        directive: wget ${UMC_SENSOR_ARGS['url']}/dms/Spy
-    loop:
-        method: external
-        directive:
-    timestamp:
-        method:
-        directive:
+    resource:
+        method:     csv
+        directive:  6,17,20,22,23
     metrics:
         host:
             - Host
@@ -51,4 +37,22 @@ soadms_soainfra_bpel_activity:
             - faultedExecutionTime_time
             - executionTime_completed
             - faultedExecutionTime_minTime
-            - faultedExecutionTime_maxTime
+            - faultedExecutionTime_maxTime 
+    loop:
+        method: external
+        directive:
+    availability:
+        method: command
+        directive: wget ${UMC_SENSOR_ARGS['url']}/dms/Spy
+    timestamp:
+        method:
+        directive:
+    rawheader:
+        method: script
+        directive: dms-collector --table ${UMC_SENSOR_ARGS['table']} --printheader --url=${UMC_SENSOR_ARGS['url']} --connect ${UMC_SENSOR_ARGS['connect']} --count 1 --delay 1 --loginform  | cut -d, -f3-9999
+        expected: >-
+            soainfra_component_type,executionTime_time,soainfra_composite_revision,Host,executionTime_minTime,executionTime_avg,
+            executionTime_maxTime,soainfra_component,Parent,ServerName,faultedExecutionTime_completed,Process,faultedExecutionTime_avg,
+            faultedExecutionTime_time,Name,executionTime_completed,soainfra_composite,soainfra_domain,soainfra_composite_label,
+            faultedExecutionTime_minTime,faultedExecutionTime_maxTime
+
