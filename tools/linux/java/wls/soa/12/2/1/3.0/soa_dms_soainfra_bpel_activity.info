@@ -1,0 +1,29 @@
+soabindings:
+    version:    1.0
+    layer:      Middleware
+    system:     SOA
+    subsystem:  dms
+    header: >-
+        soainfra_component_type,executionTime_time,soainfra_composite_revision,Host,executionTime_minTime,executionTime_avg,
+        executionTime_maxTime,soainfra_component,Parent,ServerName,faultedExecutionTime_completed,Process,faultedExecutionTime_avg,
+        faultedExecutionTime_time,Name,executionTime_completed,soainfra_composite,soainfra_domain,soainfra_composite_label,
+        faultedExecutionTime_minTime,faultedExecutionTime_maxTime
+    rawheader:
+        method:     script
+        directive:  dms-collector --table soainfra_bpel_activity --printheader --url=${UMC_SENSOR_ARGS['--url']} --connect ${UMC_SENSOR_ARGS['--credentials']} --count 1 --delay 1 --loginform  | cut -d, -f3-9999
+        expected: >-
+            soainfra_component_type,executionTime_time,soainfra_composite_revision,Host,executionTime_minTime,executionTime_avg,
+            executionTime_maxTime,soainfra_component,Parent,ServerName,faultedExecutionTime_completed,Process,faultedExecutionTime_avg,
+            faultedExecutionTime_time,Name,executionTime_completed,soainfra_composite,soainfra_domain,soainfra_composite_label,
+            faultedExecutionTime_minTime,faultedExecutionTime_maxTime
+    availability:
+        method:     command
+        directive:  wget ${UMC_SENSOR_ARGS['--URL']}/dms/Spy
+    loop:
+        method:
+        directive:
+    timestamp:
+        method:
+        directive:
+    metrics:
+
