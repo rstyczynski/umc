@@ -1,0 +1,32 @@
+soadms_soainfra_ComponentReference:
+    version: 1.0
+    layer: Middleware
+    system: SOA
+    subsystem: dms
+    header: >-
+        #2.Header here#
+    rawheader:
+        method: script
+        directive: dms-collector --table ${UMC_SENSOR_ARGS['table']} --printheader --url=${UMC_SENSOR_ARGS['url']} --connect ${UMC_SENSOR_ARGS['connect']} --count 1 --delay 1 --loginform  | cut -d, -f3-9999
+        expected: >-
+            #2.Header here#
+    resource:
+        method:     csv
+        directive:  #3.Columns to identify resource#
+    metrics:
+        host:
+            - Host
+            - Process
+            - ServerName
+        #4.Fields comes here#
+    loop:
+        method: external
+        directive:
+    availability:
+        method: command
+        directive: wget ${UMC_SENSOR_ARGS['url']}/dms/Spy
+    timestamp:
+        method:
+        directive:
+
+

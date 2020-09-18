@@ -161,6 +161,11 @@ function umc {
             invoke $sensor help
         ;;
         
+        sensor_info)
+            invoke $sensor help >/dev/null
+            echo $probeInfo
+        ;;
+
         sensor_collect)
             invoke $sensor $delay $count $params
         ;;
