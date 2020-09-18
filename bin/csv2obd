@@ -136,7 +136,7 @@ while read -r line; do
         if [ ! -z "$resource_id_column" ]; then
             resource_id=$(echo $line | 
                             cut -d$CSVdelimiter -f$resource_id_column | # get column value
-                            sed "s/[^a-zA-Z0-9\.\-\_ ]/_/g"              # replace non "filename" characters with _
+                            sed "s/[^a-zA-Z0-9\.\-\_]/_/g"              # replace non "filename" characters with _
                         )
             resource_tmp=$status_root/$resource_id/tmp
             if [ ! -d "$status_root/$resource_id" ]; then
