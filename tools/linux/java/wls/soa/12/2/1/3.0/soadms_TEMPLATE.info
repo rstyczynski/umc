@@ -18,7 +18,7 @@ soadms_#1.Put table name here#:
             - Host
             - Process
             - ServerName
-        #4.Fields comes here#
+        #4.Fields come here#
     loop:
         method: external
         directive:
@@ -28,5 +28,23 @@ soadms_#1.Put table name here#:
     timestamp:
         method:
         directive:
+
+# dms_table=
+#
+# url=
+# user=
+# password=
+#
+# >> get header
+# dms-collector/bin/dms-collector --url $url --connect $user/$password --count 1 --delay 1 --loginform  --printheader --table $dms_table 
+#
+# >> get header to fields section
+# dms-collector/bin/dms-collector --url $url --connect $user/$password --count 1 --delay 1 --loginform  --printheader --table $dms_table  | tr , '\n' | sort | sed 's/^/- /g'
+#
+# >> get headers to resource_id
+# dms-collector/bin/dms-collector --url $url --connect $user/$password --count 1 --delay 1 --loginform  --printheader --table $dms_table  | tail -1 | tr , '\n' | nl -v3
+#
+# >> get values to select resource_id
+# dms-collector/bin/dms-collector --url --url $url --connect $user/$password --count 1 --delay 1 --loginform  --table $dms_table  | tail -1 | tr , '\n' | nl -v3
 
 
