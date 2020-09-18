@@ -1,7 +1,9 @@
 #!/bin/bash
 
+# always read and shift arguments
 count=$1; shift
 delay=$1; shift
 
-dms-collector/bin/dms-collector --loginform --count 1 --delay 1 $@ 
+dms-collector/bin/dms-collector --loginform --noheader --count 1 --delay 1 $@ | cut -d, -f3-99999
+
 

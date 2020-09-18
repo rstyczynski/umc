@@ -1,29 +1,54 @@
 soadms_soainfra_bpel_activity:
-    version:    1.0
-    layer:      Middleware
-    system:     SOA
-    subsystem:  dms
+    version: 1.0
+    layer: Middleware
+    system: SOA
+    subsystem: dms
     header: >-
         soainfra_component_type,executionTime_time,soainfra_composite_revision,Host,executionTime_minTime,executionTime_avg,
         executionTime_maxTime,soainfra_component,Parent,ServerName,faultedExecutionTime_completed,Process,faultedExecutionTime_avg,
         faultedExecutionTime_time,Name,executionTime_completed,soainfra_composite,soainfra_domain,soainfra_composite_label,
         faultedExecutionTime_minTime,faultedExecutionTime_maxTime
     rawheader:
-        method:     script
-        directive:  dms-collector --table ${UMC_SENSOR_ARGS['table']}  --printheader --url=${UMC_SENSOR_ARGS['url']} --connect ${UMC_SENSOR_ARGS['connect']} --count 1 --delay 1 --loginform  | cut -d, -f3-9999
+        method: script
+        directive: dms-collector --table ${UMC_SENSOR_ARGS['table']} --printheader --url=${UMC_SENSOR_ARGS['url']} --connect ${UMC_SENSOR_ARGS['connect']} --count 1 --delay 1 --loginform  | cut -d, -f3-9999
         expected: >-
             soainfra_component_type,executionTime_time,soainfra_composite_revision,Host,executionTime_minTime,executionTime_avg,
             executionTime_maxTime,soainfra_component,Parent,ServerName,faultedExecutionTime_completed,Process,faultedExecutionTime_avg,
             faultedExecutionTime_time,Name,executionTime_completed,soainfra_composite,soainfra_domain,soainfra_composite_label,
             faultedExecutionTime_minTime,faultedExecutionTime_maxTime
     availability:
-        method:     command
-        directive:  wget ${UMC_SENSOR_ARGS['url']}/dms/Spy
+        method: command
+        directive: wget ${UMC_SENSOR_ARGS['url']}/dms/Spy
     loop:
-        method:
+        method: external
         directive:
     timestamp:
         method:
         directive:
     metrics:
-
+        host:
+            - Host
+            - Process
+            - ServerName
+        composite:
+            - soainfra_domain
+            - soainfra_composite
+            - soainfra_composite_label
+            - soainfra_composite_revision
+        component:
+            - Parent
+            - soainfra_component
+            - soainfra_component_type
+            - Name
+        success:
+            - executionTime_time
+            - executionTime_minTime,
+            - executionTime_avg,
+            - executionTime_maxTime,
+        fault:
+            - faultedExecutionTime_completed
+            - faultedExecutionTime_avg
+            - faultedExecutionTime_time
+            - executionTime_completed
+            - faultedExecutionTime_minTime
+            - faultedExecutionTime_maxTime
