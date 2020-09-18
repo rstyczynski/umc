@@ -17,7 +17,9 @@ do
 		arg=''
 	fi
 
-	UMC_PROBE_ARGS[$option]="$arg"
+	esc_option=$(echo $option | sed s/^--//)
+
+	UMC_PROBE_ARGS[$esc_option]="$arg"
 	
 	case "$option" in
 	--table)
