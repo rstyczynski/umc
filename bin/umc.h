@@ -449,10 +449,6 @@ function invoke {
   fi
 
 
-  #hostname
-  hostname=$(hostname)
-
-
 #  # reset all env settings
 #  unset UMC_PROBE_META_EXT
 #  unset UMC_SENSOR_HELP
@@ -495,13 +491,20 @@ function invoke {
     timestampDirective=""
   fi
 
+  # remote collection?
+  if [ ! -z "umc_remote_system" ]; then
+    system_name=$umc_remote_system
+  else
+    system_name=$(hostname)
+  fi
+
   #run the tool
   if [ "$loop" = "external" ]; then
     if [ "$timestampMethod" = "internal" ] || [ "$headerMethod" = "internal" ] ; then
         $toolsBin/timedExec.sh $interval $count $uosmcDEBUG $toolExecDir/$cmd $timestampDirective $@
     else
         $toolsBin/timedExec.sh $interval $count $uosmcDEBUG $toolExecDir/$cmd $@ \
-        | perl -ne "$perlBUFFER; print \"$hostname,$cmd,\$_\";" \
+        | perl -ne "$perlBUFFER; print \"$system_name,$cmd,\$_\";" \
         | $toolsBin/addTimestamp.pl $addTimestampBUFFER -timedelimiter=" " -delimiter=$CSVdelimiter
     fi
   elif [ "$loop" = "options" ]; then
@@ -509,7 +512,7 @@ function invoke {
         $toolExecDir/$cmd $loop_options $timestampDirective $@
     else
         $toolExecDir/$cmd $loop_options $@ \
-        | perl -ne "$perlBUFFER; print \"$hostname,$cmd,\$_\";" \
+        | perl -ne "$perlBUFFER; print \"$system_name,$cmd,\$_\";" \
         | $toolsBin/addTimestamp.pl $addTimestampBUFFER -timedelimiter=" " -delimiter=$CSVdelimiter
     fi
   else
@@ -517,7 +520,7 @@ function invoke {
 	$toolExecDir/$cmd $timestampDirective $@ 
     else
 	 $toolExecDir/$cmd $@ \
-         | perl -ne "$perlBUFFER; print \"$hostname,$cmd,\$_\";" \
+         | perl -ne "$perlBUFFER; print \"$system_name,$cmd,\$_\";" \
          | $toolsBin/addTimestamp.pl $addTimestampBUFFER -timedelimiter=" " -delimiter=$CSVdelimiter
     fi
   fi
