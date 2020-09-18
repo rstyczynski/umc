@@ -59,13 +59,20 @@ while line:
         #     res_name=line.split(separator)[res_name_column-1]
         # except:
         #     continue
-        
+
+        #res_name_parameter='csv:6,13,14'
         res_name_column_def=res_name_parameter.split(':')[1]
         res_name_columns=res_name_column_def.split(',')
+
+        # print(res_name_column_def)
+        # print(res_name_columns)
+        # separator=','
+
         res_name=''
         for res_name_column in res_name_columns:
             try:
                 res_name_fragment=line.split(separator)[int(res_name_column)-1]
+                # print(res_name_fragment)
             except:
                 continue
             
@@ -73,6 +80,8 @@ while line:
                 res_name=res_name_fragment
             else:
                 res_name=res_name + '_' + res_name_fragment
+
+        # print(res_name)
 
         # remove non-filename characters
         res_name=re.sub('[^a-zA-Z0-9\.\-\_]','_',res_name)
