@@ -10,7 +10,7 @@ soadms_soainfra_bpel_activity:
         faultedExecutionTime_minTime,faultedExecutionTime_maxTime
     resource:
         method:     csv
-        directive:  6,17,20,22,23
+        directive:  6,20,22,23
     metrics:
         host:
             - Host
