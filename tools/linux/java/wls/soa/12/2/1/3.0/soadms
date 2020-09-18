@@ -4,6 +4,5 @@
 count=$1; shift
 delay=$1; shift
 
+set -x
 dms-collector/bin/dms-collector --loginform --noheader --count 1 --delay 1 $@ | cut -d, -f3-99999
-
-
