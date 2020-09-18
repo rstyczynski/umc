@@ -12,11 +12,13 @@ while [ "$#" -gt 0 ]
 do  
     option=$1; shift
     if [[ ! $1 == '--*' ]]; then
-		$arg=$1; shift
+		arg=$1; shift
 	else
-		$arg=''
+		arg=''
 	fi
+
 	UMC_PROBE_ARGS[$option]="$arg"
+	
 	case "$option" in
 	--table)
 		export UMC_PROBE_META_EXT="$arg"
