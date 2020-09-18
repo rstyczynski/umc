@@ -1,4 +1,4 @@
-soabindings:
+soadms_soainfra_bpel_activity:
     version:    1.0
     layer:      Middleware
     system:     SOA
@@ -18,7 +18,7 @@ soabindings:
             faultedExecutionTime_minTime,faultedExecutionTime_maxTime
     availability:
         method:     command
-        directive:  wget ${UMC_SENSOR_ARGS['--URL']}/dms/Spy
+        directive:  wget ${UMC_SENSOR_ARGS['url']}/dms/Spy
     loop:
         method:
         directive:
