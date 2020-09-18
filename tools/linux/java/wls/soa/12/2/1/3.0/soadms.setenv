@@ -31,7 +31,6 @@ do
 		;;
 	esac
 done
-set +x
 
 UMC_SENSOR_HELP="--help"
 

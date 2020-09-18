@@ -2,4 +2,6 @@
 
 dms-collector/bin/dms-collector --loginform $@ 
 
+set +x
+
 
