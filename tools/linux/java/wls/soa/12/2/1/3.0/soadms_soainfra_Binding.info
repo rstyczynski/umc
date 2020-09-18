@@ -12,7 +12,7 @@ soadms_soainfra_Binding:
             processIncomingMessages_active,Process,Errors_count,processIncomingMessages_maxActive,Host,processOutboundMessages_avg,soainfra_composite_assembly_member_type,soainfra_composite_label,soainfra_Ports,soainfra_composite,processOutboundMessages_active,Name,processIncomingMessages_avg,processOutboundMessages_maxTime,processOutboundMessages_minTime,processOutboundMessagesEvents_count,soainfra_composite_assembly_member,processOutboundMessages_time,soainfra_composite_revision,processIncomingMessages_maxTime,processIncomingMessages_minTime,soainfra_Adapters,processIncomingMessages_time,Parent,processOutboundMessages_maxActive,soainfra_domain,processOutboundMessages_completed,soainfra_Rests,processIncomingMessagesEvents_count,ServerName,processIncomingMessages_completed
     resource:
         method:     csv
-        directive:  13,14,16,21,30
+        directive:  14,15,17,22,31
     metrics:
         host:
             - Host

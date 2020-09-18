@@ -12,7 +12,7 @@ soadms_soaInfra_JCABinding:
             Name,size_value,eElapsedTime_maxTime,size_maxValue,eTotalCount_count,eElapsedTime_avg,Host,ServerName,soaInfra_JCABinding_Type,Process,Parent,eElapsedTime_time,NumErrors_count,eElapsedTime_minTime
     resource:
         method:     csv
-        directive:  6,10,11
+        directive:  7,11,12
     metrics:
         host:
             - Host
