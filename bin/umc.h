@@ -162,7 +162,7 @@ function umc {
         ;;
         
         sensor_info)
-            unseet probeInfo
+            unset probeInfo
             invoke $sensor 1 1 >/dev/null
             echo $probeInfo
         ;;
