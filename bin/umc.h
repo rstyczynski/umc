@@ -295,6 +295,9 @@ function cfgInfoFile {
   # reset all env settings
   unset UMC_PROBE_META_EXT
   unset UMC_SENSOR_HELP
+
+  unset UMC_PROBE_ARGS
+  declare -A UMC_PROBE_ARGS
   
   #configure enronment for tool. *setenv is a part of binaries. It's not a configuration file.
   # e.g. set UMC_SENSOR_HEADER  
@@ -538,7 +541,7 @@ function testCompatibility {
   # reset all env settings
   unset UMC_PROBE_META_EXT # to keep info in another file - used in wls probe
   unset UMC_SENSOR_HELP
-  
+
   unset UMC_SENSOR_ARGS # map with arg
   declare -a UMC_SENSOR_ARGS
 

@@ -9,8 +9,12 @@ UMC_PROBE_LOG_NAME=general
 
 while [ "$#" -gt 0 ]
 do  
-    option=$(echo $1 | cut -f1 -d'=')
-    arg=$(echo $1 | cut -f2 -d'=')
+    option=$1; shift
+    if [[ ! $1 == '--*' ]]; then
+		$arg=$1; shift
+	else
+		$arg=''
+	fi
 	UMC_PROBE_ARGS[$option]="$arg"
 	case "$option" in
 	--table)
@@ -21,7 +25,6 @@ do
 		break
 		;;
 	esac
-	shift
 done
 
 UMC_SENSOR_HELP="--help"
