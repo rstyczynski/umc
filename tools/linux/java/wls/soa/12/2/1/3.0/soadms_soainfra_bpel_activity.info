@@ -10,7 +10,7 @@ soabindings:
         faultedExecutionTime_minTime,faultedExecutionTime_maxTime
     rawheader:
         method:     script
-        directive:  dms-collector --table soainfra_bpel_activity --printheader --url=${UMC_SENSOR_ARGS['--url']} --connect ${UMC_SENSOR_ARGS['--credentials']} --count 1 --delay 1 --loginform  | cut -d, -f3-9999
+        directive:  dms-collector --table ${UMC_SENSOR_ARGS['--table']}  --printheader --url=${UMC_SENSOR_ARGS['--url']} --connect ${UMC_SENSOR_ARGS['--connect']} --count 1 --delay 1 --loginform  | cut -d, -f3-9999
         expected: >-
             soainfra_component_type,executionTime_time,soainfra_composite_revision,Host,executionTime_minTime,executionTime_avg,
             executionTime_maxTime,soainfra_component,Parent,ServerName,faultedExecutionTime_completed,Process,faultedExecutionTime_avg,

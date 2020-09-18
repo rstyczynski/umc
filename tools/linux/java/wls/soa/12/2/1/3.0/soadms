@@ -1,0 +1,5 @@
+#!/bin/bash
+
+dms-collector/bin/dms-collector --loginform @ 
+
+
