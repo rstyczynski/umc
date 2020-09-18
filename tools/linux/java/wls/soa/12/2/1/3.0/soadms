@@ -1,5 +1,7 @@
 #!/bin/bash
 
-dms-collector/bin/dms-collector --loginform --count 1 --delay 1 $@ 
+count=$1; shift
+delay=$1; shift
 
+dms-collector/bin/dms-collector --loginform --count 1 --delay 1 $@ 
 
