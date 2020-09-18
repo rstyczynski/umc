@@ -4,21 +4,65 @@ soadms_soainfra_ComponentReference:
     system: SOA
     subsystem: dms
     header: >-
-        #2.Header here#
+        soainfra_composite_revision,Host,Posts_time,soainfra_composite_assembly_member_type,Requests_active,PostErrors_count,
+        Requests_maxActive,Posts_completed,Posts_maxTime,Process,soainfra_composite_label,Requests_completed,Posts_avg,
+        soainfra_ComponentReferences,RequestEvents_count,RequestErrors_count,Requests_minTime,ServerName,Requests_maxTime,
+        soainfra_composite_assembly_member,Name,Posts_minTime,Requests_time,Posts_active,Parent,PostEvents_count,Requests_avg,
+        Posts_maxActive,soainfra_composite,soainfra_domain
     rawheader:
         method: script
         directive: dms-collector --table ${UMC_SENSOR_ARGS['table']} --printheader --url=${UMC_SENSOR_ARGS['url']} --connect ${UMC_SENSOR_ARGS['connect']} --count 1 --delay 1 --loginform  | cut -d, -f3-9999
         expected: >-
-            #2.Header here#
+            soainfra_composite_revision,Host,Posts_time,soainfra_composite_assembly_member_type,Requests_active,PostErrors_count,
+            Requests_maxActive,Posts_completed,Posts_maxTime,Process,soainfra_composite_label,Requests_completed,Posts_avg,
+            soainfra_ComponentReferences,RequestEvents_count,RequestErrors_count,Requests_minTime,ServerName,Requests_maxTime,
+            soainfra_composite_assembly_member,Name,Posts_minTime,Requests_time,Posts_active,Parent,PostEvents_count,Requests_avg,
+            Posts_maxActive,soainfra_composite,soainfra_domain
     resource:
         method:     csv
-        directive:  #3.Columns to identify resource#
+        directive:  6,23,25,25,34,35
     metrics:
         host:
             - Host
             - Process
             - ServerName
-        #4.Fields comes here#
+        composite:
+            - soainfra_domain
+            - soainfra_composite
+            - soainfra_composite_label
+            - soainfra_composite_revision
+            - soainfra_composite_assembly_member
+            - soainfra_composite_assembly_member_type
+        component:
+            - Parent
+            - Name
+            - soainfra_ComponentReferences
+        
+        posts_total:
+            - PostErrors_count
+            - PostEvents_count
+            - Posts_active
+            - Posts_completed
+
+        posts:
+            - Posts_avg
+            - Posts_maxActive
+            - Posts_maxTime
+            - Posts_minTime
+            - Posts_time
+
+        requests_total:
+            - RequestErrors_count
+            - RequestEvents_count
+            - Requests_active
+            - Requests_completed
+            - Requests_maxActive
+        requests:
+            - Requests_avg
+            - Requests_maxTime
+            - Requests_minTime
+            - Requests_time
+
     loop:
         method: external
         directive:
@@ -28,5 +72,3 @@ soadms_soainfra_ComponentReference:
     timestamp:
         method:
         directive:
-
-
