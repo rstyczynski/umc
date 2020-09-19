@@ -73,6 +73,28 @@ start | stop | status | restart | register | unregister | reset-dms)
     ;;
 esac
 
+blocking_run=no
+if [ "$1" == 'block' ]; then
+    blocking_run=yes
+fi
+
+os_release=$(cat /etc/os-release | grep '^VERSION=' | cut -d= -f2 | tr -d '"' | cut -d. -f1)
+
+if [ $os_release -eq 6 ]; then
+    source /etc/init.d/functions
+fi
+
+service_user=$(whoami)
+
+function y2j() {
+    python -c "import json, sys, yaml ; y=yaml.safe_load(sys.stdin.read()) ; print(json.dumps(y))"
+}
+
+#
+# custom
+#
+
+
 # reset? ok, let's reset and exit
 if [ "$operation" == "reset-dms" ]; then
 
@@ -100,28 +122,6 @@ if [ "$operation" == "reset-dms" ]; then
 
 fi
 
-
-
-blocking_run=no
-if [ "$1" == 'block' ]; then
-    blocking_run=yes
-fi
-
-os_release=$(cat /etc/os-release | grep '^VERSION=' | cut -d= -f2 | tr -d '"' | cut -d. -f1)
-
-if [ $os_release -eq 6 ]; then
-    source /etc/init.d/functions
-fi
-
-service_user=$(whoami)
-
-function y2j() {
-    python -c "import json, sys, yaml ; y=yaml.safe_load(sys.stdin.read()) ; print(json.dumps(y))"
-}
-
-#
-# custom
-#
 
 wls_admin=$(cat $umc_cfg/$umc_svc_def | y2j  | jq -r .weblogic.admin)
 
