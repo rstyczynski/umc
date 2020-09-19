@@ -125,12 +125,14 @@ function start() {
     if [ ! -z "$umc_log_override" ] && [ "$umc_log_override" != null ]; then
         export umc_log=$umc_log_override
     fi
+    mkdir -p $umc_log
 
     status_root_override=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.soadms.runtime_dir' | sed "s|^~|$HOME|")
     if [ ! -z "$status_root_override" ] && [ "$status_root_override" != null ]; then
         export status_root=$status_root_override
     fi
-
+    mkdir -p $status_root
+    
     dms_tables=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.soadms.tables | keys[]')
 
     #
@@ -169,9 +171,6 @@ function start() {
     #
     # main loop
     #
-    mkdir -p $umc_log
-    mkdir -p $status_root
-    
     count=$max_int
 
     echo "Starting umc collectors..."

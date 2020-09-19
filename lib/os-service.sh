@@ -128,12 +128,15 @@ function start() {
         if [ ! -z "$umc_log_override" ] && [ "$umc_log_override" != null ]; then
             export umc_log=$umc_log_override
         fi
+        mkdir -p $umc_log
 
         status_root_override=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system.runtime_dir" | sed "s|^~|$HOME|")
         if [ ! -z "$status_root_override" ] && [ "$status_root_override" != null ]; then
             export status_root=$status_root_override
         fi
+        mkdir -p $status_root
 
+    
         for subsystem in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system.os | keys[]"); do
             echo "- $subsystem"
 
