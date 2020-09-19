@@ -453,11 +453,11 @@ sub openLogFile {
         
 		# race condition when multiple parallel logdirectors creates directory
 		# implemented retry with random backoff
-		my $retry_limit = 3;
+		my $retry_limit = 5;
 		my $retry=0;
 		while ( $retry < $retry_limit ) {
 			if ( ! -e $dstEffectiveDir ) {
-				select(undef, undef, undef, rand(0.5));
+				select(undef, undef, undef, rand(1));
 
 				# TODO: fix this. create group umc 
 				umask 0000;
@@ -562,11 +562,11 @@ sub generateRotatedLogName {
         #unless(-e $dstEffectiveDir or mkdir $dstEffectiveDir) { die "logdirector.pl: Unable to create $dstEffectiveDir\n"; }
 		# race condition when multiple parallel logdirectors creates directory
 		# implemented retry with random backoff
-		my $retry_limit = 3;
+		my $retry_limit = 5;
 		my $retry=0;
 		while ( $retry < $retry_limit ) {
 			if ( ! -e $dstEffectiveDir ) {
-				select(undef, undef, undef, rand(0.5));
+				select(undef, undef, undef, rand(1));
 
 				# TODO: fix this. create group umc 
 				umask 0000;
