@@ -1,0 +1,15 @@
+---
+soadms:
+  url: http://10.106.4.14:7001
+  user: ask_on_start
+  password: ask_on_start
+  interval: 60
+  log_dir: ~/x-ray/diagnose/wls/soa_domain/dms/soa
+  runtime_dir: ~/x-ray/watch/wls/soa_domain/obd/soa
+  tables:
+    soaInfra_JCABinding:
+      interval: 60
+    soainfra_bpel_activity:
+      interval: 60
+    soainfra_ComponentReference:
+      interval: 60

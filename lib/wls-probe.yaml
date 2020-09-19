@@ -1,0 +1,28 @@
+---
+weblogic:
+  admin: applsoad
+  url: t3://10.106.4.14:7001
+  interval: 60
+  log_dir: ~/x-ray/diagnose/wls/soa_domain/dms
+  runtime_dir: ~/x-ray/watch/wls/soa_domain/obd
+  collectors:
+    general:
+      resource_id: csv:6,7
+      resource_log_prefix: wls_general
+      interval: 60
+    channel:
+      resource_id: csv:6,7,10
+      resource_log_prefix: wls_channel
+      interval: 60
+    jmsruntime:
+      resource_id: csv:6,7,9
+      resource_log_prefix: wls_jmsruntime
+      interval: 60
+    jmsserver:
+      resource_id: csv:6,7,9
+      resource_log_prefix: wls_jmsserver
+      interval: 60
+    datasource:
+      resource_id: csv:6,7,9
+      resource_log_prefix: wls_datasource
+      interval: 60

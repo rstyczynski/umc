@@ -120,11 +120,13 @@ function start() {
     umc_log_override=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.weblogic.log_dir')
     if [ ! -z "$umc_log_override" ] && [ "$umc_log_override" != null ]; then
         export umc_log=$umc_log_override
+        mkdir -p $umc_log
     fi
 
     status_root_override=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.weblogic.runtime_dir')
     if [ ! -z "$status_root_override" ] && [ "$status_root_override" != null ]; then
         export status_root=$status_root_override
+        mkdir -p $status_root
     fi
 
     #
