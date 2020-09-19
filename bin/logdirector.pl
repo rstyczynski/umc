@@ -172,6 +172,9 @@ if ($verbose) {
 	print "Params: $dstDir, $logName, $rotateBy, $sizePerLog, $rotateOnStart, $verbose\n";
 }
 
+# expand ~ to hopme
+$dstDir =~ s/^~/$ENV{HOME}/e;
+
 #register signal handlers
 $SIG{HUP}  = \&signal_handler_ROTATE;
 $SIG{INT}  = \&signal_handler_EXIT;
