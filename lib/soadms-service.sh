@@ -94,9 +94,33 @@ function y2j() {
 # custom
 #
 
+wls_admin=$(cat $umc_cfg/$umc_svc_def | y2j  | jq -r .weblogic.admin)
+
+if [ ! -z "$wls_admin" ];then
+    service_user=$wls_admin
+fi
+
+function usage() {
+    cat <<EOF
+Usage: soadms-service.sh svc_def [start|stop|status|restart|register|unregister|restet-dms reason] 
+
+, where svc_def is a configuration file kept in umc configuration directory.
+
+EOF
+}
+
 
 # reset? ok, let's reset and exit
 if [ "$operation" == "reset-dms" ]; then
+
+    reason=$2
+    if [ -z "$reason" ]; then
+        echo "Reason not provided. Exiting. "
+        echo 
+        usage
+        exit 1
+    fi
+    #datetime,timezone,timestamp,system,source
 
     url=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.soadms.url')
  
@@ -116,31 +140,26 @@ if [ "$operation" == "reset-dms" ]; then
         echo
     fi
 
+    umc_log_override=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.soadms.log_dir'  | sed "s|^~|$HOME|")
+    if [ ! -z "$umc_log_override" ] && [ "$umc_log_override" != null ]; then
+        export umc_log=$umc_log_override
+    fi
+    mkdir -p $umc_log
+
     dms-collector --count 1 --delay 1 --url $url  --connect $user/$pass --loginform --dmsreset  / 
     if [ $? -eq 0 ]; then
         echo "DMS reset completed ok."
+
+        echo "OK, $reason"  | addTimestamp.pl >> $umc_log/$(date +%Y-%m-%d)/dms_reset.log
+
         exit 0
     else
         echo "DMS reset not sucessful."
+        echo "ERROR, $reason"  | addTimestamp.pl >> $umc_log/$(date +%Y-%m-%d)/dms_reset.log
         exit 1
     fi
 fi
 
-
-wls_admin=$(cat $umc_cfg/$umc_svc_def | y2j  | jq -r .weblogic.admin)
-
-if [ ! -z "$wls_admin" ];then
-    service_user=$wls_admin
-fi
-
-function usage() {
-    cat <<EOF
-Usage: soadms-service.sh svc_def [start|stop|status|restart|register|unregister] 
-
-, where svc_def is a configuration file kept in umc configuration directory.
-
-EOF
-}
 
 function start() {
 
