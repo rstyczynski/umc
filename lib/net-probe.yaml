@@ -1,0 +1,31 @@
+---
+network:
+    log_dir: ~/x-ray/diagnose/res/umc
+    runtime_dir: ~/x-ray/watch/res/obd
+    services:
+        - ILS_ftp:
+              icmp:
+                  - vcn:
+                        ip: "169.254.169.254"
+                  - internet:
+                        ip: "8.8.8.8"
+                  - cpe:
+                        ip: "138.117.252.110"
+                  - service1:
+                        ip: "10.48.2.10"
+                  - service2:
+                        ip: "172.16.11.12"
+              tcp:
+                  - vcn:
+                        ip: "169.254.169.254:53"
+                  - internet:
+                        ip: "8.8.8.8:53"
+                  - service1:
+                        ip: "10.48.2.10:22"
+                  - service2:
+                        ip: "172.16.11.12:22"
+              ftp:
+                  - service1:
+                        ip: "10.48.2.10:22"
+                  - service2:
+                        ip: "172.16.11.12:22"

@@ -63,7 +63,7 @@ svc_name=$(echo $umc_svc_def | cut -d. -f1)
 
 
 case $1 in
-start | stop | status | restart | register | unregister)
+start | stop | status | restart | register | unregister | reset-dms)
     operation=$1
     shift
     ;;
@@ -72,6 +72,35 @@ start | stop | status | restart | register | unregister)
     exit 1
     ;;
 esac
+
+# reset? ok, let's reset and exit
+if [ "$operation" == "reset-dms" ]; then
+
+    url=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.soadms.url')
+ 
+    #
+    # get user/pass
+    #
+    user=$(pnp_vault read user$url)
+    if [ -z "$user" ]; then
+        pnp_vault save user$url $(read -p "Enter WLS username needed for soadms and press enter:" val; echo $val)
+        user=$(pnp_vault read user$url)
+    fi
+
+    pass=$(pnp_vault read pass$url)
+    if [ -z "$pass" ]; then
+        pnp_vault save pass$url $(read -s -p "Enter WLS password needed for soadms and press enter:" val; echo $val)
+        pass=$(pnp_vault read pass$url)
+        echo
+    fi
+
+    dms-collector --count 1 --delay 1 --url $url  --connect $user/$pass --loginform --dmsreset  / 
+
+    exit 0
+
+fi
+
+
 
 blocking_run=no
 if [ "$1" == 'block' ]; then

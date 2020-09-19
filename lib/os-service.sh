@@ -118,7 +118,6 @@ function start() {
     for system in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r "keys[]"); do
         echo $system
 
-
         #
         # get data from cfg file
         #
