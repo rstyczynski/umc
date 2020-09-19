@@ -107,24 +107,60 @@ EOF
 }
 
 function start() {
-    wls_url=$(cat $umc_cfg/$umc_svc_def | y2j  | jq -r .weblogic.url)
+    #
+    # collector name
+    collector_name=wls
 
+    #
+    # get data from cfg file
+    #
+    wls_url=$(cat $umc_cfg/$umc_svc_def | y2j  | jq -r .weblogic.url)
+    interval_default=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.weblogic.interval')
+    
+    umc_log_override=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.weblogic.log_dir')
+    if [ ! -z "$umc_log_override" ] && [ "$umc_log_override" != null ]; then
+        export umc_log=$umc_log_override
+    fi
+
+    status_root_override=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.weblogic.runtime_dir')
+    if [ ! -z "$status_root_override" ] && [ "$status_root_override" != null ]; then
+        export status_root=$status_root_override
+    fi
+
+    #
+    # main loop
+    #
+    count=$max_int
+    
     for collector in general channel jmsserver jmsruntime datasource; do
         resource_id=$(cat $umc_cfg/$umc_svc_def | y2j  | jq -r .weblogic.collectors.$collector.resource_id)
         resource_log_prefix=$(cat $umc_cfg/$umc_svc_def | y2j  | jq -r .weblogic.collectors.$collector.resource_log_prefix)
+
         interval=$(cat $umc_cfg/$umc_svc_def | y2j  | jq -r .weblogic.collectors.$collector.interval)
+        if [ -z "$interval" ]; then
+            interval=$interval_default
+        fi
 
         echo "wls $wls_admin $wls_url $collector $resource_id $resource_log_prefix $interval"
         echo "umc wls collect $interval $max_int --subsystem $collector --url $wls_url"
         (
-            umc wls collect $interval $max_int --subsystem=$collector --url=$wls_url |
-                $umc_bin/logdirector.pl -dir $umc_log -addDateSubDir -name wls_$collector -detectHeader -checkHeaderDups -flush -tee |
-                $umc_bin/csv2obd --resource $resource_id --resource_log_prefix $umc_log/$(date +%Y-%m-%d)/$resource_log_prefix |
-                $umc_bin/dvdt --resource $resource_id --resource_log_prefix $umc_log/$(date +%Y-%m-%d)/$resource_log_prefix\_dt >/dev/null
+            # retry neede as collector uses own internal loop. in case of WLS down colelctor will stop...
+            while [ 1 ]; do
+                umc wls collect $interval $count --subsystem=$collector --url=$wls_url |
+                    $umc_bin/logdirector.pl -dir $umc_log -addDateSubDir -name wls_$collector -detectHeader -checkHeaderDups -flush -tee |
+                    $umc_bin/csv2obd --resource $resource_id --resource_log_prefix $umc_log/$(date +%Y-%m-%d)/$resource_log_prefix |
+                    $umc_bin/dvdt --resource $resource_id --resource_log_prefix $umc_log/$(date +%Y-%m-%d)/$resource_log_prefix\_dt >/dev/null
+            
+                echo "Connection to Weblogic broken. Retrying after 5 minutes..."
+                sleep 300
+            done
         ) &
         echo $! >>$umc_run/$svc_name.pid
-
     done
+
+    echo "Metric collection started for $collector_name at $url."
+    echo "Log files location: $umc_log"
+    echo "Runtime data location: $status_root"
 }
 
 function stop() {

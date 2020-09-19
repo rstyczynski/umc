@@ -116,7 +116,6 @@ function start() {
     collector_name=soadms
 
     #
-    #
     # get data from cfg file
     #
     url=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.soadms.url')
@@ -193,7 +192,6 @@ function start() {
     echo "Metric collection started for $collector_name at $url."
     echo "Log files location: $umc_log"
     echo "Runtime data location: $status_root"
-
 }
 
 function stop() {
