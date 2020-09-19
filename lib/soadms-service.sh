@@ -113,7 +113,7 @@ EOF
 # reset? ok, let's reset and exit
 if [ "$operation" == "reset-dms" ]; then
 
-    reason=$2
+    reason=$1
     if [ -z "$reason" ]; then
         echo "Reason not provided. Exiting. "
         echo 
