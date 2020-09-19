@@ -123,13 +123,13 @@ function start() {
     #
     user=$(pnp_vault read user$url)
     if [ -z "$user" ]; then
-        pnp_vault save user$url $(read -p "WLS username needed for soadms:" val; echo $val)
+        pnp_vault save user$url $(read -p "Enter WLS username needed for soadms and press enter:" val; echo $val)
         user=$(pnp_vault read user$url)
     fi
 
     pass=$(pnp_vault read pass$url)
     if [ -z "$pass" ]; then
-        pnp_vault save pass$url $(read -p "WLS password needed for soadms :" val; echo $val)
+        pnp_vault save pass$url $(read -s -p "Enter WLS password needed for soadms and press enter:" val; echo $val)
         pass=$(pnp_vault read pass$url)
     fi
 
@@ -139,13 +139,15 @@ function start() {
     unset resource_id_map
     declare -A resource_id_map
 
-    echo "Retrieving resource location info..."
+    echo -n "Retrieving resource location info"
     for dms_table in $dms_tables; do
+        echo -n '.'
         probe_info=$(umc soadms info --table $dms_table)
         rid_mth=$($toolsBin/getCfg.py $probe_info soadms_$dms_table.resource.method)
         rid_cols=$($toolsBin/getCfg.py $probe_info soadms_$dms_table.resource.directive)
         resource_id_map[$dms_table]=$rid_mth:$rid_cols
     done
+    echo 
 
     #
     # main loop
