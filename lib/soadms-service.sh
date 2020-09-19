@@ -146,6 +146,7 @@ function start() {
     if [ -z "$pass" ]; then
         pnp_vault save pass$url $(read -s -p "Enter WLS password needed for soadms and press enter:" val; echo $val)
         pass=$(pnp_vault read pass$url)
+        echo
     fi
 
     #
@@ -184,8 +185,6 @@ function start() {
         fi
 
         echo "> collector:$dms_table, interval: $interval"
-
-
         (
             umc soadms collect $interval $count --table $dms_table --url $url --connect $user/$pass |
             $umc_bin/logdirector.pl -dir $umc_log -addDateSubDir -name soadms_$dms_table -detectHeader -checkHeaderDups -tee |
