@@ -124,13 +124,11 @@ function start() {
     umc_log_override=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.soadms.log_dir')
     if [ ! -z "$umc_log_override" ] && [ "$umc_log_override" != null ]; then
         export umc_log=$umc_log_override
-        mkdir -p $umc_log
     fi
 
     status_root_override=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.soadms.runtime_dir')
     if [ ! -z "$status_root_override" ] && [ "$status_root_override" != null ]; then
         export status_root=$status_root_override
-        mkdir -p $status_root
     fi
 
     dms_tables=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.soadms.tables | keys[]')
@@ -170,6 +168,11 @@ function start() {
     #
     # main loop
     #
+    mkdir -p $umc_log
+    mkdir -p $status_root
+    
+    count=$max_int
+
     echo "Starting umc collectors..."
     for dms_table in $dms_tables; do
         resource_id=${resource_id_map[$dms_table]}
@@ -182,7 +185,7 @@ function start() {
 
         echo "> collector:$dms_table, interval: $interval"
 
-        count=$max_int
+
         (
             umc soadms collect $interval $count --table $dms_table --url $url --connect $user/$pass |
             $umc_bin/logdirector.pl -dir $umc_log -addDateSubDir -name soadms_$dms_table -detectHeader -checkHeaderDups -tee |
