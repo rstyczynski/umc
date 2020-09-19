@@ -102,13 +102,36 @@ EOF
 
 function start() {
 
+    #
+    # collector name
+    collector_name=soadms
+
+    #
+    # get data from cfg file
+    #
+    interval_default=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.network.interval')
+    
+    umc_log_override=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.network.log_dir'  | sed "s|^~|$HOME|")
+    if [ ! -z "$umc_log_override" ] && [ "$umc_log_override" != null ]; then
+        export umc_log=$umc_log_override
+    fi
+    mkdir -p $umc_log
+
+    status_root_override=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.network.runtime_dir' | sed "s|^~|$HOME|")
+    if [ ! -z "$status_root_override" ] && [ "$status_root_override" != null ]; then
+        export status_root=$status_root_override
+    fi
+    mkdir -p $status_root
+
+    #
+    # main loop
+    #
     multi_service=no
+    for service_name in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".network.services[] | keys[]"); do
 
-    for service_name in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".network[] | keys[]"); do
+        for target_name in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".network.services[].$service_name.tcp[] | keys[]"); do
 
-        for target_name in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".network[].$service_name.tcp[] | keys[]"); do
-
-            address=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".network[].$service_name.tcp[].$target_name.ip" | grep -v null)
+            address=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".network.services[].$service_name.tcp[].$target_name.ip" | grep -v null)
 
             echo "pingSocket $service_name $target_name $address"
             (
@@ -125,9 +148,9 @@ function start() {
         done
 
         # icmp
-        for target_name in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".network[].$service_name.icmp[] | keys[]"); do
+        for target_name in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".network.services[].$service_name.icmp[] | keys[]"); do
 
-            address=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".network[].$service_name.icmp[].$target_name.ip" | grep -v null)
+            address=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".network.services[].$service_name.icmp[].$target_name.ip" | grep -v null)
 
             echo "ping $service_name $target_name $address"
             (
@@ -164,6 +187,9 @@ EOF
         fi
     done
 
+    echo "Metric collection started for $collector_name"
+    echo "Log files location: $umc_log"
+    echo "Runtime data location: $status_root"
 }
 
 function stop() {

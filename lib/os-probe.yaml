@@ -1,0 +1,32 @@
+---
+soa_sit:
+  log_dir: ~/x-ray/diagnose/umc
+  runtime_dir: ~/x-ray/watch/obd
+  os:
+    system:
+      - uptime
+      - vmstat
+    memory:
+      - meminfo
+      - free
+    disk:
+      tps:
+        - name: disk1
+          device: sda
+        - name: disk2
+          device: sdb
+        - name: disk3
+          device: sdc
+      space:
+        - name: mount1
+          point: /
+        - name: mount2
+          point: /ora01
+        - name: mount3
+          point: /ora02
+    network:
+      if:
+        - name: net1
+          device: ens3
+      tcp:
+        - stats
