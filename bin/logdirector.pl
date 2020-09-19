@@ -420,7 +420,7 @@ sub moveLogFile {
 
 			# TODO: fix this. create group umc 
 			umask 0000;
-            unless(-e $dstEffectiveDir or mkdir $dstEffectiveDir) { die "logdirector.pl: Unable to create $dstEffectiveDir\n"; }
+            unless(-d $dstEffectiveDir or mkdir $dstEffectiveDir) { die "logdirector.pl: Unable to create $dstEffectiveDir\n"; }
 
         } else {
             $dstEffectiveDir = "$dstDir";
@@ -456,7 +456,7 @@ sub openLogFile {
 		my $retry_limit = 5;
 		my $retry=0;
 		while ( $retry < $retry_limit ) {
-			if ( ! -e $dstEffectiveDir ) {
+			if ( ! -d $dstEffectiveDir ) {
 				select(undef, undef, undef, rand(1));
 
 				# TODO: fix this. create group umc 
@@ -467,7 +467,7 @@ sub openLogFile {
 				$retry = $retry_limit;
 			}
 		}
-		if ( ! -e $dstEffectiveDir ){
+		if ( ! -d $dstEffectiveDir ){
 			die "logdirector.pl: Unable to create $dstEffectiveDir\n";
 		}
         
@@ -559,13 +559,13 @@ sub generateRotatedLogName {
 		$dstDateSubDir = "$year-$mon-$mday";
 		$dstEffectiveDir = "$dstDir/$dstDateSubDir";
         
-        #unless(-e $dstEffectiveDir or mkdir $dstEffectiveDir) { die "logdirector.pl: Unable to create $dstEffectiveDir\n"; }
+        #unless(-d $dstEffectiveDir or mkdir $dstEffectiveDir) { die "logdirector.pl: Unable to create $dstEffectiveDir\n"; }
 		# race condition when multiple parallel logdirectors creates directory
 		# implemented retry with random backoff
 		my $retry_limit = 5;
 		my $retry=0;
 		while ( $retry < $retry_limit ) {
-			if ( ! -e $dstEffectiveDir ) {
+			if ( ! -d $dstEffectiveDir ) {
 				select(undef, undef, undef, rand(1));
 
 				# TODO: fix this. create group umc 
@@ -576,7 +576,7 @@ sub generateRotatedLogName {
 				$retry = $retry_limit;
 			}
 		}
-		if ( ! -e $dstEffectiveDir ){
+		if ( ! -d $dstEffectiveDir ){
 			die "logdirector.pl: Unable to create $dstEffectiveDir\n";
 		}
 
