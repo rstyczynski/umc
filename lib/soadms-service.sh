@@ -148,14 +148,14 @@ if [ "$operation" == "reset-dms" ]; then
 
     dms-collector --count 1 --delay 1 --url $url  --connect $user/$pass --loginform --dmsreset  / 
     if [ $? -eq 0 ]; then
-        echo "DMS reset completed ok."
-
         echo "OK, $reason"  | addTimestamp.pl >> $umc_log/$(date +%Y-%m-%d)/dms_reset.log
+        echo "DMS reset completed ok. Check reset log: $umc_log/$(date +%Y-%m-%d)/dms_reset.log"
 
         exit 0
     else
-        echo "DMS reset not sucessful."
         echo "ERROR, $reason"  | addTimestamp.pl >> $umc_log/$(date +%Y-%m-%d)/dms_reset.log
+        echo "DMS reset not sucessful. Check reset log: $umc_log/$(date +%Y-%m-%d)/dms_reset.log"
+
         exit 1
     fi
 fi
