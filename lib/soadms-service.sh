@@ -112,6 +112,11 @@ EOF
 function start() {
 
     #
+    # collector name
+    collector_name=soadms
+
+    #
+    #
     # get data from cfg file
     #
     url=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.soadms.url')
@@ -139,22 +144,22 @@ function start() {
     unset resource_id_map
     declare -A resource_id_map
 
-    echo -n "Retrieving resource location info"
+    echo "Retrieving resource location info..."
     for dms_table in $dms_tables; do
-        echo -n '.'
+        echo -n "> collector:$dms_table, "
         probe_info=$(umc soadms info --table $dms_table)
         rid_mth=$($toolsBin/getCfg.py $probe_info soadms_$dms_table.resource.method)
         rid_cols=$($toolsBin/getCfg.py $probe_info soadms_$dms_table.resource.directive)
         resource_id_map[$dms_table]=$rid_mth:$rid_cols
+
+        echo "resource identifier column: $rid_mth:$rid_cols"
     done
-    echo 
 
     #
     # main loop
     #
     echo "Starting umc collectors..."
     for dms_table in $dms_tables; do
-        echo "$dms_table"
         resource_id=${resource_id_map[$dms_table]}
         resource_log_prefix=$dms_table
 
@@ -162,6 +167,8 @@ function start() {
         if [ -z "$interval" ]; then
             interval=$interval_default
         fi
+
+        echo "> collector:$dms_table, interval: $interval"
 
         count=$max_int
         (
@@ -171,6 +178,10 @@ function start() {
         ) &
         echo $! >>$umc_run/$svc_name.pid
     done
+    
+    echo "Metric collection started for $collector_name."
+    echo "Log files location: $umc_log"
+    echo "Runtime data location: $status_root"
 
 }
 
