@@ -120,7 +120,6 @@ if [ "$operation" == "reset-dms" ]; then
         usage
         exit 1
     fi
-    #datetime,timezone,timestamp,system,source
 
     url=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.soadms.url')
  
@@ -146,14 +145,20 @@ if [ "$operation" == "reset-dms" ]; then
     fi
     mkdir -p $umc_log
 
+    # preapre dms reset log is not ready
+    mkdir -p $umc_log/$(date +%Y-%m-%d)
+    if [ ! -f $umc_log/$(date +%Y-%m-%d)/dms_reset.log ]; then
+        echo "datetime,timezone,timestamp,system,source,result,reason" > $umc_log/$(date +%Y-%m-%d)/dms_reset.log
+    fi
+
     dms-collector --count 1 --delay 1 --url $url  --connect $user/$pass --loginform --dmsreset  / 
     if [ $? -eq 0 ]; then
-        echo "OK, $reason"  | addTimestamp.pl >> $umc_log/$(date +%Y-%m-%d)/dms_reset.log
+        echo "$(hostname),$(whoami),OK,$reason"  | addTimestamp.pl >> $umc_log/$(date +%Y-%m-%d)/dms_reset.log
         echo "DMS reset completed ok. Check reset log: $umc_log/$(date +%Y-%m-%d)/dms_reset.log"
 
         exit 0
     else
-        echo "ERROR, $reason"  | addTimestamp.pl >> $umc_log/$(date +%Y-%m-%d)/dms_reset.log
+        echo "$(hostname),$(whoami),ERROR, $reason"  | addTimestamp.pl >> $umc_log/$(date +%Y-%m-%d)/dms_reset.log
         echo "DMS reset not sucessful. Check reset log: $umc_log/$(date +%Y-%m-%d)/dms_reset.log"
 
         exit 1
