@@ -149,7 +149,7 @@ function start() {
                 umc wls collect $interval $count --subsystem=$collector --url=$wls_url |
                     $umc_bin/logdirector.pl -dir $umc_log -addDateSubDir -name wls_$collector -detectHeader -checkHeaderDups -flush -tee |
                     $umc_bin/csv2obd --resource $resource_id --resource_log_prefix $umc_log/$(date +%Y-%m-%d)/$resource_log_prefix |
-                    $umc_bin/dvdt --resource $resource_id --resource_log_prefix $umc_log/$(date +%Y-%m-%d)/$resource_log_prefix\_dt >/dev/null
+                    $umc_bin/dvdt --resource $resource_id --resource_log_prefix $umc_log/$(date +%Y-%m-%d)/$resource_log_prefix >/dev/null
             
                 echo "Connection to Weblogic broken. Retrying after 5 minutes..."
                 sleep 300
