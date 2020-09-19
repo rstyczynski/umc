@@ -121,16 +121,16 @@ function start() {
     #
     # get user/pass
     #
-    user=$(pnp_vault.sh read user$url)
+    user=$(pnp_vault read user$url)
     if [ -z "$user" ]; then
-        pnp_vault.sh save user$url $(read -p "WLS username needed for soadms:" val; echo $val)
-        user=$(pnp_vault.sh read user$url)
+        pnp_vault save user$url $(read -p "WLS username needed for soadms:" val; echo $val)
+        user=$(pnp_vault read user$url)
     fi
 
-    pass=$(pnp_vault.sh read pass$url)
+    pass=$(pnp_vault read pass$url)
     if [ -z "$pass" ]; then
-        pnp_vault.sh save pass$url $(read -p "WLS password needed for soadms :" val; echo $val)
-        pass=$(pnp_vault.sh read pass$url)
+        pnp_vault save pass$url $(read -p "WLS password needed for soadms :" val; echo $val)
+        pass=$(pnp_vault read pass$url)
     fi
 
     #
