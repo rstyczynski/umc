@@ -121,6 +121,8 @@ function start() {
     #
     url=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.soadms.url')
     interval_default=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.soadms.interval')
+    umc_log=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.soadms.log_dir')
+    status_root=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.soadms.runtime_dir')
     dms_tables=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.soadms.tables | keys[]')
 
     #
@@ -179,7 +181,7 @@ function start() {
         echo $! >>$umc_run/$svc_name.pid
     done
     
-    echo "Metric collection started for $collector_name."
+    echo "Metric collection started for $collector_name at $url."
     echo "Log files location: $umc_log"
     echo "Runtime data location: $status_root"
 
