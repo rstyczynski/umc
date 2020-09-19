@@ -117,12 +117,12 @@ function start() {
     wls_url=$(cat $umc_cfg/$umc_svc_def | y2j  | jq -r .weblogic.url)
     interval_default=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.weblogic.interval')
     
-    umc_log_override=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.weblogic.log_dir')
+    umc_log_override=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.weblogic.log_dir'  | sed "s/^~/$HOME/")
     if [ ! -z "$umc_log_override" ] && [ "$umc_log_override" != null ]; then
         export umc_log=$umc_log_override
     fi
 
-    status_root_override=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.weblogic.runtime_dir')
+    status_root_override=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.weblogic.runtime_dir' | sed "s/^~/$HOME/")
     if [ ! -z "$status_root_override" ] && [ "$status_root_override" != null ]; then
         export status_root=$status_root_override
     fi
@@ -132,7 +132,7 @@ function start() {
     #
     mkdir -p $umc_log
     mkdir -p $status_root
-    
+
     count=$max_int
     
     for collector in general channel jmsserver jmsruntime datasource; do
