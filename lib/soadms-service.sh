@@ -117,9 +117,13 @@ if [ "$operation" == "reset-dms" ]; then
     fi
 
     dms-collector --count 1 --delay 1 --url $url  --connect $user/$pass --loginform --dmsreset  / 
-
-    exit 0
-
+    if [ $? -eq 0 ]; then
+        echo "DMS reset completed ok."
+        exit 0
+    else
+        echo "DMS reset not sucessful."
+        exit 1
+    fi
 fi
 
 
