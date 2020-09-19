@@ -139,18 +139,20 @@ function start() {
     unset resource_id_map
     declare -A resource_id_map
 
+    echo "Retrieving resource location info..."
     for dms_table in $dms_tables; do
         probe_info=$(umc soadms info --table $dms_table)
         rid_mth=$($toolsBin/getCfg.py $probe_info soadms_$dms_table.resource.method)
         rid_cols=$($toolsBin/getCfg.py $probe_info soadms_$dms_table.resource.directive)
-        echo $rid_mth:$rid_cols
         resource_id_map[$dms_table]=$rid_mth:$rid_cols
     done
 
     #
     # main loop
     #
+    echo "Starting umc collectors..."
     for dms_table in $dms_tables; do
+        echo "$dms_table"
         resource_id=${resource_id_map[$dms_table]}
         resource_log_prefix=$dms_table
 
