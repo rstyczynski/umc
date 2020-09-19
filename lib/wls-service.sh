@@ -158,7 +158,7 @@ function start() {
         echo $! >>$umc_run/$svc_name.pid
     done
 
-    echo "Metric collection started for $collector_name at $url."
+    echo "Metric collection started for $collector_name at $wls_url."
     echo "Log files location: $umc_log"
     echo "Runtime data location: $status_root"
 }
