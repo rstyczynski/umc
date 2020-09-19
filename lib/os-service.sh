@@ -102,21 +102,51 @@ EOF
 
 function start() {
 
+    #
+    # collector name
+    collector_name=os
+
+
+    #
+    # main loop
+    #
+    mkdir -p $umc_log
+    mkdir -p $status_root
+
+    count=$max_int
+
     for system in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r "keys[]"); do
         echo $system
-        for subsystem in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os | keys[]"); do
+
+
+        #
+        # get data from cfg file
+        #
+        interval_default=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system.interval")
+        
+        umc_log_override=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system.log_dir"  | sed "s|^~|$HOME|")
+        if [ ! -z "$umc_log_override" ] && [ "$umc_log_override" != null ]; then
+            export umc_log=$umc_log_override
+        fi
+
+        status_root_override=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system.runtime_dir" | sed "s|^~|$HOME|")
+        if [ ! -z "$status_root_override" ] && [ "$status_root_override" != null ]; then
+            export status_root=$status_root_override
+        fi
+
+        for subsystem in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system.os | keys[]"); do
             echo "- $subsystem"
 
-            keys=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem[] | keys[]" 2>/dev/null)
+            keys=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system.os.$subsystem[] | keys[]" 2>/dev/null)
             if [ ! -z "$keys" ]; then
-                for component in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem | keys[]"); do
+                for component in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system.os.$subsystem | keys[]"); do
                     echo "    - $subsystem-$component"
                     case $subsystem-$component in
                     disk-space)
                         mount_cnt=0
-                        for mount_point_id in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.disk.space | keys[]"); do
-                            mount_point_name=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.disk.space[$mount_point_id].name")
-                            mount_point=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.disk.space[$mount_point_id].point")
+                        for mount_point_id in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system.os.disk.space | keys[]"); do
+                            mount_point_name=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system.os.disk.space[$mount_point_id].name")
+                            mount_point=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system.os.disk.space[$mount_point_id].point")
                             echo "       - $mount_point_name-$mount_point"
                             (
                                 umc df collect 15 5760 $mount_point |
@@ -131,9 +161,9 @@ function start() {
                         ;;
                     disk-tps)
                         disk_cnt=0
-                        for key in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem.$component | keys[]"); do
-                            dev_name=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem.$component[$key].name")
-                            dev_device=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem.$component[$key].device")
+                        for key in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system.os.$subsystem.$component | keys[]"); do
+                            dev_name=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system.os.$subsystem.$component[$key].name")
+                            dev_device=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system.os.$subsystem.$component[$key].device")
                             echo "       - $dev_name-$dev_device"
                             (
                                 umc iostat collect 5 2147483647 $dev_device |
@@ -146,9 +176,9 @@ function start() {
                         ;;                    
                     network-if)
                         net_cnt=0
-                        for key in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem.$component | keys[]"); do
-                            dev_name=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem.$component[$key].name")
-                            dev_device=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem.$component[$key].device")
+                        for key in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system.os.$subsystem.$component | keys[]"); do
+                            dev_name=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system.os.$subsystem.$component[$key].name")
+                            dev_device=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system.os.$subsystem.$component[$key].device")
                             echo "       - $dev_name-$dev_device"
                             (
                                 umc ifconfig collect 5 2147483647 $dev_device |
@@ -162,7 +192,7 @@ function start() {
                         done
                         ;;
                     network-tcp)
-                        for key in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem.$component[]"); do
+                        for key in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system.os.$subsystem.$component[]"); do
                             echo "       - $key"
                             if [ $key == "stats" ]; then
                                 (
@@ -179,7 +209,7 @@ function start() {
                     esac
                 done
             else
-                for component in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system[].os.$subsystem[]"); do
+                for component in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".$system.os.$subsystem[]"); do
 
                     echo "  - $subsystem-$component"
                     case $subsystem-$component in
@@ -227,7 +257,9 @@ function start() {
         cat >$umc_log/os_$system.html <<EOF
 <meta http-equiv="Refresh" content="0; url='/umc/log/charts_os?disk_cnt=$disk_cnt&net_cnt=$net_cnt&mount_cnt=$mount_cnt'" />
 EOF
-
+        echo "Metric collection started for $collector_name at $system."
+        echo "Log files location: $umc_log"
+        echo "Runtime data location: $status_root"
     done
 
 }
