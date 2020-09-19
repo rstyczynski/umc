@@ -420,7 +420,7 @@ sub moveLogFile {
 
 			# TODO: fix this. create group umc 
 			umask 0000;
-            unless(-d $dstEffectiveDir or mkdir $dstEffectiveDir) { die "logdirector.pl: Unable to create $dstEffectiveDir\n"; }
+            unless(-e $dstEffectiveDir or mkdir $dstEffectiveDir) { die "logdirector.pl: Unable to create $dstEffectiveDir\n"; }
 
         } else {
             $dstEffectiveDir = "$dstDir";
@@ -453,11 +453,11 @@ sub openLogFile {
         
 		# race condition when multiple parallel logdirectors creates directory
 		# implemented retry with random backoff
-		my $retry_limit = 5;
+		my $retry_limit = 3;
 		my $retry=0;
 		while ( $retry < $retry_limit ) {
-			if ( ! -d $dstEffectiveDir ) {
-				select(undef, undef, undef, rand(1));
+			if ( ! -e $dstEffectiveDir ) {
+				select(undef, undef, undef, rand(0.5));
 
 				# TODO: fix this. create group umc 
 				umask 0000;
@@ -467,7 +467,7 @@ sub openLogFile {
 				$retry = $retry_limit;
 			}
 		}
-		if ( ! -d $dstEffectiveDir ){
+		if ( ! -e $dstEffectiveDir ){
 			die "logdirector.pl: Unable to create $dstEffectiveDir\n";
 		}
         
@@ -559,14 +559,14 @@ sub generateRotatedLogName {
 		$dstDateSubDir = "$year-$mon-$mday";
 		$dstEffectiveDir = "$dstDir/$dstDateSubDir";
         
-        #unless(-d $dstEffectiveDir or mkdir $dstEffectiveDir) { die "logdirector.pl: Unable to create $dstEffectiveDir\n"; }
+        #unless(-e $dstEffectiveDir or mkdir $dstEffectiveDir) { die "logdirector.pl: Unable to create $dstEffectiveDir\n"; }
 		# race condition when multiple parallel logdirectors creates directory
 		# implemented retry with random backoff
-		my $retry_limit = 5;
+		my $retry_limit = 3;
 		my $retry=0;
 		while ( $retry < $retry_limit ) {
-			if ( ! -d $dstEffectiveDir ) {
-				select(undef, undef, undef, rand(1));
+			if ( ! -e $dstEffectiveDir ) {
+				select(undef, undef, undef, rand(0.5));
 
 				# TODO: fix this. create group umc 
 				umask 0000;
@@ -576,7 +576,7 @@ sub generateRotatedLogName {
 				$retry = $retry_limit;
 			}
 		}
-		if ( ! -d $dstEffectiveDir ){
+		if ( ! -e $dstEffectiveDir ){
 			die "logdirector.pl: Unable to create $dstEffectiveDir\n";
 		}
 

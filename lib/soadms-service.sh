@@ -121,8 +121,17 @@ function start() {
     #
     url=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.soadms.url')
     interval_default=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.soadms.interval')
-    umc_log=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.soadms.log_dir')
-    status_root=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.soadms.runtime_dir')
+    
+    umc_log_override=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.soadms.log_dir')
+    if [ ! -z "$umc_log_override" ]; then
+        export umc_log=$umc_log_override
+    fi
+
+    status_root_override=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.soadms.runtime_dir')
+    if [ ! -z "$status_root_override" ]; then
+        export status_root=$status_root_override
+    fi
+
     dms_tables=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.soadms.tables | keys[]')
 
     #
