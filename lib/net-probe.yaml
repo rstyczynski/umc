@@ -3,7 +3,7 @@ network:
     log_dir: ~/x-ray/diagnose/res/umc
     runtime_dir: ~/x-ray/watch/res/obd
     services:
-        - ILS_ftp:
+        - oci_basic:
               icmp:
                   - vcn:
                         ip: "169.254.169.254"
