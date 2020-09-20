@@ -102,9 +102,11 @@ fi
 
 function usage() {
     cat <<EOF
-Usage: soadms-service.sh svc_def [start|stop|status|restart|register|unregister|restet-dms reason] 
+Usage: soadms-service.sh svc_def [start|stop|status|restart|register|unregister|restet-dms dms-path reason] 
 
-, where svc_def is a configuration file kept in umc configuration directory.
+, where:
+1. svc_def is a configuration file kept in umc configuration directory.
+2. dms-path is a DMS table to reset. May be root / element
 
 EOF
 }
@@ -113,7 +115,15 @@ EOF
 # reset? ok, let's reset and exit
 if [ "$operation" == "reset-dms" ]; then
 
-    reason=$1
+    dms_path=$1; shift
+    if [ -z "$dms_path" ]; then
+        echo "DMS path to reset not provided. Exiting. "
+        echo 
+        usage
+        exit 1
+    fi
+
+    reason=$1; shift
     if [ -z "$reason" ]; then
         echo "Reason not provided. Exiting. "
         echo 
@@ -148,17 +158,17 @@ if [ "$operation" == "reset-dms" ]; then
     # preapre dms reset log is not ready
     mkdir -p $umc_log/$(date +%Y-%m-%d)
     if [ ! -f $umc_log/$(date +%Y-%m-%d)/dms_reset.log ]; then
-        echo "datetime,timezone,timestamp,system,source,result,reason" > $umc_log/$(date +%Y-%m-%d)/dms_reset.log
+        echo "datetime,timezone,timestamp,system,source,dms-path,result,reason" > $umc_log/$(date +%Y-%m-%d)/dms_reset.log
     fi
 
-    dms-collector --count 1 --delay 1 --url $url  --connect $user/$pass --loginform --dmsreset  / 
+    dms-collector --count 1 --delay 1 --url $url  --connect $user/$pass --loginform --dmsreset $dms_path
     if [ $? -eq 0 ]; then
-        echo "$(hostname),$(whoami),OK,$reason"  | addTimestamp.pl >> $umc_log/$(date +%Y-%m-%d)/dms_reset.log
+        echo "$(hostname),$(whoami),$dms_path,OK,$reason"  | addTimestamp.pl >> $umc_log/$(date +%Y-%m-%d)/dms_reset.log
         echo "DMS reset completed ok. Check reset log: $umc_log/$(date +%Y-%m-%d)/dms_reset.log"
 
         exit 0
     else
-        echo "$(hostname),$(whoami),ERROR, $reason"  | addTimestamp.pl >> $umc_log/$(date +%Y-%m-%d)/dms_reset.log
+        echo "$(hostname),$(whoami),$dms_path,ERROR,$reason"  | addTimestamp.pl >> $umc_log/$(date +%Y-%m-%d)/dms_reset.log
         echo "DMS reset not sucessful. Check reset log: $umc_log/$(date +%Y-%m-%d)/dms_reset.log"
 
         exit 1
