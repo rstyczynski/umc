@@ -492,7 +492,7 @@ function invoke {
   fi
 
   # remote collection?
-  if [ ! -z "umc_remote_system" ]; then
+  if [ ! -z "$umc_remote_system" ]; then
     system_name=$umc_remote_system
   else
     system_name=$(hostname)
