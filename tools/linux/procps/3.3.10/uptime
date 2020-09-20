@@ -1,4 +1,4 @@
 #!/bin/bash
 
-uptime | egrep -o '[0-9]+ users.*' | sed $sedBUFFER -e 's/[ a-zA-Z:]//g' 
+uptime | egrep -o '[0-9]+ user.*' | sed $sedBUFFER -e 's/[ a-zA-Z:]//g' 
 
