@@ -55,7 +55,7 @@ esac
 
 umc_svc_def=$1
 shift
-if [ ! $umc_cfg/$umc_svc_def ]; then
+if [ ! -f $umc_cfg/$umc_svc_def ]; then
     echo "Error. Service definition not found."
     exit 1
 fi
