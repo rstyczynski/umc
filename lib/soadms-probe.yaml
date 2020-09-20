@@ -1,6 +1,6 @@
 ---
 soadms:
-  url: http://10.106.4.14:7001
+  url: http://localhost:7001
   user: ask_on_start
   password: ask_on_start
   interval: 60
