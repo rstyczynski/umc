@@ -1,8 +1,9 @@
 ---
-soa_sit:
+os:
+  system: hostname
   log_dir: ~/x-ray/diagnose/umc
   runtime_dir: ~/x-ray/watch/obd
-  os:
+  probes:
     system:
       - uptime
       - vmstat
@@ -20,13 +21,9 @@ soa_sit:
       space:
         - name: mount1
           point: /
-        - name: mount2
-          point: /ora01
-        - name: mount3
-          point: /ora02
     network:
       if:
         - name: net1
-          device: ens3
+          device: eth0
       tcp:
         - stats
