@@ -228,6 +228,12 @@ function start() {
     for dms_table in $dms_tables; do
         echo -n "> collector:$dms_table, "
         probe_info=$(umc soadms info --table $dms_table)
+
+        if [ -z "$probe_info" ]; then
+            echo "Error starting soadms collector. SOA not available."
+            exit 1
+        fi
+
         rid_mth=$($toolsBin/getCfg.py $probe_info soadms_$dms_table.resource.method)
         rid_cols=$($toolsBin/getCfg.py $probe_info soadms_$dms_table.resource.directive)
         resource_id_map[$dms_table]=$rid_mth:$rid_cols
