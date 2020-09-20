@@ -14,10 +14,6 @@ os:
       tps:
         - name: disk1
           device: sda
-        - name: disk2
-          device: sdb
-        - name: disk3
-          device: sdc
       space:
         - name: mount1
           point: /
