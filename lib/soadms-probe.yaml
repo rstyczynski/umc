@@ -1,6 +1,8 @@
 ---
 soadms:
   url: http://localhost:7001
+  http_proxy: unset
+  https_proxy: unset
   user: ask_on_start
   password: ask_on_start
   interval: 60

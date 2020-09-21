@@ -131,8 +131,26 @@ if [ "$operation" == "reset-dms" ]; then
         exit 1
     fi
 
+    #
+    # control http proxy
+    # 
     url=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.soadms.url')
- 
+    http_proxy=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.soadms.http_proxy')
+    if [ ! -z "$http_proxy" ] && [ "$http_proxy" != null ]; then
+        export http_proxy=$http_proxy
+    fi
+    if ["$http_proxy" == "unset" ]; then
+        unset http_proxy
+    fi
+
+    https_proxy=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.soadms.https_proxy')
+    if [ ! -z "$https_proxy" ] && [ "$https_proxy" != null ]; then
+        export https_proxy=$https_proxy
+    fi
+    if ["$https_proxy" == "unset" ]; then
+        unset https_proxy
+    fi
+
     #
     # get user/pass
     #
