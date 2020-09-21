@@ -210,7 +210,7 @@ function getLayerDirectories {
   layer_version_minor=$(eval "echo $(echo \$$layer\_version_minor)")
   layer_version_patch=$(eval "echo $(echo \$$layer\_version_patch)")
   layer_version_specific=$(eval "echo $(echo \$$layer\_version_specific)")
-  layer_version_specific=$(eval "echo $(echo \$$layer\_version_detailed)")
+  layer_version_detailed=$(eval "echo $(echo \$$layer\_version_detailed)")
 
   if [ ! "$layer/$layer_version_major/$layer_version_minor/$layer_version_patch/$layer_version_specific/$layer_version_detailed" = "$layer/////" ]; then
     layer_dir="$layer/$layer_version_major/$layer_version_minor/$layer_version_patch/$layer_version_specific/$layer_version_detailed"
