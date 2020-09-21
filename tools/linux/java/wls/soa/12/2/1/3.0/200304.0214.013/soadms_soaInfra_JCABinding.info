@@ -1,0 +1,50 @@
+soadms_soaInfra_JCABinding:
+    version: 1.0
+    layer: Middleware
+    system: SOA
+    subsystem: dms
+    header: >-
+        Name,size_value,eElapsedTime_maxTime,size_maxValue,eTotalCount_count,eElapsedTime_avg,Host,ServerName,soaInfra_JCABinding_Type,Process,Parent,eElapsedTime_time,NumErrors_count,eElapsedTime_minTime
+    rawheader:
+        method: script
+        directive: dms-collector --table ${UMC_SENSOR_ARGS['table']} --printheader --url=${UMC_SENSOR_ARGS['url']} --connect ${UMC_SENSOR_ARGS['connect']} --count 1 --delay 1 --loginform  | cut -d, -f3-9999
+        expected: >-
+            Name,size_value,eElapsedTime_maxTime,size_maxValue,eTotalCount_count,eElapsedTime_avg,Host,ServerName,soaInfra_JCABinding_Type,Process,Parent,eElapsedTime_time,NumErrors_count,eElapsedTime_minTime
+    resource:
+        method:     csv
+        directive:  6,13,14
+    metrics:
+        host:
+            - Host
+            - Process
+            - ServerName
+        ignore:
+            - Parent
+        JCAadapter:
+            - soaInfra_JCABinding_Type:
+                - desc: Adapter name
+            - Name:
+                - desc: direction
+        size:
+            - size_value
+            - size_maxValue
+
+        time:
+            - eElapsedTime_time
+            - eElapsedTime_minTime
+            - eElapsedTime_maxTime
+            - eElapsedTime_avg
+        count:
+            - eTotalCount_count
+            - NumErrors_count
+    loop:
+        method: external
+        directive:
+    availability:
+        method: command
+        directive: wget ${UMC_SENSOR_ARGS['url']}/dms/Spy
+    timestamp:
+        method:
+        directive:
+
+

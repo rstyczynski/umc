@@ -1,0 +1,3 @@
+#!/bin/bash
+
+dms-collector --loginform --noheader --count 1 --delay 1 $@ | tr -d '"' | cut -d, -f3-99999

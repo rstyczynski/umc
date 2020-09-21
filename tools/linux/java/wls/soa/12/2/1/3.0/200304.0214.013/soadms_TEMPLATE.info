@@ -1,0 +1,50 @@
+soadms_#1.Put table name here#:
+    version: 1.0
+    layer: Middleware
+    system: SOA
+    subsystem: dms
+    header: >-
+        #2.Header here#
+    rawheader:
+        method: script
+        directive: dms-collector --table ${UMC_SENSOR_ARGS['table']} --printheader --url=${UMC_SENSOR_ARGS['url']} --connect ${UMC_SENSOR_ARGS['connect']} --count 1 --delay 1 --loginform  | cut -d, -f3-9999
+        expected: >-
+            #2.Header here#
+    resource:
+        method:     csv
+        directive:  #3.Columns to identify resource#
+    metrics:
+        host:
+            - Host
+            - Process
+            - ServerName
+        #4.Fields come here#
+    loop:
+        method: external
+        directive:
+    availability:
+        method: command
+        directive: wget ${UMC_SENSOR_ARGS['url']}/dms/Spy
+    timestamp:
+        method:
+        directive:
+
+# dms_table=
+#
+# url=
+# user=
+# pass=
+#
+# >> get header
+# dms-collector/bin/dms-collector --url $url --connect $user/$pass --count 1 --delay 1 --loginform  --printheader --table $dms_table 
+#
+# >> get header to fields section
+# dms-collector/bin/dms-collector --url $url --connect $user/$pass --count 1 --delay 1 --loginform  --printheader --table $dms_table  | tr , '\n' | sort | sed 's/^/- /g'
+#
+# >> get headers to resource_id
+# dms-collector/bin/dms-collector --url $url --connect $user/$pass --count 1 --delay 1 --loginform  --printheader --table $dms_table  | tail -1 | tr , '\n' | nl -v4
+#
+# >> get values to select resource_id
+# dms-collector/bin/dms-collector --url $url --connect $user/$pass --count 1 --delay 1 --loginform  --table $dms_table  | tail -1 | tr , '\n' | nl -v4
+
+

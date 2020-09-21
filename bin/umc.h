@@ -210,18 +210,38 @@ function getLayerDirectories {
   layer_version_minor=$(eval "echo $(echo \$$layer\_version_minor)")
   layer_version_patch=$(eval "echo $(echo \$$layer\_version_patch)")
   layer_version_specific=$(eval "echo $(echo \$$layer\_version_specific)")
-  
+  layer_version_specific=$(eval "echo $(echo \$$layer\_version_detailed)")
+
+  if [ ! "$layer/$layer_version_major/$layer_version_minor/$layer_version_patch/$layer_version_specific/$layer_version_detailed" = "$layer/////" ]; then
+    layer_dir="$layer/$layer_version_major/$layer_version_minor/$layer_version_patch/$layer_version_specific/$layer_version_detailed"
+    # if [ -d $umcRoot/tools/$layer_dir ]; then
+      echo $layer_dir
+    # fi
+  fi
+
   if [ ! "$layer/$layer_version_major/$layer_version_minor/$layer_version_patch/$layer_version_specific" = "$layer////" ]; then
-    echo "$layer/$layer_version_major/$layer_version_minor/$layer_version_patch/$layer_version_specific"
+    layer_dir="$layer/$layer_version_major/$layer_version_minor/$layer_version_patch/$layer_version_specific"
+    # if [ -d $umcRoot/tools/$layer_dir ]; then
+      echo $layer_dir
+    # fi
   fi
   if [ ! "$layer/$layer_version_major/$layer_version_minor/$layer_version_patch" = "$layer///" ]; then
-    echo "$layer/$layer_version_major/$layer_version_minor/$layer_version_patch"
+    layer_dir="$layer/$layer_version_major/$layer_version_minor/$layer_version_patch"
+    # if [ -d $umcRoot/tools/$layer_dir ]; then
+      echo $layer_dir
+    # fi
   fi
   if [ ! "$layer/$layer_version_major/$layer_version_minor" = "$layer//" ]; then
-    echo "$layer/$layer_version_major/$layer_version_minor"
+    layer_dir="$layer/$layer_version_major/$layer_version_minor"
+    # if [ -d $umcRoot/tools/$layer_dir ]; then
+      echo $layer_dir
+    # fi
   fi
   if [ ! "$layer/$layer_version_major" = "$layer/" ]; then
-    echo "$layer/$layer_version_major"
+    layer_dir="$layer/$layer_version_major"
+    # if [ -d $umcRoot/tools/$layer_dir ]; then
+      echo $layer_dir
+    # fi
   fi
   echo "$layer"
   
@@ -238,26 +258,48 @@ function getDirectories {
                     for directoryWLS in $(getLayerDirectories wls); do
                         if [ ! $layer = "wls" ]; then
                             for directorySOA in $(getLayerDirectories soa); do
-                                echo -n "$umcRoot/tools"
-                                echo $directoryRoot/$directoryLinux/$directoryJava/$directoryWLS/$directorySOA
+                                #echo -n "$umcRoot/tools"
+                                #echo $directoryRoot/$directoryLinux/$directoryJava/$directoryWLS/$directorySOA
+
+                                tool_dir=$umcRoot/tools/$directoryRoot/$directoryLinux/$directoryJava/$directoryWLS/$directorySOA
+                                if [ -d $tool_dir ]; then
+                                  echo $tool_dir
+                                fi
+
                             done
                             for directoryOSB in $(getLayerDirectories osb); do
-                                echo -n "$umcRoot/tools"
-                                echo $directoryRoot/$directoryLinux/$directoryJava/$directoryWLS/$directoryOSB
+                                # echo -n "$umcRoot/tools"
+                                # echo $directoryRoot/$directoryLinux/$directoryJava/$directoryWLS/$directoryOSB
+                                tool_dir=$umcRoot/tools/$directoryRoot/$directoryLinux/$directoryJava/$directoryWLS/$directoryOSB
+                                if [ -d $tool_dir ]; then
+                                  echo $tool_dir
+                                fi
                             done
 			else
-                            echo -n "$umcRoot/tools"
-                            echo $directoryRoot/$directoryLinux/$directoryJava/$directoryWLS
+                            # echo -n "$umcRoot/tools"
+                            # echo $directoryRoot/$directoryLinux/$directoryJava/$directoryWLS
+                            tool_dir=$umcRoot/tools/$directoryRoot/$directoryLinux/$directoryJava/$directoryWLS
+                            if [ -d $tool_dir ]; then
+                              echo $tool_dir
+                            fi
                         fi
                     done
                 else
-                    echo -n "$umcRoot/tools"
-                    echo $directoryRoot/$directoryLinux/$directoryJava
+                    # echo -n "$umcRoot/tools"
+                    # echo $directoryRoot/$directoryLinux/$directoryJava
+                    tool_dir=$umcRoot/tools/$directoryRoot/$directoryLinux/$directoryJava
+                    if [ -d $tool_dir ]; then
+                      echo $tool_dir
+                    fi
                 fi
             done
         else
-            echo -n "$umcRoot/tools"
-            echo $directoryRoot/$directoryLinux
+            # echo -n "$umcRoot/tools"
+            # echo $directoryRoot/$directoryLinux
+            tool_dir=$umcRoot/tools/$directoryRoot/$directoryLinux
+            if [ -d $tool_dir ]; then
+              echo $tool_dir
+            fi
         fi
       done
     done
