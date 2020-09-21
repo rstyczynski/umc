@@ -139,7 +139,7 @@ if [ "$operation" == "reset-dms" ]; then
     if [ ! -z "$http_proxy" ] && [ "$http_proxy" != null ]; then
         export http_proxy=$http_proxy
     fi
-    if ["$http_proxy" == "unset" ]; then
+    if [ "$http_proxy" == "unset" ]; then
         unset http_proxy
     fi
 
@@ -147,7 +147,7 @@ if [ "$operation" == "reset-dms" ]; then
     if [ ! -z "$https_proxy" ] && [ "$https_proxy" != null ]; then
         export https_proxy=$https_proxy
     fi
-    if ["$https_proxy" == "unset" ]; then
+    if [ "$https_proxy" == "unset" ]; then
         unset https_proxy
     fi
 
