@@ -284,7 +284,7 @@ function start() {
     done
     
     echo "Metric collection started for $collector_name at $url."
-    echo "Log files location: $umc_log"
+    echo "Log files location: $umc_log/$(date +%Y-%m-%d)"
     echo "Runtime data location: $status_root"
 }
 

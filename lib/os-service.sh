@@ -263,7 +263,7 @@ function start() {
 <meta http-equiv="Refresh" content="0; url='/umc/log/charts_os?disk_cnt=$disk_cnt&net_cnt=$net_cnt&mount_cnt=$mount_cnt'" />
 EOF
         echo "Metric collection started for $collector_name at $system."
-        echo "Log files location: $umc_log"
+        echo "Log files location: $umc_log/$(date +%Y-%m-%d)"
         echo "Runtime data location: $status_root"
     #done
 
