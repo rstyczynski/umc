@@ -198,7 +198,7 @@ if [ "$operation" == "reset-dms" ]; then
         if [ "$force_reset" == "force" ]; then
             exit_code=0
         else
-            echo "$(hostname),$(whoami),$dms_path,ERROR,$reason,too frequent reset request "  | addTimestamp.pl >> $umc_log/$(date +%Y-%m-%d)/dms_reset.log
+            echo "$(hostname),$(whoami),$dms_path,ERROR,$reason,too frequent reset request "  | addTimestamp.pl >> $umc_log/$(date +%Y-%m-%d)/dms_reset_error.log
             echo "DMS reset request too frequent; wait 5 minutes. Check reset log: $umc_log/$(date +%Y-%m-%d)/dms_reset_error.log"
             exit_code=2
         fi
