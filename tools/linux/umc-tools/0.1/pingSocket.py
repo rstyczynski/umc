@@ -9,6 +9,7 @@ import sys
 import getopt
 import os
 import struct
+import re
 
 from time import gmtime, strftime
 
