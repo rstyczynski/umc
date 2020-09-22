@@ -190,9 +190,10 @@ if [ "$operation" == "reset-dms" ]; then
         echo "datetime,timezone,timestamp,system,source,dms-path,result,reason,comment" > $umc_log/$(date +%Y-%m-%d)/dms_reset.log
     fi
 
+    exit_code=0
+    
     # check if reset was done in last 5 minute
     changed=$(find $umc_log/$(date +%Y-%m-%d)  -maxdepth 1 -mmin -5 -type f -name dms_reset.log | wc -l)
-
     if [ $changed -gt 0 ]; then
         if [ "$force_reset" == "force" ]; then
             exit_code=0
