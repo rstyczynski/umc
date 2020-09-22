@@ -212,6 +212,7 @@ if [ "$operation" == "reset-dms" ]; then
             else
                 echo "$(hostname),$(whoami),$dms_path,OK,$reason"  | addTimestamp.pl >> $umc_log/$(date +%Y-%m-%d)/dms_reset.log
                 echo "DMS reset completed ok. Check reset log: $umc_log/$(date +%Y-%m-%d)/dms_reset.log"
+            fi
             exit_code=0
         else
             echo "$(hostname),$(whoami),$dms_path,ERROR,$reason"  | addTimestamp.pl >> $umc_log/$(date +%Y-%m-%d)/dms_reset.log
