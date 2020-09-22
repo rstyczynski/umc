@@ -331,6 +331,7 @@ function locateToolExecDir {
       if [ ! -z $cmd_package ]; then
           if [ -f $directory/$cmd_package/$cmd ]; then
               toolExecDir=$directory/$cmd_package
+              tool_dir_cache[$cmd]=$toolExecDir
               return 0
           fi
       fi
@@ -345,8 +346,6 @@ function locateToolExecDir {
       echo "--- $cmd_version"
       return 3
     fi
-
-    tool_dir_cache[$cmd]=$toolExecDir
   fi
 }
 
