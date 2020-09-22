@@ -231,7 +231,7 @@ def getStats(targetSystem, targetPort):
             response=ms
             #
             if makeResponseShort:
-                    if len(responseStr)>100:
+                if len(responseStr)>100:
                     responseStr = responseStr[:100]
 
             #
