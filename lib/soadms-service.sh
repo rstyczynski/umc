@@ -173,24 +173,49 @@ if [ "$operation" == "reset-dms" ]; then
     fi
     mkdir -p $umc_log
 
+
     # preapre dms reset log is not ready
     mkdir -p $umc_log/$(date +%Y-%m-%d)
+
+    ###
+    ###
+    ###
+
+    exec 8>$umc_log/$(date +%Y-%m-%d)/dms-reset.lock
+    flock -x -w 5 8
+
     if [ ! -f $umc_log/$(date +%Y-%m-%d)/dms_reset.log ]; then
         echo "datetime,timezone,timestamp,system,source,dms-path,result,reason" > $umc_log/$(date +%Y-%m-%d)/dms_reset.log
     fi
 
-    dms-collector --count 1 --delay 1 --url $url  --connect $user/$pass --loginform --dmsreset $dms_path
-    if [ $? -eq 0 ]; then
-        echo "$(hostname),$(whoami),$dms_path,OK,$reason"  | addTimestamp.pl >> $umc_log/$(date +%Y-%m-%d)/dms_reset.log
-        echo "DMS reset completed ok. Check reset log: $umc_log/$(date +%Y-%m-%d)/dms_reset.log"
+    # check if reset was done in last 5 minute
+    changed=$(find $umc_log/$(date +%Y-%m-%d)  -maxdepth 1 -mmin -5 -type f -name dms_reset.log | wc -l)
 
-        exit 0
+    if [ $changed -eq 0 ]; then
+        dms-collector --count 1 --delay 1 --url $url  --connect $user/$pass --loginform --dmsreset $dms_path
+        if [ $? -eq 0 ]; then
+            echo "$(hostname),$(whoami),$dms_path,OK,$reason"  | addTimestamp.pl >> $umc_log/$(date +%Y-%m-%d)/dms_reset.log
+            echo "DMS reset completed ok. Check reset log: $umc_log/$(date +%Y-%m-%d)/dms_reset.log"
+
+            exit_code=0
+        else
+            echo "$(hostname),$(whoami),$dms_path,ERROR,$reason"  | addTimestamp.pl >> $umc_log/$(date +%Y-%m-%d)/dms_reset.log
+            echo "DMS reset not sucessful. Check reset log: $umc_log/$(date +%Y-%m-%d)/dms_reset.log"
+
+            exit_code=1
+        fi
     else
-        echo "$(hostname),$(whoami),$dms_path,ERROR,$reason"  | addTimestamp.pl >> $umc_log/$(date +%Y-%m-%d)/dms_reset.log
-        echo "DMS reset not sucessful. Check reset log: $umc_log/$(date +%Y-%m-%d)/dms_reset.log"
-
-        exit 1
+        echo "$(hostname),$(whoami),$dms_path,ERROR,$reason but too frequent. "  | addTimestamp.pl >> $umc_log/$(date +%Y-%m-%d)/dms_reset.log
+        echo "DMS reset request too frequent. Check reset log: $umc_log/$(date +%Y-%m-%d)/dms_reset.log"
+        exit_code=2
     fi
+
+    # remove lock
+    flock -u 8
+    rm -f $umc_log/$(date +%Y-%m-%d)/dms-reset.lock
+
+    exit $exit_code
+
 fi
 
 
