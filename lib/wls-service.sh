@@ -116,7 +116,7 @@ function start() {
     #
     wls_url=$(cat $umc_cfg/$umc_svc_def | y2j  | jq -r .weblogic.url)
     wls_admin_server=$(cat $umc_cfg/$umc_svc_def | y2j  | jq -r .weblogic.admin_server)
-    if [ -z "$umc_log_override" ] || [ "$umc_log_override" != null ]; then
+    if [ -z "$wls_admin_server" ] || [ "$wls_admin_server" != null ]; then
         wls_admin_server=AdminServer
     fi
 
