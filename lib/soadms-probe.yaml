@@ -5,7 +5,7 @@ soadms:
   https_proxy: unset
   user: ask_on_start
   password: ask_on_start
-  interval: 60
+  interval: 3600
   reset: 
     directive: after_each_collection # never 
     path: /
@@ -14,12 +14,12 @@ soadms:
     watch: ~/x-ray/watch/wls/soa_domain/obd/soa
   tables:
     soainfra_Binding:
-      interval: 60
+      interval: 3600
     soainfra_bpel_activity:
-      interval: 60
+      interval: 3600
     soainfra_ComponentReference:
-      interval: 60
+      interval: 3600
     soainfra_composite_label:
-      interval: 60
+      interval: 3600
     soaInfra_JCABinding:
-      interval: 60
+      interval: 3600
