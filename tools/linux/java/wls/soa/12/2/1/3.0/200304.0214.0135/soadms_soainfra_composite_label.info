@@ -3,13 +3,11 @@ soadms_soainfra_composite_label:
     layer: Middleware
     system: SOA
     subsystem: dms
-    header: >-
-        Name,Posts_minTime,Posts_maxTime,ServerName,RequestEvents_count,Parent,Posts_time,Posts_completed,Posts_maxActive,soainfra_composite,Requests_time,Posts_avg,Host,Requests_minTime,Requests_maxTime,CompositeState_value,Requests_completed,Requests_avg,Requests_maxActive,soainfra_composite_revision,soainfra_domain,PostEvents_count,Process,Posts_active,Requests_active
+    header: Name,Posts_minTime,Posts_maxTime,ServerName,RequestEvents_count,Parent,Posts_time,Posts_completed,Posts_maxActive,soainfra_composite,Requests_time,Posts_avg,Host,Requests_minTime,Requests_maxTime,CompositeState_value,Requests_completed,Requests_avg,Requests_maxActive,soainfra_composite_revision,soainfra_domain,PostEvents_count,Process,Posts_active,Requests_active
     rawheader:
         method: script
         directive: dms-collector --table ${UMC_SENSOR_ARGS['table']} --printheader --url=${UMC_SENSOR_ARGS['url']} --connect ${UMC_SENSOR_ARGS['connect']} --count 1 --delay 1 --loginform  | cut -d, -f3-9999
-        expected: >-
-            Name,Posts_minTime,Posts_maxTime,ServerName,RequestEvents_count,Parent,Posts_time,Posts_completed,Posts_maxActive,soainfra_composite,Requests_time,Posts_avg,Host,Requests_minTime,Requests_maxTime,CompositeState_value,Requests_completed,Requests_avg,Requests_maxActive,soainfra_composite_revision,soainfra_domain,PostEvents_count,Process,Posts_active,Requests_active
+        expected: Name,Posts_minTime,Posts_maxTime,ServerName,RequestEvents_count,Parent,Posts_time,Posts_completed,Posts_maxActive,soainfra_composite,Requests_time,Posts_avg,Host,Requests_minTime,Requests_maxTime,CompositeState_value,Requests_completed,Requests_avg,Requests_maxActive,soainfra_composite_revision,soainfra_domain,PostEvents_count,Process,Posts_active,Requests_active
     resource:
         method:     csv
         directive:  15,26
