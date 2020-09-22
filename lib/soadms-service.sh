@@ -299,7 +299,7 @@ function start() {
         export umc_svc_def
         (
             umc soadms collect $interval $count --table $dms_table --url $url --connect $user/$pass |
-            $umc_bin/logdirector.pl -dir $umc_log -addDateSubDir -name soadms_$dms_table -detectHeader -checkHeaderDups -tee |
+            $umc_bin/logdirector.pl -dir $umc_log -addDateSubDir -name soadms_$dms_table -detectHeader -checkHeaderDups -tee -flush |
             $umc_bin/csv2obd --resource $resource_id --resource_log_prefix $umc_log/$(date +%Y-%m-%d)/$resource_log_prefix >/dev/null
         ) &
         echo $! >>$umc_run/$svc_name.pid
