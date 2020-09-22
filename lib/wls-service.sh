@@ -115,6 +115,11 @@ function start() {
     # get data from cfg file
     #
     wls_url=$(cat $umc_cfg/$umc_svc_def | y2j  | jq -r .weblogic.url)
+    wls_admin_server=$(cat $umc_cfg/$umc_svc_def | y2j  | jq -r .weblogic.admin_server)
+    if [ -z "$umc_log_override" ] || [ "$umc_log_override" != null ]; then
+        wls_admin_server=AdminServer
+    fi
+
     interval_default=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.weblogic.interval')
     
     umc_log_override=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.weblogic.log_dir'  | sed "s|^~|$HOME|")
@@ -149,7 +154,7 @@ function start() {
         (
             # retry neede as collector uses own internal loop. in case of WLS down colelctor will stop...
             while [ 1 ]; do
-                umc wls collect $interval $count --subsystem=$collector --url=$wls_url |
+                umc wls collect $interval $count --subsystem=$collector --url=$wls_url --server $wls_admin_server |
                     $umc_bin/logdirector.pl -dir $umc_log -addDateSubDir -name wls_$collector -detectHeader -checkHeaderDups -flush -tee |
                     $umc_bin/csv2obd --resource $resource_id --resource_log_prefix $umc_log/$(date +%Y-%m-%d)/$resource_log_prefix |
                     $umc_bin/dvdt --resource $resource_id --resource_log_prefix $umc_log/$(date +%Y-%m-%d)/$resource_log_prefix >/dev/null

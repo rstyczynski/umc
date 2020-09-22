@@ -2,6 +2,7 @@
 weblogic:
   admin: oracle
   url: t3://localhost:7001
+  admin_server: AdminServer
   interval: 60
   log_dir: ~/x-ray/diagnose/wls/soa_domain/dms
   runtime_dir: ~/x-ray/watch/wls/soa_domain/obd

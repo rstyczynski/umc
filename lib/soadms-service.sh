@@ -151,6 +151,9 @@ if [ "$operation" == "reset-dms" ]; then
         unset https_proxy
     fi
 
+    echo "http proxy: $http_proxy"
+    echo "https proxy: $https_proxy"
+
     #
     # get user/pass
     #
