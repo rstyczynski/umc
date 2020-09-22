@@ -225,7 +225,10 @@ def getStats(targetSystem, targetPort):
             #
             start_time = time.time()
             responseStr = s.recv(4096)
-            responseStr = responseStr.replace("\n", " ")
+            #
+            # remove non ascii chars
+            responseStr = re.sub(r'[^\x00-\x7F]',' ', responseStr)
+            #responseStr = responseStr.replace("\n", " ").replace("\r", " ")
             #
             ms = (time.time() - start_time ) * 1000
             response=ms
