@@ -116,8 +116,7 @@ function start() {
     #
     wls_url=$(cat $umc_cfg/$umc_svc_def | y2j  | jq -r .weblogic.url)
     wls_admin_server=$(cat $umc_cfg/$umc_svc_def | y2j  | jq -r .weblogic.admin_server)
-    echo $wls_admin_server
-    if [ -z "$wls_admin_server" ] || [ "$wls_admin_server" != null ]; then
+    if [ -z "$wls_admin_server" ] || [ "$wls_admin_server" == null ]; then
         wls_admin_server=AdminServer
     fi
 
