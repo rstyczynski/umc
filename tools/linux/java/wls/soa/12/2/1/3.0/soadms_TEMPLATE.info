@@ -36,15 +36,15 @@ soadms_#1.Put table name here#:
 # pass=
 #
 # >> get header
-# dms-collector/bin/dms-collector --url $url --connect $user/$pass --count 1 --delay 1 --loginform  --printheader --table $dms_table 
+# dms-collector --url $url --connect "$user/$pass" --count 1 --delay 1 --loginform  --printheader --table $dms_table 
 #
 # >> get header to fields section
-# dms-collector/bin/dms-collector --url $url --connect $user/$pass --count 1 --delay 1 --loginform  --printheader --table $dms_table  | tr , '\n' | sort | sed 's/^/- /g'
+# dms-collector --url $url --connect "$user/$pass" --count 1 --delay 1 --loginform  --printheader --table $dms_table  | tr , '\n' | sort | sed 's/^/- /g'
 #
 # >> get headers to resource_id
-# dms-collector/bin/dms-collector --url $url --connect $user/$pass --count 1 --delay 1 --loginform  --printheader --table $dms_table  | tail -1 | tr , '\n' | nl -v4
+# dms-collector --url $url --connect "$user/$pass" --count 1 --delay 1 --loginform  --printheader --table $dms_table  | tail -1 | tr , '\n' | nl -v4
 #
 # >> get values to select resource_id
-# dms-collector/bin/dms-collector --url $url --connect $user/$pass --count 1 --delay 1 --loginform  --table $dms_table  | tail -1 | tr , '\n' | nl -v4
+# dms-collector --url $url --connect "$user/$pass" --count 1 --delay 1 --loginform  --table $dms_table  | tail -1 | tr , '\n' | nl -v4
 
 

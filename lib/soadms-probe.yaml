@@ -5,13 +5,13 @@ soadms:
   https_proxy: unset
   user: ask_on_start
   password: ask_on_start
-  interval: 60
+  interval: 300
   log_dir: ~/x-ray/diagnose/wls/soa_domain/dms/soa
   runtime_dir: ~/x-ray/watch/wls/soa_domain/obd/soa
   tables:
     soaInfra_JCABinding:
-      interval: 60
+      interval: 300
     soainfra_bpel_activity:
-      interval: 60
+      interval: 300
     soainfra_ComponentReference:
-      interval: 60
+      interval: 300
