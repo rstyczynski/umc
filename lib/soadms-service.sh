@@ -191,7 +191,7 @@ if [ "$operation" == "reset-dms" ]; then
     fi
 
     exit_code=0
-    
+
     # check if reset was done in last 5 minute
     changed=$(find $umc_log/$(date +%Y-%m-%d)  -maxdepth 1 -mmin -5 -type f -name dms_reset.log | wc -l)
     if [ $changed -gt 0 ]; then
@@ -199,7 +199,7 @@ if [ "$operation" == "reset-dms" ]; then
             exit_code=0
         else
             echo "$(hostname),$(whoami),$dms_path,ERROR,$reason,too frequent reset request "  | addTimestamp.pl >> $umc_log/$(date +%Y-%m-%d)/dms_reset.log
-            echo "DMS reset request too frequent; wait 5 minutes. Check reset log: $umc_log/$(date +%Y-%m-%d)/dms_reset.log"
+            echo "DMS reset request too frequent; wait 5 minutes. Check reset log: $umc_log/$(date +%Y-%m-%d)/dms_reset_error.log"
             exit_code=2
         fi
     fi
@@ -217,7 +217,7 @@ if [ "$operation" == "reset-dms" ]; then
             exit_code=0
         else
             echo "$(hostname),$(whoami),$dms_path,ERROR,$reason"  | addTimestamp.pl >> $umc_log/$(date +%Y-%m-%d)/dms_reset.log
-            echo "DMS reset not sucessful. Check reset log: $umc_log/$(date +%Y-%m-%d)/dms_reset.log"
+            echo "DMS reset not sucessful. Check reset log: $umc_log/$(date +%Y-%m-%d)/dms_reset_error.log"
 
             exit_code=1
         fi
