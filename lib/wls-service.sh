@@ -149,12 +149,12 @@ function start() {
             interval=$interval_default
         fi
 
-        echo "wls $wls_admin $wls_url $collector $resource_id $resource_log_prefix $interval"
-        echo "umc wls collect $interval $max_int --subsystem $collector --url $wls_url"
+        echo "wls $wls_admin $wls_url $wls_admin_server $collector $resource_id $resource_log_prefix $interval"
+        echo "umc wls collect $interval $count --subsystem=$collector --url=$wls_url --server=$wls_admin_server"
         (
             # retry neede as collector uses own internal loop. in case of WLS down colelctor will stop...
             while [ 1 ]; do
-                umc wls collect $interval $count --subsystem=$collector --url=$wls_url --server $wls_admin_server |
+                umc wls collect $interval $count --subsystem=$collector --url=$wls_url --server=$wls_admin_server |
                     $umc_bin/logdirector.pl -dir $umc_log -addDateSubDir -name wls_$collector -detectHeader -checkHeaderDups -flush -tee |
                     $umc_bin/csv2obd --resource $resource_id --resource_log_prefix $umc_log/$(date +%Y-%m-%d)/$resource_log_prefix |
                     $umc_bin/dvdt --resource $resource_id --resource_log_prefix $umc_log/$(date +%Y-%m-%d)/$resource_log_prefix >/dev/null
