@@ -244,23 +244,6 @@ function start() {
     unset resource_id_map
     declare -A resource_id_map
 
-    echo "Retrieving resource location info..."
-    for dms_table in $dms_tables; do
-        echo -n "> collector:$dms_table, "
-        probe_info=$(umc soadms info --table $dms_table)
-
-        if [ -z "$probe_info" ]; then
-            echo "Error starting soadms collector. SOA not available."
-            exit 1
-        fi
-
-        rid_mth=$($toolsBin/getCfg.py $probe_info soadms_$dms_table.resource.method)
-        rid_cols=$($toolsBin/getCfg.py $probe_info soadms_$dms_table.resource.directive)
-        resource_id_map[$dms_table]=$rid_mth:$rid_cols
-
-        echo "resource identifier column: $rid_mth:$rid_cols"
-    done
-
     #
     # control http proxy
     # 
@@ -280,7 +263,7 @@ function start() {
     if [ "$https_proxy" == "unset" ]; then
         unset https_proxy
     fi
-    
+
     #
     # main loop
     #
@@ -296,7 +279,20 @@ function start() {
             interval=$interval_default
         fi
 
-        echo "> collector:$dms_table, interval: $interval"
+        echo -n "> collector:$dms_table, interval: $interval"
+  
+        probe_info=$(umc soadms info --table $dms_table)
+
+        if [ -z "$probe_info" ]; then
+            echo "Error starting soadms collector. SOA not available."
+            exit 1
+        fi
+
+        rid_mth=$($toolsBin/getCfg.py $probe_info soadms_$dms_table.resource.method)
+        rid_cols=$($toolsBin/getCfg.py $probe_info soadms_$dms_table.resource.directive)
+        resource_id_map[$dms_table]=$rid_mth:$rid_cols
+
+        echo ", resource identifier column: $rid_mth:$rid_cols"
 
         export dms_reset
         export dms_reset_path
