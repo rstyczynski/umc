@@ -239,12 +239,6 @@ function start() {
     fi
 
     #
-    # get resource id info
-    #
-    unset resource_id_map
-    declare -A resource_id_map
-
-    #
     # control http proxy
     # 
     url=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.soadms.url')
@@ -271,16 +265,10 @@ function start() {
 
     echo "Starting umc collectors..."
     for dms_table in $dms_tables; do
-        resource_id=${resource_id_map[$dms_table]}
-        resource_log_prefix=$dms_table
 
-        interval=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".soadms.tables.$dms_table.interval")
-        if [ -z "$interval" ]; then
-            interval=$interval_default
-        fi
+        echo -n "> collector:$dms_table"
 
-        echo -n "> collector:$dms_table, interval: $interval"
-  
+        # probe info
         probe_info=$(umc soadms info --table $dms_table)
 
         if [ -z "$probe_info" ]; then
@@ -290,17 +278,25 @@ function start() {
 
         rid_mth=$($toolsBin/getCfg.py $probe_info soadms_$dms_table.resource.method)
         rid_cols=$($toolsBin/getCfg.py $probe_info soadms_$dms_table.resource.directive)
-        resource_id_map[$dms_table]=$rid_mth:$rid_cols
+        resource_id=$rid_mth:$rid_cols
 
-        echo ", resource identifier column: $rid_mth:$rid_cols"
+        echo ", resource identifier column: $resource_id"
 
+        # interval  
+        interval=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".soadms.tables.$dms_table.interval")
+        if [ -z "$interval" ]; then
+            interval=$interval_default
+        fi
+        echo ", interval: $interval"
+
+        # export to be used in soadms start script
         export dms_reset
         export dms_reset_path
         export umc_svc_def
         (
             umc soadms collect $interval $count --table $dms_table --url $url --connect $user/$pass |
             $umc_bin/logdirector.pl -dir $umc_log -addDateSubDir -name soadms_$dms_table -detectHeader -checkHeaderDups -tee -flush |
-            $umc_bin/csv2obd --resource $resource_id --resource_log_prefix $umc_log/$(date +%Y-%m-%d)/$resource_log_prefix >/dev/null
+            $umc_bin/csv2obd --resource $resource_id --resource_log_prefix $umc_log/$(date +%Y-%m-%d)/$dms_table >/dev/null
         ) &
         echo $! >>$umc_run/$svc_name.pid
     done
