@@ -167,7 +167,7 @@ if [ "$operation" == "reset-dms" ]; then
         echo
     fi
 
-    umc_log_override=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.soadms.log_dir'  | sed "s|^~|$HOME|")
+    umc_log_override=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.soadms.dir.log'  | sed "s|^~|$HOME|")
     if [ ! -z "$umc_log_override" ] && [ "$umc_log_override" != null ]; then
         export umc_log=$umc_log_override
     fi
