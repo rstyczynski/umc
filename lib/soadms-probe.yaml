@@ -15,3 +15,5 @@ soadms:
       interval: 300
     soainfra_ComponentReference:
       interval: 300
+    soainfra_composite_label:
+      interval: 300
