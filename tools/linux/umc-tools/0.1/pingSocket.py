@@ -225,10 +225,11 @@ def getStats(targetSystem, targetPort):
             #
             start_time = time.time()
             responseStr = s.recv(4096)
+            responseStr = responseStr.replace("\n", " ")
+            #
             ms = (time.time() - start_time ) * 1000
             response=ms
-            
-            responseStr = responseStr.replace("\n", " ")
+            #
             if makeResponseShort:
                     if len(responseStr)>100:
                     responseStr = responseStr[:100]
