@@ -131,6 +131,8 @@ if [ "$operation" == "reset-dms" ]; then
         exit 1
     fi
 
+    force_reset=$1; shift
+
     #
     # control http proxy
     # 
@@ -185,18 +187,31 @@ if [ "$operation" == "reset-dms" ]; then
     flock -x -w 5 8
 
     if [ ! -f $umc_log/$(date +%Y-%m-%d)/dms_reset.log ]; then
-        echo "datetime,timezone,timestamp,system,source,dms-path,result,reason" > $umc_log/$(date +%Y-%m-%d)/dms_reset.log
+        echo "datetime,timezone,timestamp,system,source,dms-path,result,reason,comment" > $umc_log/$(date +%Y-%m-%d)/dms_reset.log
     fi
 
     # check if reset was done in last 5 minute
     changed=$(find $umc_log/$(date +%Y-%m-%d)  -maxdepth 1 -mmin -5 -type f -name dms_reset.log | wc -l)
 
-    if [ $changed -eq 0 ]; then
+    if [ $changed -gt 0 ]; then
+        if [ "$force_reset" == "force" ]; then
+            exit_code=0
+        else
+            echo "$(hostname),$(whoami),$dms_path,ERROR,$reason,too frequent reset request "  | addTimestamp.pl >> $umc_log/$(date +%Y-%m-%d)/dms_reset.log
+            echo "DMS reset request too frequent; wait 5 minutes. Check reset log: $umc_log/$(date +%Y-%m-%d)/dms_reset.log"
+            exit_code=2
+        fi
+    fi
+
+    if [ $exit_code -eq 0 ]; then
         dms-collector --count 1 --delay 1 --url $url  --connect $user/$pass --loginform --dmsreset $dms_path
         if [ $? -eq 0 ]; then
-            echo "$(hostname),$(whoami),$dms_path,OK,$reason"  | addTimestamp.pl >> $umc_log/$(date +%Y-%m-%d)/dms_reset.log
-            echo "DMS reset completed ok. Check reset log: $umc_log/$(date +%Y-%m-%d)/dms_reset.log"
-
+            if [ "$force_reset" == "force" ]; then
+                echo "$(hostname),$(whoami),$dms_path,OK,$reason, frequent reset forced"  | addTimestamp.pl >> $umc_log/$(date +%Y-%m-%d)/dms_reset.log
+                echo "DMS reset completed ok; frequent reset forced. Check reset log: $umc_log/$(date +%Y-%m-%d)/dms_reset.log"
+            else
+                echo "$(hostname),$(whoami),$dms_path,OK,$reason"  | addTimestamp.pl >> $umc_log/$(date +%Y-%m-%d)/dms_reset.log
+                echo "DMS reset completed ok. Check reset log: $umc_log/$(date +%Y-%m-%d)/dms_reset.log"
             exit_code=0
         else
             echo "$(hostname),$(whoami),$dms_path,ERROR,$reason"  | addTimestamp.pl >> $umc_log/$(date +%Y-%m-%d)/dms_reset.log
@@ -204,10 +219,6 @@ if [ "$operation" == "reset-dms" ]; then
 
             exit_code=1
         fi
-    else
-        echo "$(hostname),$(whoami),$dms_path,ERROR,$reason but too frequent. "  | addTimestamp.pl >> $umc_log/$(date +%Y-%m-%d)/dms_reset.log
-        echo "DMS reset request too frequent. Check reset log: $umc_log/$(date +%Y-%m-%d)/dms_reset.log"
-        exit_code=2
     fi
 
     # remove lock
