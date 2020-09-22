@@ -318,35 +318,37 @@ function locateToolExecDir {
   
   unset toolExecDir
 
-  if [ ! -z ${tool_dir_cache[$cmd]} ]; then
+  if [ ! -z "${tool_dir_cache[$cmd]}" ]; then
     toolExecDir=${tool_dir_cache[$cmd]}
-  else
-  
-    directories=$(getDirectories $cmd_layer);
-    for directory in $directories; do
-      if [ -f $directory/$cmd ]; then
-          toolExecDir=$directory
-          return 0
-      fi
-      if [ ! -z $cmd_package ]; then
-          if [ -f $directory/$cmd_package/$cmd ]; then
-              toolExecDir=$directory/$cmd_package
-              tool_dir_cache[$cmd]=$toolExecDir
-              return 0
-          fi
-      fi
-    done
-  
-    if [ -z $toolExecDir ]; then
-      echo "Error! Reason: utility not recognized as supported tool."
-      echo "Available versions:"
-      find $umcRoot/tools -name $cmd -type f | sed 's/^/--- /g'
-      echo "Your version:"
-      cmd_version=$(eval "echo $(echo \$$cmd\_package)")
-      echo "--- $cmd_version"
-      return 3
-    fi
+    return 0
   fi
+  
+  directories=$(getDirectories $cmd_layer);
+  for directory in $directories; do
+    if [ -f $directory/$cmd ]; then
+        toolExecDir=$directory
+        tool_dir_cache[$cmd]=$toolExecDir
+        return 0
+    fi
+    if [ ! -z $cmd_package ]; then
+        if [ -f $directory/$cmd_package/$cmd ]; then
+            toolExecDir=$directory/$cmd_package
+            tool_dir_cache[$cmd]=$toolExecDir
+            return 0
+        fi
+    fi
+  done
+  
+  if [ -z $toolExecDir ]; then
+    echo "Error! Reason: utility not recognized as supported tool."
+    echo "Available versions:"
+    find $umcRoot/tools -name $cmd -type f | sed 's/^/--- /g'
+    echo "Your version:"
+    cmd_version=$(eval "echo $(echo \$$cmd\_package)")
+    echo "--- $cmd_version"
+    return 3
+  fi
+
 }
 
 
