@@ -1,12 +1,6 @@
 #!/bin/bash
 
-echo "${!UMC_SENSOR_ARGS[@]}"
-echo "${UMC_SENSOR_ARGS[@]}"
-
 dms-collector --loginform --noheader --count 1 --delay 1 $@ | tr -d '"' | cut -d, -f3-99999
-if [ "${UMC_SENSOR_ARGS['dms_reset']}" == 'after_each_collection' ]; then
-    service_def=${UMC_SENSOR_ARGS['service_def']}
-    reset_reason=${UMC_SENSOR_ARGS['dms_reset']}
-    reset_path= ${UMC_SENSOR_ARGS['dms_reset_path']} 
-    $umcRoot/lib/soadms-service.sh $service_def reset-dms $reset_path "Reset: $reset_reason"
+if [ "$dms_reset" == 'after_each_collection' ]; then
+    $umcRoot/lib/soadms-service.sh $umc_svc_def reset-dms $dms_reset_path "Reset: $dms_reset"
 fi
