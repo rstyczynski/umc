@@ -278,17 +278,18 @@ function start() {
 
         rid_mth=$($toolsBin/getCfg.py $probe_info soadms_$dms_table.resource.method)
         rid_cols=$($toolsBin/getCfg.py $probe_info soadms_$dms_table.resource.directive)
-        resource_id=$rid_mth:$rid_cols
+        resource_id="$rid_mth:$rid_cols"
 
-        echo ", resource identifier column: $resource_id"
+        echo -n ", resource identifier column: $resource_id"
 
         # interval  
         interval=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".soadms.tables.$dms_table.interval")
         if [ -z "$interval" ]; then
             interval=$interval_default
         fi
-        echo ", interval: $interval"
+        echo -n ", interval: $interval"
 
+        echo
         # export to be used in soadms start script
         export dms_reset
         export dms_reset_path
