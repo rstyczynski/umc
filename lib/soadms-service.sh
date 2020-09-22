@@ -208,7 +208,9 @@ function start() {
     #
     url=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.soadms.url')
     interval_default=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.soadms.interval')
-    
+    dms_reset=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.soadms.dms.reset')
+    dms_reset_path=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.soadms.dms.reset_path')
+
     umc_log_override=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r '.soadms.log_dir'  | sed "s|^~|$HOME|")
     if [ ! -z "$umc_log_override" ] && [ "$umc_log_override" != null ]; then
         export umc_log=$umc_log_override
@@ -279,7 +281,7 @@ function start() {
 
         echo "> collector:$dms_table, interval: $interval"
         (
-            umc soadms collect $interval $count --table $dms_table --url $url --connect $user/$pass |
+            umc soadms collect $interval $count --table $dms_table --url $url --connect $user/$pass --dms_reset $dms_reset --dms_reset_path $dms_reset_path --service_def $umc_svc_def |
             $umc_bin/logdirector.pl -dir $umc_log -addDateSubDir -name soadms_$dms_table -detectHeader -checkHeaderDups -tee |
             $umc_bin/csv2obd --resource $resource_id --resource_log_prefix $umc_log/$(date +%Y-%m-%d)/$resource_log_prefix >/dev/null
         ) &
