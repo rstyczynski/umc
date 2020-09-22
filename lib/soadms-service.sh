@@ -186,10 +186,6 @@ if [ "$operation" == "reset-dms" ]; then
     exec 8>$umc_log/$(date +%Y-%m-%d)/dms-reset.lock
     flock -x -w 5 8
 
-    if [ ! -f $umc_log/$(date +%Y-%m-%d)/dms_reset.log ]; then
-        echo "datetime,timezone,timestamp,system,source,dms-path,result,reason,comment" > $umc_log/$(date +%Y-%m-%d)/dms_reset.log
-    fi
-
     exit_code=0
 
     # check if reset was done in last 5 minute
@@ -205,6 +201,10 @@ if [ "$operation" == "reset-dms" ]; then
     fi
 
     if [ $exit_code -eq 0 ]; then
+        if [ ! -f $umc_log/$(date +%Y-%m-%d)/dms_reset.log ]; then
+            echo "datetime,timezone,timestamp,system,source,dms-path,result,reason,comment" > $umc_log/$(date +%Y-%m-%d)/dms_reset.log
+        fi
+
         dms-collector --count 1 --delay 1 --url $url  --connect $user/$pass --loginform --dmsreset $dms_path
         if [ $? -eq 0 ]; then
             if [ "$force_reset" == "force" ]; then
