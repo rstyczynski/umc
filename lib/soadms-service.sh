@@ -226,16 +226,16 @@ function start() {
     #
     # get user/pass
     #
-    user=$(pnp_vault read user$url)
+    user=$($umcRoot/bin/pnp_vault read user$url)
     if [ -z "$user" ]; then
-        pnp_vault save user$url $(read -p "Enter WLS username needed for soadms and press enter:" val; echo $val)
-        user=$(pnp_vault read user$url)
+        $umcRoot/bin/pnp_vault save user$url $(read -p "Enter WLS username needed for soadms and press enter:" val; echo $val)
+        user=$($umcRoot/bin/pnp_vault read user$url)
     fi
 
-    pass=$(pnp_vault read pass$url)
+    pass=$($umcRoot/bin/pnp_vault read pass$url)
     if [ -z "$pass" ]; then
-        pnp_vault save pass$url $(read -s -p "Enter WLS password needed for soadms and press enter:" val; echo $val)
-        pass=$(pnp_vault read pass$url)
+        $umcRoot/bin/pnp_vault save pass$url $(read -s -p "Enter WLS password needed for soadms and press enter:" val; echo $val)
+        pass=$($umcRoot/bin/pnp_vault read pass$url)
         echo
     fi
 
