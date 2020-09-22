@@ -1,7 +1,10 @@
 #!/bin/bash
 
+echo "${!UMC_SENSOR_ARGS[@]}"
+echo "${UMC_SENSOR_ARGS[@]}"
+
 dms-collector --loginform --noheader --count 1 --delay 1 $@ | tr -d '"' | cut -d, -f3-99999
-if [ ${UMC_SENSOR_ARGS['dms_reset']} == 'after_each_collection' ]; then
+if [ "${UMC_SENSOR_ARGS['dms_reset']}" == 'after_each_collection' ]; then
     service_def=${UMC_SENSOR_ARGS['service_def']}
     reset_reason=${UMC_SENSOR_ARGS['dms_reset']}
     reset_path= ${UMC_SENSOR_ARGS['dms_reset_path']} 
