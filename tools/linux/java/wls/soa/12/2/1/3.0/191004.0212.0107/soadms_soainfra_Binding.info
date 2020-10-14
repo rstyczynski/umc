@@ -1,0 +1,72 @@
+soadms_soainfra_Binding:
+    version: 1.0
+    layer: Middleware
+    system: SOA
+    subsystem: dms
+    header: >-
+        processIncomingMessages_active,Process,Errors_count,processIncomingMessages_maxActive,Host,processOutboundMessages_avg,soainfra_composite_assembly_member_type,soainfra_composite_label,soainfra_Ports,soainfra_composite,processOutboundMessages_active,Name,processIncomingMessages_avg,processOutboundMessages_maxTime,processOutboundMessages_minTime,processOutboundMessagesEvents_count,soainfra_composite_assembly_member,processOutboundMessages_time,soainfra_composite_revision,processIncomingMessages_maxTime,processIncomingMessages_minTime,soainfra_Adapters,processIncomingMessages_time,Parent,processOutboundMessages_maxActive,soainfra_domain,processOutboundMessages_completed,soainfra_Rests,processIncomingMessagesEvents_count,ServerName,processIncomingMessages_completed
+    rawheader:
+        method: script
+        directive: dms-collector --table ${UMC_SENSOR_ARGS['table']} --printheader --url=${UMC_SENSOR_ARGS['url']} --connect ${UMC_SENSOR_ARGS['connect']} --count 1 --delay 1 --loginform  | cut -d, -f3-9999
+        expected: >-
+            processIncomingMessages_active,Process,Errors_count,processIncomingMessages_maxActive,Host,processOutboundMessages_avg,soainfra_composite_assembly_member_type,soainfra_composite_label,soainfra_Ports,soainfra_composite,processOutboundMessages_active,Name,processIncomingMessages_avg,processOutboundMessages_maxTime,processOutboundMessages_minTime,processOutboundMessagesEvents_count,soainfra_composite_assembly_member,processOutboundMessages_time,soainfra_composite_revision,processIncomingMessages_maxTime,processIncomingMessages_minTime,soainfra_Adapters,processIncomingMessages_time,Parent,processOutboundMessages_maxActive,soainfra_domain,processOutboundMessages_completed,soainfra_Rests,processIncomingMessagesEvents_count,ServerName,processIncomingMessages_completed
+    resource:
+        method:     csv
+        directive:  14,15,17,22,31
+    metrics:
+        host:
+            - Host
+            - Process
+            - ServerName
+
+        component:
+            - Parent
+            - Name
+            - soainfra_ComponentReferences
+            - soainfra_Adapters:
+                - desc: Adapters or nothing
+            - soainfra_Ports:
+                - decs: PORTs or nothing
+            - soainfra_Rests:
+                - desc: Rests or nothing
+        composite:
+            - soainfra_composite
+            - soainfra_composite_assembly_member
+            - soainfra_composite_assembly_member_type
+            - soainfra_composite_label
+            - soainfra_composite_revision
+            - soainfra_domain
+
+        incomming:
+            - processIncomingMessages_completed
+            - processIncomingMessages_active
+            - processIncomingMessages_maxActive
+            - processIncomingMessages_avg
+            - processIncomingMessages_maxTime
+            - processIncomingMessages_minTime
+            - processIncomingMessages_time
+
+        outbound:
+            - processOutboundMessages_completed
+            - processOutboundMessages_active
+            - processOutboundMessages_maxActive
+            - processOutboundMessages_avg
+            - processOutboundMessages_maxTime
+            - processOutboundMessages_minTime
+            - processOutboundMessages_time
+
+        ops:
+            - processOutboundMessagesEvents_count
+            - processIncomingMessagesEvents_count
+            - Errors_count
+    loop:
+        method: external
+        directive:
+    availability:
+        method: command
+        directive: wget ${UMC_SENSOR_ARGS['url']}/dms/Spy
+    timestamp:
+        method:
+        directive:
+
+

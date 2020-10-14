@@ -1,0 +1,50 @@
+soadms_soainfra_bpel_activity:
+    version: 1.0
+    layer: Middleware
+    system: SOA
+    subsystem: dms
+    header: faultedExecutionTime_completed,executionTime_minTime,soainfra_component,Process,soainfra_domain,soainfra_composite_revision,executionTime_maxTime,executionTime_completed,Name,soainfra_composite_label,Parent,soainfra_composite,soainfra_component_type,faultedExecutionTime_minTime,executionTime_avg,faultedExecutionTime_avg,faultedExecutionTime_maxTime,faultedExecutionTime_time,ServerName,Host,executionTime_time
+    resource:
+        method:     csv
+        directive:  18,14,17,10
+    metrics:
+        host:
+            - Host
+            - Process
+            - ServerName
+        composite:
+            - soainfra_domain
+            - soainfra_composite
+            - soainfra_composite_label
+            - soainfra_composite_revision
+        component:
+            - Parent
+            - soainfra_component
+            - soainfra_component_type
+            - Name
+        success:
+            - executionTime_time
+            - executionTime_minTime
+            - executionTime_avg
+            - executionTime_maxTime
+        fault:
+            - faultedExecutionTime_completed
+            - faultedExecutionTime_avg
+            - faultedExecutionTime_time
+            - executionTime_completed
+            - faultedExecutionTime_minTime
+            - faultedExecutionTime_maxTime 
+    loop:
+        method: external
+        directive:
+    availability:
+        method: command
+        directive: wget ${UMC_SENSOR_ARGS['url']}/dms/Spy
+    timestamp:
+        method:
+        directive:
+    rawheader:
+        method: script
+        directive: dms-collector --table ${UMC_SENSOR_ARGS['table']} --printheader --url=${UMC_SENSOR_ARGS['url']} --connect ${UMC_SENSOR_ARGS['connect']} --count 1 --delay 1 --loginform  | cut -d, -f3-9999
+        expected: faultedExecutionTime_completed,executionTime_minTime,soainfra_component,Process,soainfra_domain,soainfra_composite_revision,executionTime_maxTime,executionTime_completed,Name,soainfra_composite_label,Parent,soainfra_composite,soainfra_component_type,faultedExecutionTime_minTime,executionTime_avg,faultedExecutionTime_avg,faultedExecutionTime_maxTime,faultedExecutionTime_time,ServerName,Host,executionTime_time
+

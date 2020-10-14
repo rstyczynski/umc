@@ -1,0 +1,36 @@
+#!/bin/bash
+
+#
+# Taking args w/o getops from: https://gist.github.com/dgoguerra/9206418
+#
+
+UMC_PROBE_META_EXT=general
+UMC_PROBE_LOG_NAME=general
+
+while [ "$#" -gt 0 ]
+do  
+    option=$1; shift
+    if [[ ! $1 == '--*' ]]; then
+		arg=$1; shift
+	else
+		arg=''
+	fi
+
+	esc_option=$(echo $option | sed s/^--//)
+
+	UMC_PROBE_ARGS[$esc_option]="$arg"
+	
+	case "$option" in
+	--table)
+		export UMC_PROBE_META_EXT="$arg"
+        export UMC_PROBE_LOG_NAME="$arg"
+		;;
+	--)
+		break
+		;;
+	esac
+done
+
+
+UMC_SENSOR_HELP="--help"
+
