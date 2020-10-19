@@ -35,7 +35,7 @@ soadms_soainfra_bpel_activity:
             - faultedExecutionTime_minTime
             - faultedExecutionTime_maxTime 
     loop:
-        method: 
+        method: external
         directive:
     availability:
         method: command
