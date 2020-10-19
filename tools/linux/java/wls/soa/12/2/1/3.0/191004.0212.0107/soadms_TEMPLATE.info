@@ -20,7 +20,7 @@ soadms_#1.Put table name here#:
             - ServerName
         #4.Fields come here#
     loop:
-        method: external
+        method: 
         directive:
     availability:
         method: command

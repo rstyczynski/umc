@@ -38,7 +38,7 @@ soadms_soaInfra_JCABinding:
             - eTotalCount_count
             - NumErrors_count
     loop:
-        method: external
+        method: 
         directive:
     availability:
         method: command

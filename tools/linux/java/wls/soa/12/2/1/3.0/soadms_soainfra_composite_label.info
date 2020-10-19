@@ -46,7 +46,7 @@ soadms_soainfra_composite_label:
             - Requests_minTime
             - Requests_time
     loop:
-        method: external
+        method: 
         directive:
     availability:
         method: command
