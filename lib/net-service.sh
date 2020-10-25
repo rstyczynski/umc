@@ -129,7 +129,7 @@ function start() {
     multi_service=no
     for service_name in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".network.services[] | keys[]"); do
 
-        for target_name in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".network.services[].$service_name.tcp[] | keys[]"); do
+        for target_name in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".network.services[].$service_name" |  sed '/null/d'  | jq -r ".tcp[] | keys[]"); do
 
             address=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".network.services[].$service_name.tcp[].$target_name.ip" | grep -v null)
 
@@ -148,7 +148,7 @@ function start() {
         done
 
         # icmp
-        for target_name in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".network.services[].$service_name.icmp[] | keys[]"); do
+        for target_name in $(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".network.services[].$service_name" |  sed '/null/d'  | jq -r ".icmp[] | keys[]"); do
 
             address=$(cat $umc_cfg/$umc_svc_def | y2j | jq -r ".network.services[].$service_name.icmp[].$target_name.ip" | grep -v null)
 

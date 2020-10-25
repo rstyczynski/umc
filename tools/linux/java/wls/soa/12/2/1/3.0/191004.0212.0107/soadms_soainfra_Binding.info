@@ -60,7 +60,7 @@ soadms_soainfra_Binding:
             - processIncomingMessagesEvents_count
             - Errors_count
     loop:
-        method: 
+        method: external
         directive:
     availability:
         method: command

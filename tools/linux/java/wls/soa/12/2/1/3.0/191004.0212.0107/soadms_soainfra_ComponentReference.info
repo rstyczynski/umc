@@ -64,7 +64,7 @@ soadms_soainfra_ComponentReference:
             - Requests_time
 
     loop:
-        method: 
+        method: external
         directive:
     availability:
         method: command
