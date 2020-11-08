@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # external loop is used to add proper timestmp to each measurement
-#count=$1; shift
-#delay=$1; shift
+count=$1; shift
+delay=$1; shift
 
 dms-collector --loginform --noheader --count 1 --delay 1 $@ | tr -d '"' | cut -d, -f3-99999
 if [ "$dms_reset" == 'after_each_collection' ]; then

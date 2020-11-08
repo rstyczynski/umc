@@ -104,7 +104,7 @@ function start() {
 
     #
     # collector name
-    collector_name=soadms
+    collector_name=net
 
     #
     # get data from cfg file
