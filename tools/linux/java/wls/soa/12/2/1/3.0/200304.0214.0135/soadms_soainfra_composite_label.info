@@ -1,0 +1,76 @@
+soadms_soainfra_composite_label:
+    version: 1.0
+    layer: Middleware
+    system: SOA
+    subsystem: dms
+    header: Name,Posts_minTime,Posts_maxTime,ServerName,RequestEvents_count,Parent,Posts_time,Posts_completed,Posts_maxActive,soainfra_composite,Requests_time,Posts_avg,Host,Requests_minTime,Requests_maxTime,CompositeState_value,Requests_completed,Requests_avg,Requests_maxActive,soainfra_composite_revision,soainfra_domain,PostEvents_count,Process,Posts_active,Requests_active
+    rawheader:
+        method: script
+        directive: dms-collector --table ${UMC_SENSOR_ARGS['table']} --printheader --url=${UMC_SENSOR_ARGS['url']} --connect ${UMC_SENSOR_ARGS['connect']} --count 1 --delay 1 --loginform  | cut -d, -f3-9999
+        expected: Name,Posts_minTime,Posts_maxTime,ServerName,RequestEvents_count,Parent,Posts_time,Posts_completed,Posts_maxActive,soainfra_composite,Requests_time,Posts_avg,Host,Requests_minTime,Requests_maxTime,CompositeState_value,Requests_completed,Requests_avg,Requests_maxActive,soainfra_composite_revision,soainfra_domain,PostEvents_count,Process,Posts_active,Requests_active
+    resource:
+        method:     csv
+        directive:  15,26
+    metrics:
+        host:
+            - Host
+            - Process
+            - ServerName
+        composite:
+            - Name
+            - Parent
+            - soainfra_composite
+            - soainfra_composite_revision
+            - soainfra_domain
+
+        state:
+            - CompositeState_value
+
+        counts:
+            - PostEvents_count  
+            - RequestEvents_count
+            - Posts_active
+            - Posts_completed
+            - Requests_active
+            - Requests_completed
+        posts:
+            - Posts_avg
+            - Posts_maxActive
+            - Posts_maxTime
+            - Posts_minTime
+            - Posts_time
+        requests:
+            - Requests_avg
+            - Requests_maxActive
+            - Requests_maxTime
+            - Requests_minTime
+            - Requests_time
+    loop:
+        method: external
+        directive:
+    availability:
+        method: command
+        directive: wget ${UMC_SENSOR_ARGS['url']}/dms/Spy
+    timestamp:
+        method:
+        directive:
+
+# dms_table=soainfra_composite_label
+#
+# url=
+# user=
+# pass=
+#
+# >> get header
+# dms-collector --url $url --connect "$user/$pass" --count 1 --delay 1 --loginform  --printheader --table $dms_table 
+#
+# >> get header to fields section
+# dms-collector --url $url --connect "$user/$pass" --count 1 --delay 1 --loginform  --printheader --table $dms_table  | tr , '\n' | sort | sed 's/^/- /g'
+#
+# >> get headers to resource_id
+# dms-collector --url $url --connect "$user/$pass" --count 1 --delay 1 --loginform  --printheader --table $dms_table  | tail -1 | tr , '\n' | nl -v4
+#
+# >> get values to select resource_id
+# dms-collector --url $url --connect "$user/$pass" --count 1 --delay 1 --loginform  --table $dms_table  | tail -1 | tr , '\n' | nl -v4
+
+
