@@ -1,0 +1,30 @@
+mtr:
+    version:    1.0
+    layer:      OS
+    subsystem:  kernel
+    header: >-
+        address,hops,host,loss,snt,last,avg,best,wrst,stdev
+    rawheader:
+        method:     command
+        directive:  mtr -c 1 --report --report-wide localhost | head -1 | tr -s ' ' | sed 's/^ //' | tr ' ' ',' | sed 's/.,/,/' | cut -d, -f3-9
+        expected:   "Loss%,Snt,Last,Avg,Best,Wrst,StDev"
+    availability:
+        method:     file
+        directive:  /usr/sbin/mtr
+    loop:
+        method:
+        directive:  
+    timestamp:
+        method:     
+        directive:  
+    metrics:
+        quality:
+            loss:
+        counter:
+            snt:
+        rtt:
+            last:
+            avg:
+            best:
+            wrst:
+            stdev:       

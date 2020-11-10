@@ -1,0 +1,25 @@
+#!/bin/bash
+
+delay=$1
+shift
+count=$1
+shift
+
+target=$@
+
+#echo "mtr: $delay, $count, $0"
+let cnt=0
+while [ "$cnt" -lt "$count" ]; do
+    echo -n "$target,"
+    /usr/sbin/mtr -c $delay --report --report-wide $target |
+        tail -1 |
+        tr -s ' ' |
+        sed 's/^ //' |
+        tr ' ' ',' |
+        sed 's/.,/,/' |
+        sed 's/\.|-//g' |
+        tr -d %
+
+    cnt=$(( $cnt + 1 ))
+    #echo "mtr: $cnt"
+done
