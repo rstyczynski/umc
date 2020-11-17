@@ -1,8 +1,8 @@
 ---
 os:
   system: hostname
-  log_dir: ~/x-ray/diagnose/umc
-  runtime_dir: ~/x-ray/watch/obd
+  log_dir: ~/x-ray/diag/os/log
+  runtime_dir: ~/x-ray/watch/os/obd
   probes:
     system:
       - uptime
