@@ -11,7 +11,7 @@ soadms:
     path: /
   log: 
     diag: ~/x-ray/diag/wls/soa/dms/soa_domain
-    watch: ~/x-ray/watch/wls/soa/obd/soa_domain
+    watch: ~/x-ray/watch/wls/soa/obd/dms/soa_domain
   tables:
     soainfra_Binding:
       interval: 3600
