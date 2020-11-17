@@ -4,8 +4,8 @@ weblogic:
   url: t3://localhost:7001
   admin_server: AdminServer
   interval: 60
-  log_dir: ~/x-ray/diagnose/wls/soa_domain/dms
-  runtime_dir: ~/x-ray/watch/wls/soa_domain/obd
+  log_dir: ~/x-ray/diag/wls/dms/soa_domain
+  runtime_dir: ~/x-ray/watch/wls/obd/dms/soa_domain
   collectors:
     general:
       resource_id: csv:6,7
