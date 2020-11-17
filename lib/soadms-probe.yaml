@@ -10,8 +10,8 @@ soadms:
     directive: after_each_collection # never 
     path: /
   log: 
-    diag: ~/x-ray/diagnose/wls/soa_domain/dms/soa
-    watch: ~/x-ray/watch/wls/soa_domain/obd/soa
+    diag: ~/x-ray/diag/wls/dms/soa_domain/soa
+    watch: ~/x-ray/watch/wls/obd/soa_domain/soa
   tables:
     soainfra_Binding:
       interval: 3600
