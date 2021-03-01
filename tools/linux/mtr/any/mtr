@@ -17,7 +17,7 @@ while [ "$cnt" -lt "$count" ]; do
         sed 's/^ //' |
         tr ' ' ',' |
         sed 's/.,/,/' |
-        tr -d %
+        tr -d '%-'
 
     cnt=$(( $cnt + 1 ))
     #echo "mtr: $cnt"
