@@ -17,6 +17,7 @@ while [ "$cnt" -lt "$count" ]; do
         sed 's/^ //' |
         tr ' ' ',' |
         sed 's/.,/,/' |
+        sed 's/\.|-//g' |
         tr -d '%-'
 
     cnt=$(( $cnt + 1 ))
