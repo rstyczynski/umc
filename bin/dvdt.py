@@ -5,10 +5,10 @@ import re
 res_type = sys.argv[1]     # os.environ['herald_res_type'] #'ens3'
 res_name_parameter = sys.argv[2]     # os.environ['herald_res_name'] #'ens3'
 dt = int(sys.argv[3])
-dt_column = int(sys.argv[4])
-dataat = int(sys.argv[5])
-out_format = sys.argv[6]   # map | csv
-out_data = sys.argv[7]     # compute | forward
+dt_column = int(sys.argv[4]) - 1 # column is provided counting from 1, array is indexed from 0
+dataat = int(sys.argv[5]) - 1    # skip prefix columns | column is provided counting from 1, array is indexed from 0
+out_format = sys.argv[6]         # map | csv
+out_data = sys.argv[7]           # compute | forward
 separator = sys.argv[8]
 herald_state = sys.argv[9]
 resource_log_prefix = sys.argv[10]
