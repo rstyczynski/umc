@@ -147,6 +147,7 @@ function build_DB_view() {
   close_service
   close_view
 }
+
 function build_JCA_view() {
   local view_name=$1
   add_view "${view_name}"

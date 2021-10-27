@@ -47,7 +47,8 @@
             position: fixed;
             top: 0;
             width: 100%;
-            background-color: hsla(170, 58%, 86%, 0.932); /* with opacity */
+            background-color: hsla(170, 58%, 86%, 0.932);
+            /* with opacity */
             z-index: 2;
         }
     </style>
@@ -56,12 +57,12 @@
 
 <body>
     <div id="chart-legend"></div>
-    
+
     <title id='main_title'>Host operational metrics</title>
     <h1 id='body_title' align="left">Host operational metrics</h1>
 
     <p align="left">
-    <a id='link_rev'>previous</a><text id='data_date'></text><a id='link_fwd'>next</a>
+        <a id='link_rev'>previous</a><text id='data_date'></text><a id='link_fwd'>next</a>
     </p>
 
     <h2>Overview</h2>
@@ -104,30 +105,30 @@
         */
 
         params = (new URL(document.location)).searchParams;
-        
-    
+
+
         host = parseInt(params.get('host'));
-        if ( host === null ) {
+        if (host === null) {
             csv_root = "/umc/log/";
         } else {
             csv_root = "/umc/" + host + "/log/";
         }
 
         net_cnt = parseInt(params.get('net_cnt'));
-        if ( net_cnt === null ) {
+        if (net_cnt === null) {
             net_cnt = 1;
         }
 
         mount_cnt = parseInt(params.get('mount_cnt'));
-        if ( mount_cnt === null ) {
+        if (mount_cnt === null) {
             mount_cnt = 1;
         }
-        
+
         disk_cnt = parseInt(params.get('disk_cnt'));
-        if ( disk_cnt === null ) {
+        if (disk_cnt === null) {
             disk_cnt = 1;
         }
-        
+
         csv_date = params.get('date');
         if (!csv_date) {
             today = new Date();
@@ -137,36 +138,36 @@
 
         document.getElementById('data_date').textContent = " | " + csv_date + " | ";
         csv_date_rwd = new Date(csv_date);
-        csv_date_rwd.setDate(csv_date_rwd.getDate() - 1 );
+        csv_date_rwd.setDate(csv_date_rwd.getDate() - 1);
 
         csv_date_fwd = new Date(csv_date);
-        csv_date_fwd.setDate(csv_date_fwd.getDate() + 1 );
+        csv_date_fwd.setDate(csv_date_fwd.getDate() + 1);
 
-        link_rev = location.protocol + '//' + location.host + location.pathname + '?date=' + date2text(csv_date_rwd);        
-        if ( disk_cnt !== null ) {
+        link_rev = location.protocol + '//' + location.host + location.pathname + '?date=' + date2text(csv_date_rwd);
+        if (disk_cnt !== null) {
             link_rev += "&disk_cnt=" + disk_cnt;
         }
-        if ( net_cnt !== null ) {
+        if (net_cnt !== null) {
             link_rev += "&net_cnt=" + net_cnt;
         }
-        if ( mount_cnt !== null ) {
+        if (mount_cnt !== null) {
             link_rev += "&mount_cnt=" + mount_cnt;
         }
 
         link_fwd = location.protocol + '//' + location.host + location.pathname + '?date=' + date2text(csv_date_fwd);
-        if ( disk_cnt !== null ) {
+        if (disk_cnt !== null) {
             link_fwd += "&disk_cnt=" + disk_cnt;
         }
-        if ( net_cnt !== null ) {
+        if (net_cnt !== null) {
             link_fwd += "&net_cnt=" + net_cnt;
         }
-        if ( mount_cnt !== null ) {
+        if (mount_cnt !== null) {
             link_fwd += "&mount_cnt=" + mount_cnt;
         }
 
-        document.getElementById("link_rev").setAttribute("href",link_rev);
+        document.getElementById("link_rev").setAttribute("href", link_rev);
         document.getElementById("link_rev").textContent = date2text(csv_date_rwd);
-        document.getElementById("link_fwd").setAttribute("href",link_fwd);
+        document.getElementById("link_fwd").setAttribute("href", link_fwd);
         document.getElementById("link_fwd").textContent = date2text(csv_date_fwd);
 
 
@@ -215,42 +216,42 @@
             csv_root + csv_date + "/system-vmstat.log", {
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false,        // timezone,timestamp,system,source, 
-                        false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false]
+                false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false]
         });
 
         var g_os_vmstat_101 = new Dygraph(document.getElementById("chart-os-vmstat-cpu-busy"),
             csv_root + csv_date + "/system-vmstat.log", {
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false,        // timezone,timestamp,system,source, 
-                        false, false, false, false, false, false, false, false, false, false, false, false, true, true, false, true, true]
+                false, false, false, false, false, false, false, false, false, false, false, false, true, true, false, true, true]
         });
 
         var g_os_vmstat_110 = new Dygraph(document.getElementById("chart-os-vmstat-proc"),
             csv_root + csv_date + "/system-vmstat.log", {
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false,        // timezone,timestamp,system,source, 
-                        true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false]
+                true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false]
         });
 
         var g_os_vmstat_111 = new Dygraph(document.getElementById("chart-os-vmstat-io"),
             csv_root + csv_date + "/system-vmstat.log", {
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false,        // timezone,timestamp,system,source, 
-                        false, false, false, false, false, false, true, true, true, true, false, false, false, false, false, false, false]
+                false, false, false, false, false, false, true, true, true, true, false, false, false, false, false, false, false]
         });
 
         var g_os_vmstat_112 = new Dygraph(document.getElementById("chart-os-vmstat-int"),
             csv_root + csv_date + "/system-vmstat.log", {
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false,        // timezone,timestamp,system,source, 
-                        false, false, false, false, false, false, false, false, false, false, true, true, false, false, false, false, false]
+                false, false, false, false, false, false, false, false, false, false, true, true, false, false, false, false, false]
         });
 
         var g_os_vmstat_113 = new Dygraph(document.getElementById("chart-os-vmstat-mem"),
             csv_root + csv_date + "/system-vmstat.log", {
             labelsDiv: "chart-legend",
             visibility: [false, false, false, false,        // timezone,timestamp,system,source, 
-                        false, false, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false]
+                false, false, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false]
         });
 
 
@@ -259,7 +260,7 @@
         network_html = "";
         network_bucket = new Array();
 
-        for(var id=1; id<=net_cnt; id++){
+        for (var id = 1; id <= net_cnt; id++) {
             network_bucket[id] = {};
 
             network_bucket[id].network_div = ` 
@@ -282,18 +283,18 @@
                 </tr>
             </table>
             `
-            network_html += network_bucket[id].network_div ;
+            network_html += network_bucket[id].network_div;
             network_div.innerHTML = network_html;
         }
 
-        for(var id=1; id<=net_cnt; id++){
+        for (var id = 1; id <= net_cnt; id++) {
             network_bucket[id].g_os_network_200 = new Dygraph(document.getElementById("chart-os-network-net" + id + "-bytes"),
                 csv_root + csv_date + "/network-if-net" + id + "_dt.log",
                 {
                     logscale: false,
                     labelsDiv: "chart-legend",
                     visibility: [false, false, false, false,    // timezone,timestamp,system,source, 
-                                false, false, false, false, false, false, false, false, false, false, false, false, false, true, true]
+                        false, false, false, false, false, false, false, false, false, false, false, false, false, true, true]
                 });
             network_bucket[id].g_os_network_201 = new Dygraph(document.getElementById("chart-os-network-net" + id + "-packets"),
                 csv_root + csv_date + "/network-if-net" + id + "_dt.log",
@@ -301,15 +302,15 @@
                     logscale: false,
                     labelsDiv: "chart-legend",
                     visibility: [false, false, false, false,    // timezone,timestamp,system,source, 
-                                false, true, false, false, false, false, true, false, false, false, false, false, false, false, false] 
-            });
+                        false, true, false, false, false, false, true, false, false, false, false, false, false, false, false]
+                });
             network_bucket[id].g_os_network_202 = new Dygraph(document.getElementById("chart-os-network-net" + id + "-errors"),
                 csv_root + csv_date + "/network-if-net" + id + "_dt.log",
                 {
                     logscale: false,
                     labelsDiv: "chart-legend",
                     visibility: [false, false, false, false,    // timezone,timestamp,system,source, 
-                                false, false, true, false, false, false, false, true, false, false, false, false, false, false, false]
+                        false, false, true, false, false, false, false, true, false, false, false, false, false, false, false]
                 });
         }
 
@@ -319,7 +320,7 @@
         disk_space_html = "";
         disk_space_bucket = new Array();
 
-        for(var id=1; id<=mount_cnt; id++){
+        for (var id = 1; id <= mount_cnt; id++) {
 
             disk_space_bucket[id] = {};
 
@@ -336,23 +337,23 @@
                 </tr>
             </table>
             `
-        
+
             disk_space_html += disk_space_bucket[id].disk_space_div;
             disk_space_div.innerHTML = disk_space_html;
         }
 
-        for(var id=1; id<=mount_cnt; id++){
+        for (var id = 1; id <= mount_cnt; id++) {
 
             disk_space_bucket[id].g_os_disk_space_100 = new Dygraph(document.getElementById("chart-os-disk-space-mount" + id + "-used"),
-            csv_root + csv_date + "/disk-space-mount" + id + ".log",
-            {
-                logscale: false,
-                labelsDiv: "chart-legend",
+                csv_root + csv_date + "/disk-space-mount" + id + ".log",
+                {
+                    logscale: false,
+                    labelsDiv: "chart-legend",
                     visibility: [false, false, false, false,   // timezone,timestamp,system,source, 
-                                false, false,                 // filesystem, type
-                                false, false, false, true,    // 1024-blocks, used, available, capacity, 
-                                false ]                       // mounted_on
-            });
+                        false, false,                 // filesystem, type
+                        false, false, false, true,    // 1024-blocks, used, available, capacity, 
+                        false]                       // mounted_on
+                });
 
             disk_space_bucket[id].g_os_disk_space_101 = new Dygraph(document.getElementById("chart-os-disk-space-mount" + id + "-ups"),
                 csv_root + csv_date + "/disk-space-mount" + id + "_dt.log",
@@ -360,9 +361,9 @@
                     logscale: false,
                     labelsDiv: "chart-legend",
                     visibility: [false, false, false, false,     // timezone,timestamp,system,source, 
-                                false, false,                  // filesystem, type
-                                false, true , false, false,    // 1024-blocks, used, available, capacity, 
-                                false ]                        // mounted_on
+                        false, false,                  // filesystem, type
+                        false, true, false, false,    // 1024-blocks, used, available, capacity, 
+                        false]                        // mounted_on
                 });
         }
 
@@ -372,7 +373,7 @@
         disk_tps_html = "";
         disk_tps_bucket = new Array();
 
-        for(var id=1; id<=disk_cnt; id++){
+        for (var id = 1; id <= disk_cnt; id++) {
 
             disk_tps_bucket[id] = {};
 
@@ -394,25 +395,25 @@
             disk_tps_div.innerHTML = disk_tps_html;
         }
 
-        for(var id=1; id<=disk_cnt; id++){
+        for (var id = 1; id <= disk_cnt; id++) {
             var g_os_disk_tps_500 = new Dygraph(document.getElementById("chart-os-disk-tps-disk" + id + "-kB_read_wrtn"),
-            csv_root + csv_date + "/disk-tps-disk" + id + ".log",
-            {
-                logscale: false,
-                labelsDiv: "chart-legend",
+                csv_root + csv_date + "/disk-tps-disk" + id + ".log",
+                {
+                    logscale: false,
+                    labelsDiv: "chart-legend",
                     visibility: [false, false, false, false,       // timezone,timestamp,system,source, 
-                                false, false, true, true, false, false ]
-            });
+                        false, false, true, true, false, false]
+                });
             var g_os_disk_tps_501 = new Dygraph(document.getElementById("chart-os-disk-tps-disk" + id + "-tps"),
                 csv_root + csv_date + "/disk-tps-disk" + id + ".log",
                 {
                     logscale: false,
                     labelsDiv: "chart-legend",
                     visibility: [false, false, false, false,        // timezone,timestamp,system,source, 
-                                false, true, false, false, false, false ]
+                        false, true, false, false, false, false]
                 });
         }
-            
+
     </script>
 </body>
 
