@@ -1,6 +1,17 @@
 #!/bin/bash
 
+delay=$1
+shift
+count=$1
+shift
+
 target=$@
 
-echo "$target,$(sudo mtr -c 60 --report --report-wide $target | tail -1 | tr -s ' ' | sed 's/^ //' | tr ' ' ',' | sed 's/.,/,/; s/\.|//' | tr -d '%-')"
+echo "$target,$(sudo mtr -c $delay --report --report-wide $target | 
+tail -1 | 
+tr -s ' ' | 
+sed 's/^ //' | 
+tr ' ' ',' | 
+sed 's/.,/,/; s/\.|//' | 
+tr -d '%-')"
 
