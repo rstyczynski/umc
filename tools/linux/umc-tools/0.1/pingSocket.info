@@ -3,12 +3,12 @@ pingSocket:
     layer:      OS
     system:     OS
     subsystem:  network
-    header:     targetName,targetPort,address,dnsInfo,resolve,resolveFull,connect,send,response,close,response,error
+    header:     targetName,targetPort,address,dnsInfo,resolve,resolveFull,connect,send,response,close,failure,response,error
     rawheader:
         method:     script
         directive:  pingSocket.py --printrawheader
         expected: |-  
-            targetName,targetPort,address,dnsInfo,resolve,resolveFull,connect,send,response,close,response,error
+            targetName,targetPort,address,dnsInfo,resolve,resolveFull,connect,send,response,close,failure,response,error
     availability:
         method:     env
         directive:  WL_HOME

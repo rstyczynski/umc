@@ -190,10 +190,12 @@ def getStats(targetSystem, targetPort):
     send=-1
     response=-1
     close=-1
+    failure=-1
     addressStr='n/a'
     addressFullStr='n/a'
     responseStr='n/a'
     errorStr='OK'
+
     #
     try:
         #
@@ -219,7 +221,7 @@ def getStats(targetSystem, targetPort):
             connect=ms
             #
             start_time = time.time()
-            s.sendall("GET / HTTP/1.1\r\nHost: " + targetSystem + "\r\n\r\n")
+            s.sendall(requestStr)
             #s.sendall("\n")
             ms = (time.time() - start_time ) * 1000
             send=ms
@@ -292,15 +294,17 @@ def getStats(targetSystem, targetPort):
             response=ms
 
     except Exception as ex:
+        ms = (time.time() - start_time ) * 1000
+        failure=ms
         errorStr = str(ex)
     #
     #
     if(timestamp): 
         now = datetime.datetime.now()
         writer.writerow([now.strftime('%Y-%m-%d' + timedelimiter + '%H:%M:%S'), strftime("%z", gmtime()), str(int(pytime.time())), system, source, 
-                                      targetSystem, targetPort, addressStr, addressFullStr, resolv, resolvFull, connect, send, response, close, responseStr, errorStr])
+                                      targetSystem, targetPort, addressStr, addressFullStr, resolv, resolvFull, connect, send, response, close, failure, responseStr, errorStr])
     else:
-        writer.writerow([targetSystem, targetPort, addressStr, addressFullStr, resolv, resolvFull, connect, send, response, close, 
+        writer.writerow([targetSystem, targetPort, addressStr, addressFullStr, resolv, resolvFull, connect, send, response, close, failure,
                      responseStr, errorStr])
 
     
@@ -320,13 +324,13 @@ def printStats(monitor_subsystems, monitor_count, monitor_interval):
 def printHeader():
     if(timestamp == True): 
         header=globalheader.split(delimiter)
-        header.extend(['targetName', 'targetPort', 'address', 'dnsInfo', 'resolve', 'resolveFull', 'connect', 'send', 'response', 'close',
+        header.extend(['targetName', 'targetPort', 'address', 'dnsInfo', 'resolve', 'resolveFull', 'connect', 'send', 'response', 'close', 'failure',
             'response', 'error'
             ])                 
         writer.writerow(header)  
     else:
         writer.writerow([
-            'targetName', 'targetPort', 'address', 'dnsInfo', 'resolve', 'resolveFull', 'connect', 'send', 'response', 'close',
+            'targetName', 'targetPort', 'address', 'dnsInfo', 'resolve', 'resolveFull', 'connect', 'send', 'response', 'close', 'failure',
             'response', 'error'
             ])  
 #
@@ -356,9 +360,11 @@ printrawheader=False
 
 makeResponseShort = True
 
+requestStr="GET / HTTP/1.1\r\nHost: " + targetSystem + "\r\n\r\n";
+
 #
 try:
-    opts, args = getopt.getopt( sys.argv[1:], 's:p:u:c:d:h', ['server=','port=','ulr=', 'count=','delay=','transport=', 'subsystem=','subsystems=','help', 'helpInternal', 'timedelimiter=','delimiter=','system=','source=', 'globalheader=', 'noheader', 'timestamp', 'notbuffered', 'printrawheader', 'longResponse'] )
+    opts, args = getopt.getopt( sys.argv[1:], 's:p:u:c:d:h', ['server=','port=','ulr=', 'count=','delay=','transport=', 'subsystem=','subsystems=', 'request=', 'help', 'helpInternal', 'timedelimiter=','delimiter=','system=','source=', 'globalheader=', 'noheader', 'timestamp', 'notbuffered', 'printrawheader', 'longResponse'] )
 except getopt.GetoptError, err:
     print str(err)
     usage()
@@ -376,7 +382,9 @@ for opt, arg in opts:
         monitor_subsystems = arg.split(',')
     elif opt in ('--subsystem'):
         monitor_subsystems = arg
-    elif opt in ('--transport'):
+    elif opt in ('--subsystem'):
+        requestStr = arg
+    elif opt in ('--request'):
         if(arg == "udp"):
             monitor_transport = socket.SOCK_DGRAM
         if(arg == "icmp"):
