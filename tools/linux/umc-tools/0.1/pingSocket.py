@@ -360,7 +360,7 @@ printrawheader=False
 
 makeResponseShort = True
 
-requestStr="GET / HTTP/1.1\r\nHost: " + targetSystem + "\r\n\r\n";
+requestStr="GET / HTTP/1.1\r\n";
 
 #
 try:
