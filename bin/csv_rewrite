@@ -168,7 +168,12 @@ for csv_row in reader:
 
     else:
       record_date_time_full_str = record_date_time_str + ' ' + record_date_time_tz_str
-      record_date_time = datetime.strptime(record_date_time_full_str, '%Y-%m-%d %H:%M:%S %z')
+
+      try:
+        record_date_time = datetime.strptime(record_date_time_full_str, '%Y-%m-%d %H:%M:%S %z')
+      except:
+        eprint('Warning: malformed timestamp. Ignoring line.')
+        continue
 
       record_age = datetime.now().timestamp() - record_date_time.timestamp()
 
